@@ -1,162 +1,124 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { Link, router } from 'expo-router';
-import { Text } from '../../src/components/common/Text';
-import { Button } from '../../src/components/common/Button';
-import { TextInput } from '../../src/components/forms/TextInput';
-import { useColors, useSpacing } from '../../src/hooks/useTheme';
+import { View, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { Text } from '../../components/ui/Text';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function ForgotPasswordScreen() {
-  const colors = useColors();
-  const spacing = useSpacing();
+export default function ForgotPassword() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  const handleResetPassword = async () => {
-    if (!email) {
-      setError('Please enter your email');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-
-    try {
-      // TODO: Implement password reset logic
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSuccess(true);
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (success) {
-    return (
-      <View
-        style={[
-          styles.container,
-          {
-            padding: spacing[6],
-            backgroundColor: colors.background,
-          },
-        ]}
-      >
-        <View style={styles.successContent}>
-          <Text variant="h2" style={styles.title}>
-            Check Your Email
-          </Text>
-          <Text variant="body" color="textSecondary" style={styles.subtitle}>
-            We've sent password reset instructions to your email address.
-          </Text>
-          <Button
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            Back to Sign In
-          </Button>
-        </View>
-      </View>
-    );
-  }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View
-        style={[
-          styles.content,
-          {
-            padding: spacing[6],
-            backgroundColor: colors.background,
-          },
-        ]}
-      >
-        <View style={styles.header}>
-          <Text variant="h1" style={styles.title}>
-            Forgot Password?
-          </Text>
-          <Text variant="body" color="textSecondary" style={styles.subtitle}>
-            Enter your email to reset your password
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Reset Password</Text>
+      </View>
 
-        <View style={styles.form}>
+      <View style={styles.content}>
+        <Text style={styles.description}>
+          Enter your email address and we'll send you instructions to reset your password.
+        </Text>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Email</Text>
           <TextInput
-            label="Email"
+            style={styles.input}
             placeholder="Enter your email"
+            keyboardType="email-address"
+            autoCapitalize="none"
             value={email}
             onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            error={error}
           />
-
-          <Button
-            onPress={handleResetPassword}
-            loading={loading}
-            disabled={loading}
-            style={styles.resetButton}
-          >
-            Reset Password
-          </Button>
         </View>
 
-        <View style={styles.footer}>
-          <Text variant="body" color="textSecondary">
-            Remember your password?{' '}
-          </Text>
-          <Link href="./sign-in" asChild>
-            <Button variant="ghost">Sign In</Button>
-          </Link>
-        </View>
+        <TouchableOpacity 
+          style={styles.resetButton}
+          onPress={() => {
+            // Show success message and navigate back
+            router.back();
+          }}
+        >
+          <Text style={styles.resetButtonText}>Send Reset Link</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.loginLink}
+          onPress={() => router.push('/login')}
+        >
+          <Text style={styles.loginLinkText}>Back to Login</Text>
+        </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  successContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 32,
-  },
-  title: {
-    marginBottom: 8,
-  },
-  subtitle: {
-    textAlign: 'center',
-  },
-  form: {
-    width: '100%',
-  },
-  resetButton: {
-    width: '100%',
-    marginTop: 24,
+    padding: 20,
+    paddingTop: 40,
   },
   backButton: {
-    marginTop: 24,
+    marginRight: 15,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  content: {
+    padding: 20,
+  },
+  description: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+    lineHeight: 24,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#f9f9f9',
+  },
+  resetButton: {
+    backgroundColor: '#2196F3',
+    padding: 15,
+    borderRadius: 8,
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 20,
   },
-}); 
+  resetButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  loginLink: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  loginLinkText: {
+    color: '#2196F3',
+    fontSize: 16,
+  },
+});

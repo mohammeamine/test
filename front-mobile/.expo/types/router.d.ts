@@ -1,14 +1,240 @@
-/* eslint-disable */
-import * as Router from 'expo-router';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable import/export */
+/* eslint-disable @typescript-eslint/ban-types */
+declare module "expo-router" {
+  import type { LinkProps as OriginalLinkProps } from 'expo-router/build/link/Link';
+  import type { Router as OriginalRouter } from 'expo-router/src/types';
+  export * from 'expo-router/build';
 
-export * from 'expo-router';
+  // prettier-ignore
+  type StaticRoutes = `/` | `/(app)/_layout` | `/_layout` | `/(auth)/(admin)/` | `/(auth)/(admin)` | `/(auth)/(admin)/_layout` | `/(auth)/(parent)/` | `/(auth)/(parent)` | `/(auth)/(parent)/_layout` | `/(auth)/(student)/` | `/(auth)/(student)` | `/(auth)/(student)/_layout` | `/(auth)/(teacher)/` | `/(auth)/(teacher)` | `/(auth)/(teacher)/_layout` | `/(auth)/forgot-password` | `/forgot-password` | `/(auth)/login` | `/login` | `/(auth)/role-select` | `/role-select` | `/(auth)/_layout` | `/admin/classes` | `/admin/dashboard` | `/admin/settings` | `/admin/users` | `/admin/_layout` | `/parent/dashboard` | `/signup` | `/student/dashboard` | `/teacher/dashboard` | `/admin/courses`;
+  // prettier-ignore
+  type DynamicRoutes<T extends string> = never;
+  // prettier-ignore
+  type DynamicRouteTemplate = never;
 
-declare module 'expo-router' {
-  export namespace ExpoRouter {
-    export interface __routes<T extends string | object = string> {
-      hrefInputParams: { pathname: Router.RelativePathString, params?: Router.UnknownInputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownInputParams } | { pathname: `/`; params?: Router.UnknownInputParams; } | { pathname: `/modal`; params?: Router.UnknownInputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/attendance` | `/attendance`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/classes` | `/classes`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/departments` | `/departments`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}` | `/`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/more` | `/more`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/settings` | `/settings`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/users` | `/users`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic` | `/academic`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/courses/add` | `/academic/courses/add`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/courses` | `/academic/courses`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/departments/add` | `/academic/departments/add`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/departments/edit` | `/academic/departments/edit`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/departments` | `/academic/departments`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/grades/add` | `/academic/grades/add`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/grades` | `/academic/grades`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/monitoring` | `/monitoring`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/monitoring/attendance` | `/monitoring/attendance`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/monitoring/schedule` | `/monitoring/schedule`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/staff` | `/staff`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/students/attendance` | `/students/attendance`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/students/grades` | `/students/grades`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/students` | `/students`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/teachers` | `/teachers`; params?: Router.UnknownInputParams; } | { pathname: `${'/(auth)'}/forgot-password` | `/forgot-password`; params?: Router.UnknownInputParams; } | { pathname: `${'/(auth)'}/sign-in` | `/sign-in`; params?: Router.UnknownInputParams; } | { pathname: `${'/(auth)'}/sign-up` | `/sign-up`; params?: Router.UnknownInputParams; } | { pathname: `${'/(debug)'}` | `/`; params?: Router.UnknownInputParams; } | { pathname: `${'/(debug)'}/theme` | `/theme`; params?: Router.UnknownInputParams; } | { pathname: `${'/(teacher)'}` | `/`; params?: Router.UnknownInputParams; } | { pathname: `/+not-found`, params: Router.UnknownInputParams & {  } };
-      hrefOutputParams: { pathname: Router.RelativePathString, params?: Router.UnknownOutputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownOutputParams } | { pathname: `/`; params?: Router.UnknownOutputParams; } | { pathname: `/modal`; params?: Router.UnknownOutputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/attendance` | `/attendance`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/classes` | `/classes`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/departments` | `/departments`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}` | `/`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/more` | `/more`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/settings` | `/settings`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/users` | `/users`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/academic` | `/academic`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/academic/courses/add` | `/academic/courses/add`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/academic/courses` | `/academic/courses`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/academic/departments/add` | `/academic/departments/add`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/academic/departments/edit` | `/academic/departments/edit`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/academic/departments` | `/academic/departments`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/academic/grades/add` | `/academic/grades/add`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/academic/grades` | `/academic/grades`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/monitoring` | `/monitoring`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/monitoring/attendance` | `/monitoring/attendance`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/monitoring/schedule` | `/monitoring/schedule`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/staff` | `/staff`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/students/attendance` | `/students/attendance`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/students/grades` | `/students/grades`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/students` | `/students`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(admin)'}/teachers` | `/teachers`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(auth)'}/forgot-password` | `/forgot-password`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(auth)'}/sign-in` | `/sign-in`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(auth)'}/sign-up` | `/sign-up`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(debug)'}` | `/`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(debug)'}/theme` | `/theme`; params?: Router.UnknownOutputParams; } | { pathname: `${'/(teacher)'}` | `/`; params?: Router.UnknownOutputParams; } | { pathname: `/+not-found`, params: Router.UnknownOutputParams & {  } };
-      href: Router.RelativePathString | Router.ExternalPathString | `/${`?${string}` | `#${string}` | ''}` | `/modal${`?${string}` | `#${string}` | ''}` | `/_sitemap${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/attendance${`?${string}` | `#${string}` | ''}` | `/attendance${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/classes${`?${string}` | `#${string}` | ''}` | `/classes${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/departments${`?${string}` | `#${string}` | ''}` | `/departments${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}${`?${string}` | `#${string}` | ''}` | `/${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/more${`?${string}` | `#${string}` | ''}` | `/more${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/settings${`?${string}` | `#${string}` | ''}` | `/settings${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/users${`?${string}` | `#${string}` | ''}` | `/users${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/academic${`?${string}` | `#${string}` | ''}` | `/academic${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/academic/courses/add${`?${string}` | `#${string}` | ''}` | `/academic/courses/add${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/academic/courses${`?${string}` | `#${string}` | ''}` | `/academic/courses${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/academic/departments/add${`?${string}` | `#${string}` | ''}` | `/academic/departments/add${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/academic/departments/edit${`?${string}` | `#${string}` | ''}` | `/academic/departments/edit${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/academic/departments${`?${string}` | `#${string}` | ''}` | `/academic/departments${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/academic/grades/add${`?${string}` | `#${string}` | ''}` | `/academic/grades/add${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/academic/grades${`?${string}` | `#${string}` | ''}` | `/academic/grades${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/monitoring${`?${string}` | `#${string}` | ''}` | `/monitoring${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/monitoring/attendance${`?${string}` | `#${string}` | ''}` | `/monitoring/attendance${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/monitoring/schedule${`?${string}` | `#${string}` | ''}` | `/monitoring/schedule${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/staff${`?${string}` | `#${string}` | ''}` | `/staff${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/students/attendance${`?${string}` | `#${string}` | ''}` | `/students/attendance${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/students/grades${`?${string}` | `#${string}` | ''}` | `/students/grades${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/students${`?${string}` | `#${string}` | ''}` | `/students${`?${string}` | `#${string}` | ''}` | `${'/(admin)'}/teachers${`?${string}` | `#${string}` | ''}` | `/teachers${`?${string}` | `#${string}` | ''}` | `${'/(auth)'}/forgot-password${`?${string}` | `#${string}` | ''}` | `/forgot-password${`?${string}` | `#${string}` | ''}` | `${'/(auth)'}/sign-in${`?${string}` | `#${string}` | ''}` | `/sign-in${`?${string}` | `#${string}` | ''}` | `${'/(auth)'}/sign-up${`?${string}` | `#${string}` | ''}` | `/sign-up${`?${string}` | `#${string}` | ''}` | `${'/(debug)'}${`?${string}` | `#${string}` | ''}` | `/${`?${string}` | `#${string}` | ''}` | `${'/(debug)'}/theme${`?${string}` | `#${string}` | ''}` | `/theme${`?${string}` | `#${string}` | ''}` | `${'/(teacher)'}${`?${string}` | `#${string}` | ''}` | `/${`?${string}` | `#${string}` | ''}` | { pathname: Router.RelativePathString, params?: Router.UnknownInputParams } | { pathname: Router.ExternalPathString, params?: Router.UnknownInputParams } | { pathname: `/`; params?: Router.UnknownInputParams; } | { pathname: `/modal`; params?: Router.UnknownInputParams; } | { pathname: `/_sitemap`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/attendance` | `/attendance`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/classes` | `/classes`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/departments` | `/departments`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}` | `/`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/more` | `/more`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/settings` | `/settings`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/users` | `/users`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic` | `/academic`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/courses/add` | `/academic/courses/add`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/courses` | `/academic/courses`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/departments/add` | `/academic/departments/add`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/departments/edit` | `/academic/departments/edit`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/departments` | `/academic/departments`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/grades/add` | `/academic/grades/add`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/academic/grades` | `/academic/grades`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/monitoring` | `/monitoring`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/monitoring/attendance` | `/monitoring/attendance`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/monitoring/schedule` | `/monitoring/schedule`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/staff` | `/staff`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/students/attendance` | `/students/attendance`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/students/grades` | `/students/grades`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/students` | `/students`; params?: Router.UnknownInputParams; } | { pathname: `${'/(admin)'}/teachers` | `/teachers`; params?: Router.UnknownInputParams; } | { pathname: `${'/(auth)'}/forgot-password` | `/forgot-password`; params?: Router.UnknownInputParams; } | { pathname: `${'/(auth)'}/sign-in` | `/sign-in`; params?: Router.UnknownInputParams; } | { pathname: `${'/(auth)'}/sign-up` | `/sign-up`; params?: Router.UnknownInputParams; } | { pathname: `${'/(debug)'}` | `/`; params?: Router.UnknownInputParams; } | { pathname: `${'/(debug)'}/theme` | `/theme`; params?: Router.UnknownInputParams; } | { pathname: `${'/(teacher)'}` | `/`; params?: Router.UnknownInputParams; } | `/+not-found` | { pathname: `/+not-found`, params: Router.UnknownInputParams & {  } };
-    }
+  type RelativePathString = `./${string}` | `../${string}` | '..';
+  type AbsoluteRoute = DynamicRouteTemplate | StaticRoutes;
+  type ExternalPathString = `http${string}`;
+  type ExpoRouterRoutes = DynamicRouteTemplate | StaticRoutes | RelativePathString;
+  type AllRoutes = ExpoRouterRoutes | ExternalPathString;
+
+  /****************
+   * Route Utils  *
+   ****************/
+
+  type SearchOrHash = `?${string}` | `#${string}`;
+  type UnknownInputParams = Record<string, string | number | (string | number)[]>;
+  type UnknownOutputParams = Record<string, string | string[]>;
+
+  /**
+   * Return only the RoutePart of a string. If the string has multiple parts return never
+   *
+   * string   | type
+   * ---------|------
+   * 123      | 123
+   * /123/abc | never
+   * 123?abc  | never
+   * ./123    | never
+   * /123     | never
+   * 123/../  | never
+   */
+  type SingleRoutePart<S extends string> = S extends `${string}/${string}`
+    ? never
+    : S extends `${string}${SearchOrHash}`
+    ? never
+    : S extends ''
+    ? never
+    : S extends `(${string})`
+    ? never
+    : S extends `[${string}]`
+    ? never
+    : S;
+
+  /**
+   * Return only the CatchAll router part. If the string has search parameters or a hash return never
+   */
+  type CatchAllRoutePart<S extends string> = S extends `${string}${SearchOrHash}`
+    ? never
+    : S extends ''
+    ? never
+    : S extends `${string}(${string})${string}`
+    ? never
+    : S extends `${string}[${string}]${string}`
+    ? never
+    : S;
+
+  // type OptionalCatchAllRoutePart<S extends string> = S extends `${string}${SearchOrHash}` ? never : S
+
+  /**
+   * Return the name of a route parameter
+   * '[test]'    -> 'test'
+   * 'test'      -> never
+   * '[...test]' -> '...test'
+   */
+  type IsParameter<Part> = Part extends `[${infer ParamName}]` ? ParamName : never;
+
+  /**
+   * Return a union of all parameter names. If there are no names return never
+   *
+   * /[test]         -> 'test'
+   * /[abc]/[...def] -> 'abc'|'...def'
+   */
+  type ParameterNames<Path> = Path extends `${infer PartA}/${infer PartB}`
+    ? IsParameter<PartA> | ParameterNames<PartB>
+    : IsParameter<Path>;
+
+  /**
+   * Returns all segements of a route.
+   *
+   * /(group)/123/abc/[id]/[...rest] -> ['(group)', '123', 'abc', '[id]', '[...rest]'
+   */
+  type RouteSegments<Path> = Path extends `${infer PartA}/${infer PartB}`
+    ? PartA extends '' | '.'
+      ? [...RouteSegments<PartB>]
+      : [PartA, ...RouteSegments<PartB>]
+    : Path extends ''
+    ? []
+    : [Path];
+
+  /**
+   * Returns a Record of the routes parameters as strings and CatchAll parameters
+   *
+   * There are two versions, input and output, as you can input 'string | number' but
+   *  the output will always be 'string'
+   *
+   * /[id]/[...rest] -> { id: string, rest: string[] }
+   * /no-params      -> {}
+   */
+  type InputRouteParams<Path> = {
+    [Key in ParameterNames<Path> as Key extends `...${infer Name}`
+      ? Name
+      : Key]: Key extends `...${string}` ? (string | number)[] : string | number;
+  } & UnknownInputParams;
+
+  type OutputRouteParams<Path> = {
+    [Key in ParameterNames<Path> as Key extends `...${infer Name}`
+      ? Name
+      : Key]: Key extends `...${string}` ? string[] : string;
+  } & UnknownOutputParams;
+
+  /**
+   * Returns the search parameters for a route.
+   */
+  export type SearchParams<T extends AllRoutes> = T extends DynamicRouteTemplate
+    ? OutputRouteParams<T>
+    : T extends StaticRoutes
+    ? never
+    : UnknownOutputParams;
+
+  /**
+   * Route is mostly used as part of Href to ensure that a valid route is provided
+   *
+   * Given a dynamic route, this will return never. This is helpful for conditional logic
+   *
+   * /test         -> /test, /test2, etc
+   * /test/[abc]   -> never
+   * /test/resolve -> /test, /test2, etc
+   *
+   * Note that if we provide a value for [abc] then the route is allowed
+   *
+   * This is named Route to prevent confusion, as users they will often see it in tooltips
+   */
+  export type Route<T> = T extends string
+    ? T extends DynamicRouteTemplate
+      ? never
+      :
+          | StaticRoutes
+          | RelativePathString
+          | ExternalPathString
+          | (T extends `${infer P}${SearchOrHash}`
+              ? P extends DynamicRoutes<infer _>
+                ? T
+                : never
+              : T extends DynamicRoutes<infer _>
+              ? T
+              : never)
+    : never;
+
+  /*********
+   * Href  *
+   *********/
+
+  export type Href<T> = T extends Record<'pathname', string> ? HrefObject<T> : Route<T>;
+
+  export type HrefObject<
+    R extends Record<'pathname', string>,
+    P = R['pathname']
+  > = P extends DynamicRouteTemplate
+    ? { pathname: P; params: InputRouteParams<P> }
+    : P extends Route<P>
+    ? { pathname: Route<P> | DynamicRouteTemplate; params?: never | InputRouteParams<never> }
+    : never;
+
+  /***********************
+   * Expo Router Exports *
+   ***********************/
+
+  export type Router = Omit<OriginalRouter, 'push' | 'replace' | 'setParams'> & {
+    /** Navigate to the provided href. */
+    push: <T>(href: Href<T>) => void;
+    /** Navigate to route without appending to the history. */
+    replace: <T>(href: Href<T>) => void;
+    /** Update the current route query params. */
+    setParams: <T = ''>(params?: T extends '' ? Record<string, string> : InputRouteParams<T>) => void;
+  };
+
+  /** The imperative router. */
+  export const router: Router;
+
+  /************
+   * <Link /> *
+   ************/
+  export interface LinkProps<T> extends OriginalLinkProps {
+    href: Href<T>;
   }
+
+  export interface LinkComponent {
+    <T>(props: React.PropsWithChildren<LinkProps<T>>): JSX.Element;
+    /** Helper method to resolve an Href object into a string. */
+    resolveHref: <T>(href: Href<T>) => string;
+  }
+
+  /**
+   * Component to render link to another route using a path.
+   * Uses an anchor tag on the web.
+   *
+   * @param props.href Absolute path to route (e.g. `/feeds/hot`).
+   * @param props.replace Should replace the current route without adding to the history.
+   * @param props.asChild Forward props to child component. Useful for custom buttons.
+   * @param props.children Child elements to render the content.
+   */
+  export const Link: LinkComponent;
+  
+  /** Redirects to the href as soon as the component is mounted. */
+  export const Redirect: <T>(
+    props: React.PropsWithChildren<{ href: Href<T> }>
+  ) => JSX.Element;
+
+  /************
+   * Hooks *
+   ************/
+  export function useRouter(): Router;
+
+  export function useLocalSearchParams<
+    T extends AllRoutes | UnknownOutputParams = UnknownOutputParams
+  >(): T extends AllRoutes ? SearchParams<T> : T;
+
+  /** @deprecated renamed to `useGlobalSearchParams` */
+  export function useSearchParams<
+    T extends AllRoutes | UnknownOutputParams = UnknownOutputParams
+  >(): T extends AllRoutes ? SearchParams<T> : T;
+
+  export function useGlobalSearchParams<
+    T extends AllRoutes | UnknownOutputParams = UnknownOutputParams
+  >(): T extends AllRoutes ? SearchParams<T> : T;
+
+  export function useSegments<
+    T extends AbsoluteRoute | RouteSegments<AbsoluteRoute> | RelativePathString
+  >(): T extends AbsoluteRoute ? RouteSegments<T> : T extends string ? string[] : T;
 }

@@ -1,9 +1,14 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require('expo/metro-config');
-const { withNativeWind } = require('nativewind/metro');
 
 /** @type {import('expo/metro-config').MetroConfig} */
-// eslint-disable-next-line no-undef
-const config = getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname, {
+  // Enable CSS support
+  isCSSEnabled: true,
+});
 
-module.exports = withNativeWind(config, { input: './global.css', inlineRem: 16 });
+// Add support for native wind and other assets
+config.resolver.assetExts.push('cjs');
+config.resolver.sourceExts.push('css');
+
+module.exports = config;
