@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Text } from '../../components/ui/Text';
+import { Text } from '../../../components/ui/Text';
+import { Card } from '../../../components/ui/Card';
 import { Ionicons } from '@expo/vector-icons';
+import { scale, verticalScale } from '../../../utils/responsive';
 
 const classList = [
   { id: 1, name: '12-A', teacher: 'John Doe', students: 35, subject: 'Mathematics' },
@@ -11,52 +13,59 @@ const classList = [
   { id: 5, name: '11-A', teacher: 'David Miller', students: 31, subject: 'Physics' },
 ];
 
-export default function ClassesScreen() {
+export default function ClassesManagement() {
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Classes Management</Text>
+        <Text variant="h1" style={styles.title}>Classes Management</Text>
+        <Text variant="body" style={styles.subtitle}>
+          Manage all classes and their assignments
+        </Text>
+      </View>
+
+      <View style={styles.actionContainer}>
         <TouchableOpacity style={styles.addButton}>
-          <Ionicons name="add" size={24} color="#fff" />
+          <Ionicons name="add" size={scale(20)} color="#fff" style={styles.buttonIcon} />
+          <Text style={styles.buttonText}>Add New Class</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.classList}>
+      <View style={styles.classList}>
         {classList.map((classItem) => (
-          <TouchableOpacity key={classItem.id} style={styles.classCard}>
+          <Card key={classItem.id} style={styles.classCard}>
             <View style={styles.classHeader}>
               <Text style={styles.className}>{classItem.name}</Text>
               <View style={styles.studentCount}>
-                <Ionicons name="people-outline" size={16} color="#666" />
+                <Ionicons name="people-outline" size={scale(16)} color="#666" />
                 <Text style={styles.countText}>{classItem.students}</Text>
               </View>
             </View>
 
             <View style={styles.classDetails}>
               <View style={styles.detailItem}>
-                <Ionicons name="person-outline" size={16} color="#666" />
+                <Ionicons name="person-outline" size={scale(16)} color="#666" />
                 <Text style={styles.detailText}>{classItem.teacher}</Text>
               </View>
               <View style={styles.detailItem}>
-                <Ionicons name="book-outline" size={16} color="#666" />
+                <Ionicons name="book-outline" size={scale(16)} color="#666" />
                 <Text style={styles.detailText}>{classItem.subject}</Text>
               </View>
             </View>
 
             <View style={styles.cardActions}>
               <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="calendar-outline" size={20} color="#2196F3" />
+                <Ionicons name="calendar-outline" size={scale(20)} color="#2196F3" />
                 <Text style={styles.actionText}>Schedule</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="stats-chart-outline" size={20} color="#2196F3" />
+                <Ionicons name="stats-chart-outline" size={scale(20)} color="#2196F3" />
                 <Text style={styles.actionText}>Reports</Text>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </Card>
         ))}
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -66,89 +75,98 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    padding: scale(16),
+    paddingTop: verticalScale(20),
   },
   title: {
-    fontSize: 20,
+    fontSize: scale(24),
     fontWeight: 'bold',
+    marginBottom: verticalScale(4),
+  },
+  subtitle: {
+    fontSize: scale(14),
+    color: '#666',
+    marginBottom: verticalScale(16),
+  },
+  actionContainer: {
+    paddingHorizontal: scale(16),
+    marginBottom: verticalScale(16),
   },
   addButton: {
     backgroundColor: '#2196F3',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: verticalScale(10),
+    paddingHorizontal: scale(16),
+    borderRadius: scale(8),
+    alignSelf: 'flex-start',
+  },
+  buttonIcon: {
+    marginRight: scale(8),
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: scale(14),
   },
   classList: {
-    padding: 15,
+    padding: scale(16),
+    paddingBottom: verticalScale(30),
   },
   classCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    padding: scale(16),
+    marginBottom: verticalScale(16),
   },
   classHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: verticalScale(12),
   },
   className: {
-    fontSize: 18,
+    fontSize: scale(18),
     fontWeight: 'bold',
   },
   studentCount: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f0f0f0',
-    padding: 6,
-    borderRadius: 15,
+    padding: scale(6),
+    borderRadius: scale(15),
   },
   countText: {
-    marginLeft: 5,
+    marginLeft: scale(5),
     color: '#666',
-    fontSize: 14,
+    fontSize: scale(14),
   },
   classDetails: {
-    marginBottom: 15,
+    marginBottom: verticalScale(16),
   },
   detailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 5,
+    marginTop: verticalScale(5),
   },
   detailText: {
-    marginLeft: 8,
+    marginLeft: scale(8),
     color: '#666',
-    fontSize: 14,
+    fontSize: scale(14),
   },
   cardActions: {
     flexDirection: 'row',
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    paddingTop: 10,
+    paddingTop: verticalScale(10),
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: scale(20),
   },
   actionText: {
     color: '#2196F3',
-    marginLeft: 5,
-    fontSize: 14,
+    marginLeft: scale(5),
+    fontSize: scale(14),
   },
-});
+}); 

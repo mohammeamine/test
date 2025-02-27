@@ -1,31 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet } from 'react-native';
+import { View, Modal, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Text } from './ui/Text';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-// List of all available routes in the app
-const routes = [
-  { name: 'Home', path: '/' },
-  { name: 'Sign Up', path: '/signup' },
-  // Auth routes
-  { name: 'Auth Home', path: '/(auth)/' },
-  // Admin routes
-  { name: 'Admin Dashboard', path: '/admin/dashboard' },
-  // Parent routes
-  { name: 'Parent Dashboard', path: '/parent/dashboard' },
-  // Student routes
-  { name: 'Student Dashboard', path: '/student/dashboard' },
-  // Teacher routes
-  { name: 'Teacher Dashboard', path: '/teacher/dashboard' },
-];
+import { NAVIGATION_GROUPS, ROLE_COLORS, NAVIGATION_THEME } from '../navigation/constants';
+import { RoleType } from '../navigation/types';
+import { scale, verticalScale } from '../utils/responsive';
 
 export const DevNavigation = () => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<RoleType | null>(null);
   const router = useRouter();
 
-  const navigateToRoute = (path: string) => {
+  const handleNavigation = (role: RoleType, path: string) => {
+    router.push(`/(app)/${role}/${path}` as any);
     setModalVisible(false);
-    router.push(path as any);
   };
 
   return (
@@ -34,7 +23,7 @@ export const DevNavigation = () => {
         style={styles.floatingButton}
         onPress={() => setModalVisible(true)}
       >
-        <Ionicons name="menu" size={24} color="white" />
+        <Ionicons name="code-working" size={24} color="white" />
       </TouchableOpacity>
 
       <Modal
@@ -51,19 +40,59 @@ export const DevNavigation = () => {
                 onPress={() => setModalVisible(false)}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color="black" />
+                <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.routeList}>
-              {routes.map((route, index) => (
+
+            <View style={styles.roleSelector}>
+              {(Object.keys(NAVIGATION_GROUPS) as RoleType[]).map((role) => (
                 <TouchableOpacity
-                  key={index}
-                  style={styles.routeItem}
-                  onPress={() => navigateToRoute(route.path)}
+                  key={role}
+                  style={[
+                    styles.roleButton,
+                    selectedRole === role && {
+                      backgroundColor: `${ROLE_COLORS[role].primary}15`,
+                    },
+                  ]}
+                  onPress={() => setSelectedRole(role)}
                 >
-                  <Text style={styles.routeText}>{route.name}</Text>
+                  <Text
+                    style={[
+                      styles.roleText,
+                      selectedRole === role && {
+                        color: ROLE_COLORS[role].primary,
+                        fontWeight: '600',
+                      },
+                    ]}
+                  >
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </Text>
                 </TouchableOpacity>
               ))}
+            </View>
+
+            <ScrollView style={styles.routeList}>
+              {selectedRole &&
+                NAVIGATION_GROUPS[selectedRole].map((group) => (
+                  <View key={group.name} style={styles.group}>
+                    <Text style={styles.groupTitle}>{group.name}</Text>
+                    {group.routes.map((route) => (
+                      <TouchableOpacity
+                        key={route.path}
+                        style={styles.routeItem}
+                        onPress={() => handleNavigation(selectedRole, route.path)}
+                      >
+                        <Ionicons
+                          name={route.icon}
+                          size={20}
+                          color={ROLE_COLORS[selectedRole].primary}
+                          style={styles.routeIcon}
+                        />
+                        <Text style={styles.routeText}>{route.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ))}
             </ScrollView>
           </View>
         </View>
@@ -75,12 +104,12 @@ export const DevNavigation = () => {
 const styles = StyleSheet.create({
   floatingButton: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
+    right: NAVIGATION_THEME.spacing.md,
+    bottom: NAVIGATION_THEME.spacing.md,
     backgroundColor: '#2196F3',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: scale(56),
+    height: scale(56),
+    borderRadius: scale(28),
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 5,
@@ -96,34 +125,71 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 20,
-    width: '80%',
+    backgroundColor: NAVIGATION_THEME.colors.background,
+    borderRadius: scale(20),
+    width: '90%',
     maxHeight: '80%',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    padding: NAVIGATION_THEME.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: NAVIGATION_THEME.colors.border,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: scale(18),
     fontWeight: 'bold',
   },
   closeButton: {
-    padding: 5,
+    padding: NAVIGATION_THEME.spacing.xs,
+  },
+  roleSelector: {
+    flexDirection: 'row',
+    padding: NAVIGATION_THEME.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: NAVIGATION_THEME.colors.border,
+  },
+  roleButton: {
+    paddingHorizontal: NAVIGATION_THEME.spacing.md,
+    paddingVertical: NAVIGATION_THEME.spacing.sm,
+    borderRadius: scale(20),
+    marginRight: NAVIGATION_THEME.spacing.sm,
+  },
+  roleText: {
+    fontSize: scale(14),
+    color: '#666',
   },
   routeList: {
     flexGrow: 0,
+    padding: NAVIGATION_THEME.spacing.sm,
+  },
+  group: {
+    marginBottom: NAVIGATION_THEME.spacing.md,
+  },
+  groupTitle: {
+    fontSize: scale(16),
+    fontWeight: '600',
+    marginBottom: NAVIGATION_THEME.spacing.sm,
+    paddingHorizontal: NAVIGATION_THEME.spacing.sm,
   },
   routeItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: NAVIGATION_THEME.spacing.sm,
+    borderRadius: scale(8),
+    marginBottom: 2,
+  },
+  routeIcon: {
+    marginRight: NAVIGATION_THEME.spacing.sm,
   },
   routeText: {
-    fontSize: 16,
+    fontSize: scale(14),
   },
 });

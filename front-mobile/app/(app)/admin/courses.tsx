@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { Text } from '../../components/ui/Text';
+import { Text } from '../../../components/ui/Text';
+import { Card } from '../../../components/ui/Card';
 import { Ionicons } from '@expo/vector-icons';
+import { scale, verticalScale } from '../../../utils/responsive';
 
 const coursesList = [
   {
@@ -46,7 +48,7 @@ const coursesList = [
   },
 ];
 
-export default function CoursesScreen() {
+export default function CoursesManagement() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredCourses = coursesList.filter(course =>
@@ -64,12 +66,12 @@ export default function CoursesScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Courses Management</Text>
-        <TouchableOpacity style={styles.addButton}>
-          <Ionicons name="add" size={24} color="#fff" />
-        </TouchableOpacity>
+        <Text variant="h1" style={styles.title}>Courses Management</Text>
+        <Text variant="body" style={styles.subtitle}>
+          Manage all academic courses and their assignments
+        </Text>
       </View>
 
       <View style={styles.searchContainer}>
@@ -82,20 +84,23 @@ export default function CoursesScreen() {
             onChangeText={setSearchQuery}
           />
         </View>
+        <TouchableOpacity style={styles.addButton}>
+          <Ionicons name="add" size={scale(24)} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.courseList}>
+      <View style={styles.courseList}>
         {filteredCourses.map((course) => (
-          <TouchableOpacity key={course.id} style={styles.courseCard}>
+          <Card key={course.id} style={styles.courseCard}>
             <View style={styles.courseHeader}>
               <View style={styles.courseInfo}>
                 <Text style={styles.courseName}>{course.name}</Text>
                 <Text style={styles.courseTeacher}>
-                  <Ionicons name="person-outline" size={14} color="#666" /> {course.teacher}
+                  <Ionicons name="person-outline" size={scale(14)} color="#666" /> {course.teacher}
                 </Text>
               </View>
               <View style={getStatusStyle(course.status)}>
-                <Text>
+                <Text style={styles.statusText}>
                   {course.status}
                 </Text>
               </View>
@@ -103,33 +108,33 @@ export default function CoursesScreen() {
             
             <View style={styles.courseDetails}>
               <View style={styles.detailItem}>
-                <Ionicons name="people-outline" size={16} color="#666" />
+                <Ionicons name="people-outline" size={scale(16)} color="#666" />
                 <Text style={styles.detailText}>{course.students} Students</Text>
               </View>
               <View style={styles.detailItem}>
-                <Ionicons name="time-outline" size={16} color="#666" />
+                <Ionicons name="time-outline" size={scale(16)} color="#666" />
                 <Text style={styles.detailText}>{course.schedule}</Text>
               </View>
             </View>
 
             <View style={styles.courseActions}>
               <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="create-outline" size={20} color="#2196F3" />
+                <Ionicons name="create-outline" size={scale(20)} color="#2196F3" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="people-outline" size={20} color="#4CAF50" />
+                <Ionicons name="people-outline" size={scale(20)} color="#4CAF50" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="calendar-outline" size={20} color="#FF9800" />
+                <Ionicons name="calendar-outline" size={scale(20)} color="#FF9800" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="trash-outline" size={20} color="#F44336" />
+                <Ionicons name="trash-outline" size={scale(20)} color="#F44336" />
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </Card>
         ))}
-      </ScrollView>
-    </View>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -139,99 +144,98 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    padding: scale(16),
+    paddingTop: verticalScale(20),
   },
   title: {
-    fontSize: 20,
+    fontSize: scale(24),
     fontWeight: 'bold',
+    marginBottom: verticalScale(4),
   },
-  addButton: {
-    backgroundColor: '#2196F3',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+  subtitle: {
+    fontSize: scale(14),
+    color: '#666',
+    marginBottom: verticalScale(16),
   },
   searchContainer: {
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  searchBox: {
+    padding: scale(16),
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 8,
+  },
+  searchBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: scale(8),
+    padding: scale(10),
+    marginRight: scale(10),
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   searchInput: {
     flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
+    marginLeft: scale(8),
+    fontSize: scale(16),
+  },
+  addButton: {
+    backgroundColor: '#2196F3',
+    width: scale(44),
+    height: scale(44),
+    borderRadius: scale(22),
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   courseList: {
-    flex: 1,
-    padding: 16,
+    padding: scale(16),
+    paddingBottom: verticalScale(30),
   },
   courseCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    padding: scale(16),
+    marginBottom: verticalScale(16),
   },
   courseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: verticalScale(12),
   },
   courseInfo: {
     flex: 1,
-    marginRight: 12,
+    marginRight: scale(12),
   },
   courseName: {
-    fontSize: 16,
+    fontSize: scale(16),
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: verticalScale(4),
   },
   courseTeacher: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: '#666',
   },
   courseStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    fontSize: 12,
+    paddingHorizontal: scale(8),
+    paddingVertical: verticalScale(4),
+    borderRadius: scale(4),
+  },
+  statusText: {
+    fontSize: scale(12),
+    fontWeight: '500',
   },
   statusActive: {
     backgroundColor: '#E8F5E9',
-    color: '#4CAF50',
   },
   statusInactive: {
     backgroundColor: '#FFEBEE',
-    color: '#F44336',
   },
   statusPending: {
     backgroundColor: '#FFF59D',
-    color: '#FF9800',
   },
   courseDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
-    paddingBottom: 12,
+    marginBottom: verticalScale(12),
+    paddingBottom: verticalScale(12),
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
@@ -240,8 +244,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detailText: {
-    marginLeft: 4,
-    fontSize: 14,
+    marginLeft: scale(4),
+    fontSize: scale(14),
     color: '#666',
   },
   courseActions: {
@@ -249,12 +253,12 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#f5f5f5',
+    width: scale(36),
+    height: scale(36),
+    borderRadius: scale(18),
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
+    marginLeft: scale(8),
   },
-});
+}); 

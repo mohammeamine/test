@@ -1,42 +1,31 @@
+import React from 'react';
 import { Stack } from 'expo-router';
+import { NAVIGATION_GROUPS, NAVIGATION_THEME } from '../../navigation/constants';
+import { NavigationErrorBoundary } from '../../components/navigation/NavigationErrorBoundary';
+import { RoleType } from '../../navigation/types';
 
 export default function AppLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#f5f5f5',
-        },
-        headerTintColor: '#000',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <Stack.Screen
-        name="admin/dashboard"
-        options={{
-          title: 'Admin Dashboard',
+    <NavigationErrorBoundary>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: NAVIGATION_THEME.colors.background,
+          },
         }}
-      />
-      <Stack.Screen
-        name="teacher/dashboard"
-        options={{
-          title: 'Teacher Dashboard',
-        }}
-      />
-      <Stack.Screen
-        name="student/dashboard"
-        options={{
-          title: 'Student Dashboard',
-        }}
-      />
-      <Stack.Screen
-        name="parent/dashboard"
-        options={{
-          title: 'Parent Dashboard',
-        }}
-      />
-    </Stack>
+      >
+        {/* Role-based routes */}
+        {(Object.keys(NAVIGATION_GROUPS) as RoleType[]).map((role) => (
+          <Stack.Screen
+            key={role}
+            name={role}
+            options={{
+              headerShown: false,
+            }}
+          />
+        ))}
+      </Stack>
+    </NavigationErrorBoundary>
   );
 } 

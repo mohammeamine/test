@@ -1,156 +1,244 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text } from '../ui/Text';
+import { Card } from '../ui/Card';
 import { Ionicons } from '@expo/vector-icons';
+import { scale, verticalScale } from '../../utils/responsive';
+import { RoleType } from '../../navigation/types';
 
 interface Activity {
   id: string;
-  type: 'enrollment' | 'attendance' | 'grade' | 'event';
+  type: 'enrollment' | 'attendance' | 'grade' | 'event' | 'assignment' | 'message';
   title: string;
   description: string;
   time: string;
 }
 
-const activities: Activity[] = [
-  {
-    id: '1',
-    type: 'enrollment',
-    title: 'New Student Enrollment',
-    description: 'Sarah Johnson enrolled in Class 10-A',
-    time: '2 hours ago',
-  },
-  {
-    id: '2',
-    type: 'attendance',
-    title: 'Attendance Update',
-    description: 'Class 11-B attendance marked by Mr. Smith',
-    time: '3 hours ago',
-  },
-  {
-    id: '3',
-    type: 'grade',
-    title: 'Grades Published',
-    description: 'Mathematics mid-term grades published',
-    time: '5 hours ago',
-  },
-  {
-    id: '4',
-    type: 'event',
-    title: 'New Event',
-    description: 'Science Fair scheduled for next month',
-    time: '1 day ago',
-  },
-];
+interface RecentActivitiesProps {
+  role: RoleType;
+}
+
+const getActivitiesByRole = (role: RoleType): Activity[] => {
+  switch (role) {
+    case 'admin':
+      return [
+        {
+          id: '1',
+          type: 'enrollment',
+          title: 'New Student Enrollment',
+          description: 'Sarah Johnson enrolled in Class 10-A',
+          time: '2 hours ago',
+        },
+        {
+          id: '2',
+          type: 'attendance',
+          title: 'Attendance Update',
+          description: 'Class 11-B attendance marked by Mr. Smith',
+          time: '3 hours ago',
+        },
+        {
+          id: '3',
+          type: 'grade',
+          title: 'Grades Published',
+          description: 'Mathematics mid-term grades published',
+          time: '5 hours ago',
+        },
+        {
+          id: '4',
+          type: 'event',
+          title: 'New Event',
+          description: 'Science Fair scheduled for next month',
+          time: '1 day ago',
+        },
+      ];
+    case 'teacher':
+      return [
+        {
+          id: '1',
+          type: 'attendance',
+          title: 'Attendance Marked',
+          description: 'You marked attendance for Class 10-A',
+          time: '1 hour ago',
+        },
+        {
+          id: '2',
+          type: 'grade',
+          title: 'Grades Updated',
+          description: 'You published grades for Mathematics Quiz',
+          time: '3 hours ago',
+        },
+        {
+          id: '3',
+          type: 'assignment',
+          title: 'Assignment Created',
+          description: 'New assignment: Chapter 5 Exercises',
+          time: '4 hours ago',
+        },
+      ];
+    case 'student':
+      return [
+        {
+          id: '1',
+          type: 'grade',
+          title: 'New Grade',
+          description: 'You received an A in Mathematics Quiz',
+          time: '2 hours ago',
+        },
+        {
+          id: '2',
+          type: 'assignment',
+          title: 'Assignment Due',
+          description: 'Mathematics: Chapter 5 Exercises due tomorrow',
+          time: '3 hours ago',
+        },
+        {
+          id: '3',
+          type: 'event',
+          title: 'Class Schedule',
+          description: 'Chemistry Lab rescheduled to Room 203',
+          time: '5 hours ago',
+        },
+      ];
+    case 'parent':
+      return [
+        {
+          id: '1',
+          type: 'grade',
+          title: 'Grade Update',
+          description: 'John received an A in Mathematics Quiz',
+          time: '2 hours ago',
+        },
+        {
+          id: '2',
+          type: 'attendance',
+          title: 'Attendance Alert',
+          description: 'John was present in all classes today',
+          time: '4 hours ago',
+        },
+        {
+          id: '3',
+          type: 'event',
+          title: 'Parent Meeting',
+          description: 'Parent-Teacher meeting scheduled next week',
+          time: '1 day ago',
+        },
+        {
+          id: '4',
+          type: 'message',
+          title: 'New Message',
+          description: 'Message from Math teacher regarding progress',
+          time: '1 day ago',
+        },
+      ];
+  }
+};
 
 const getActivityIcon = (type: Activity['type']) => {
   switch (type) {
     case 'enrollment':
-      return 'person-add';
+      return 'person-add-outline';
     case 'attendance':
-      return 'calendar';
+      return 'calendar-outline';
     case 'grade':
-      return 'school';
+      return 'school-outline';
     case 'event':
-      return 'calendar';
+      return 'calendar-outline';
+    case 'assignment':
+      return 'document-text-outline';
+    case 'message':
+      return 'mail-outline';
     default:
-      return 'information-circle';
+      return 'information-circle-outline';
   }
 };
 
-const ActivityItem = ({ activity }: { activity: Activity }) => (
-  <TouchableOpacity style={styles.activityItem}>
-    <View style={styles.activityIcon}>
-      <Ionicons name={getActivityIcon(activity.type)} size={20} color="#2196F3" />
-    </View>
-    <View style={styles.activityContent}>
-      <Text style={styles.activityTitle}>{activity.title}</Text>
-      <Text style={styles.activityDescription}>{activity.description}</Text>
-      <Text style={styles.activityTime}>{activity.time}</Text>
-    </View>
-    <Ionicons name="chevron-forward" size={20} color="#999" />
-  </TouchableOpacity>
-);
+const getActivityColor = (type: Activity['type']) => {
+  switch (type) {
+    case 'enrollment':
+      return '#2196F3';
+    case 'attendance':
+      return '#4CAF50';
+    case 'grade':
+      return '#FF9800';
+    case 'event':
+      return '#9C27B0';
+    case 'assignment':
+      return '#00BCD4';
+    case 'message':
+      return '#3F51B5';
+    default:
+      return '#757575';
+  }
+};
 
-export const RecentActivities = () => {
+export const RecentActivities: React.FC<RecentActivitiesProps> = ({ role }) => {
+  const activities = getActivitiesByRole(role);
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.sectionTitle}>Recent Activities</Text>
-        <TouchableOpacity style={styles.viewAllButton}>
-          <Text style={styles.viewAllText}>View All</Text>
-          <Ionicons name="arrow-forward" size={16} color="#2196F3" />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.activitiesList}>
+      <Text style={styles.title}>Recent Activities</Text>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {activities.map((activity) => (
-          <ActivityItem key={activity.id} activity={activity} />
+          <Card key={activity.id} style={styles.activityCard}>
+            <View style={[styles.iconContainer, { backgroundColor: `${getActivityColor(activity.type)}15` }]}>
+              <Ionicons
+                name={getActivityIcon(activity.type)}
+                size={24}
+                color={getActivityColor(activity.type)}
+              />
+            </View>
+            <Text style={styles.activityTitle}>{activity.title}</Text>
+            <Text style={styles.activityDescription}>{activity.description}</Text>
+            <Text style={styles.activityTime}>{activity.time}</Text>
+          </Card>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    margin: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginBottom: verticalScale(16),
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
+  title: {
+    fontSize: scale(18),
     fontWeight: 'bold',
+    marginBottom: verticalScale(12),
+    paddingHorizontal: scale(16),
   },
-  viewAllButton: {
-    flexDirection: 'row',
+  scrollContent: {
+    paddingHorizontal: scale(12),
+  },
+  activityCard: {
+    width: scale(250),
+    marginHorizontal: scale(4),
+    padding: scale(16),
+  },
+  iconContainer: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  viewAllText: {
-    color: '#2196F3',
-    marginRight: 4,
-  },
-  activitiesList: {
-    gap: 12,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  activityIcon: {
-    backgroundColor: '#e3f2fd',
-    padding: 8,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  activityContent: {
-    flex: 1,
+    marginBottom: verticalScale(12),
   },
   activityTitle: {
-    fontSize: 16,
+    fontSize: scale(16),
     fontWeight: '600',
-    marginBottom: 2,
+    marginBottom: verticalScale(4),
   },
   activityDescription: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: '#666',
-    marginBottom: 2,
+    marginBottom: verticalScale(8),
   },
   activityTime: {
-    fontSize: 12,
+    fontSize: scale(12),
     color: '#999',
   },
 });

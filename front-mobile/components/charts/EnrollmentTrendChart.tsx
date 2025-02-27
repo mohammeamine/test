@@ -2,28 +2,47 @@ import React from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { Text } from '../ui/Text';
 import { LineChart } from 'react-native-chart-kit';
+import { EnrollmentData } from '../../services/dashboard';
+import { scale, verticalScale } from '../../utils/responsive';
 
-const data = {
-  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-  datasets: [
-    {
-      data: [2350, 2400, 2450, 2480, 2500, 2550],
-      color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-      strokeWidth: 2,
-    },
-  ],
-};
+interface EnrollmentTrendChartProps {
+  data?: EnrollmentData;
+}
 
-export const EnrollmentTrendChart = () => {
+export const EnrollmentTrendChart: React.FC<EnrollmentTrendChartProps> = ({ data }) => {
   const { width } = useWindowDimensions();
-  const chartWidth = width * 0.75; // Take up 75% of the card width
-  const chartHeight = 200; // Fixed height that works well on mobile
+  const isSmallScreen = width < 360;
+  const chartWidth = width - (isSmallScreen ? 32 : 64);
+  const chartHeight = isSmallScreen ? 180 : 220;
+
+  if (!data) {
+    return (
+      <View style={styles.placeholder}>
+        <Text>No enrollment data available</Text>
+      </View>
+    );
+  }
+
+  // For small screens, show fewer labels
+  const labelCount = isSmallScreen ? 3 : data.labels.length;
+  const step = Math.ceil(data.labels.length / labelCount);
+  
+  const chartData = {
+    labels: data.labels.filter((_, i) => i % step === 0),
+    datasets: [
+      {
+        data: data.data,
+        color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+        strokeWidth: 2,
+      },
+    ],
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Enrollment Trend</Text>
+      <Text style={[styles.title, isSmallScreen && styles.smallTitle]}>Enrollment Trend</Text>
       <LineChart
-        data={data}
+        data={chartData}
         width={chartWidth}
         height={chartHeight}
         yAxisLabel=""
@@ -39,16 +58,17 @@ export const EnrollmentTrendChart = () => {
             borderRadius: 16,
           },
           propsForDots: {
-            r: '4',
-            strokeWidth: '2',
+            r: isSmallScreen ? 3 : 4,
+            strokeWidth: isSmallScreen ? 1 : 2,
             stroke: '#2196F3',
           },
           propsForLabels: {
-            fontSize: 10,
+            fontSize: isSmallScreen ? 10 : 12,
           },
           propsForVerticalLabels: {
-            fontSize: 10,
+            fontSize: isSmallScreen ? 10 : 12,
           },
+          formatYLabel: (yLabel: string) => Math.round(parseFloat(yLabel)).toString(),
         }}
         bezier
         style={styles.chart}
@@ -59,6 +79,8 @@ export const EnrollmentTrendChart = () => {
         withVerticalLabels={true}
         withHorizontalLabels={true}
         fromZero={true}
+        getDotColor={() => '#2196F3'}
+        segments={isSmallScreen ? 3 : 4}
       />
     </View>
   );
@@ -68,8 +90,8 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    padding: scale(12),
+    marginBottom: verticalScale(12),
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -77,12 +99,21 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   title: {
-    fontSize: 18,
+    fontSize: scale(18),
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: verticalScale(12),
+  },
+  smallTitle: {
+    fontSize: scale(16),
+    marginBottom: verticalScale(8),
   },
   chart: {
-    marginVertical: 8,
-    borderRadius: 16,
+    marginVertical: scale(4),
+    borderRadius: scale(16),
+  },
+  placeholder: {
+    height: 180,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

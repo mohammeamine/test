@@ -1,86 +1,56 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { Text } from '../ui/Text';
+import { Card } from '../ui/Card';
 import { Ionicons } from '@expo/vector-icons';
+import { scale, verticalScale } from '../../utils/responsive';
+import { QuickStat } from '../../services/dashboard';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_MARGIN = 8;
-const CARDS_PER_ROW = 2;
-const CARD_WIDTH = (SCREEN_WIDTH - (CARD_MARGIN * (CARDS_PER_ROW + 1) * 2)) / CARDS_PER_ROW;
-
-interface StatItemProps {
-  title: string;
-  value: string;
-  change?: {
-    value: number;
-    trend: 'up' | 'down';
-  };
-  icon: string;
+interface QuickStatsProps {
+  data?: QuickStat[];
 }
 
-const StatItem = ({ title, value, change, icon }: StatItemProps) => (
-  <View style={styles.statCard}>
-    <View style={styles.statHeader}>
-      <View style={styles.iconContainer}>
-        <Ionicons name={icon as any} size={24} color="#2196F3" />
-      </View>
-      {change && (
-        <View style={[
-          styles.changeContainer,
-          { backgroundColor: change.trend === 'up' ? '#e3f2fd' : '#ffebee' }
-        ]}>
-          <Ionicons
-            name={change.trend === 'up' ? 'arrow-up' : 'arrow-down'}
-            size={12}
-            color={change.trend === 'up' ? '#2196F3' : '#f44336'}
-          />
-          <Text style={[
-            styles.changeText,
-            { color: change.trend === 'up' ? '#2196F3' : '#f44336' }
-          ]}>
-            {change.value}%
-          </Text>
-        </View>
-      )}
-    </View>
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statTitle}>{title}</Text>
-  </View>
-);
-
-export const QuickStats = () => {
-  const stats: StatItemProps[] = [
-    {
-      title: 'Total Students',
-      value: '2,550',
-      change: { value: 12, trend: 'up' },
-      icon: 'people',
-    },
-    {
-      title: 'Total Teachers',
-      value: '128',
-      change: { value: 5, trend: 'up' },
-      icon: 'school',
-    },
-    {
-      title: 'Total Classes',
-      value: '64',
-      icon: 'book',
-    },
-    {
-      title: 'Total Parents',
-      value: '3,842',
-      change: { value: 8, trend: 'up' },
-      icon: 'people',
-    },
-  ];
+export const QuickStats: React.FC<QuickStatsProps> = ({ data = [] }) => {
+  const { width } = useWindowDimensions();
+  const isSmallScreen = width < 360;
+  const gridColumns = width < 480 ? 1 : 2;
 
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Quick Stats</Text>
-      <View style={styles.statsGrid}>
-        {stats.map((stat, index) => (
-          <StatItem key={index} {...stat} />
+      <View style={[styles.statsGrid, { flexDirection: gridColumns === 1 ? 'column' : 'row' }]}>
+        {data.map((stat) => (
+          <Card key={stat.id} style={[styles.statCard, gridColumns === 1 && styles.fullWidthCard]}>
+            <View style={styles.statHeader}>
+              <View style={[styles.iconContainer, isSmallScreen && styles.smallIconContainer]}>
+                <Ionicons name={stat.icon as any} size={isSmallScreen ? 20 : 24} color="#2196F3" />
+              </View>
+              {stat.change && (
+                <View style={[
+                  styles.changeContainer,
+                  { backgroundColor: stat.change.trend === 'up' ? '#e3f2fd' : '#ffebee' }
+                ]}>
+                  <Ionicons
+                    name={stat.change.trend === 'up' ? 'arrow-up' : 'arrow-down'}
+                    size={12}
+                    color={stat.change.trend === 'up' ? '#2196F3' : '#f44336'}
+                  />
+                  <Text style={[
+                    styles.changeText,
+                    { color: stat.change.trend === 'up' ? '#2196F3' : '#f44336' }
+                  ]}>
+                    {stat.change.value}%
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Text style={[styles.statValue, isSmallScreen && styles.smallStatValue]}>
+              {stat.value}
+            </Text>
+            <Text style={[styles.statTitle, isSmallScreen && styles.smallStatTitle]}>
+              {stat.title}
+            </Text>
+          </Card>
         ))}
       </View>
     </View>
@@ -89,72 +59,73 @@ export const QuickStats = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
-    paddingHorizontal: CARD_MARGIN,
+    marginBottom: verticalScale(16),
+    padding: scale(8),
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: scale(18),
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1a1a1a',
+    marginBottom: verticalScale(16),
+    paddingHorizontal: scale(8),
   },
   statsGrid: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -CARD_MARGIN,
+    margin: -scale(4),
   },
   statCard: {
-    width: CARD_WIDTH,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    margin: CARD_MARGIN,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    flex: 1,
+    minWidth: '45%',
+    margin: scale(4),
+    padding: scale(12),
+  },
+  fullWidthCard: {
+    minWidth: '100%',
+    marginBottom: scale(8),
   },
   statHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: verticalScale(8),
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
     backgroundColor: '#f0f7ff',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  smallIconContainer: {
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
+  },
   changeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: scale(6),
+    paddingVertical: scale(2),
+    borderRadius: scale(12),
   },
   changeText: {
-    fontSize: 12,
-    marginLeft: 2,
+    fontSize: scale(12),
+    marginLeft: scale(2),
     fontWeight: '500',
   },
   statValue: {
-    fontSize: 24,
+    fontSize: scale(24),
     fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 4,
+    marginBottom: verticalScale(4),
+  },
+  smallStatValue: {
+    fontSize: scale(20),
   },
   statTitle: {
-    fontSize: 14,
+    fontSize: scale(14),
     color: '#666',
+  },
+  smallStatTitle: {
+    fontSize: scale(12),
   },
 });
