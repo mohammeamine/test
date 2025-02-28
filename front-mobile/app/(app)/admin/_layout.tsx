@@ -14,6 +14,8 @@ import Reports from './reports';
 import Courses from './courses';
 import Settings from './settings';
 import Logs from './logs';
+import Documents from './documents';
+import Payments from './payments';
 
 const Drawer = createDrawerNavigator();
 
@@ -26,6 +28,8 @@ const SCREEN_COMPONENTS: Record<string, React.ComponentType<any>> = {
   courses: Courses,
   settings: Settings,
   logs: Logs,
+  documents: Documents,
+  payments: Payments,
 };
 
 export default function AdminLayout() {
@@ -39,12 +43,15 @@ export default function AdminLayout() {
   return (
     <Drawer.Navigator
       screenOptions={({ route }) => ({
-        header: () => (
-          <HeaderBar 
-            title={SCREEN_COMPONENTS[route.name].name || route.name} 
-            showMenuButton={!isPermanentDrawer}
-          />
-        ),
+        header: () => {
+          const routeConfig = allRoutes.find(r => r.path === route.name);
+          return (
+            <HeaderBar 
+              title={routeConfig?.name || route.name} 
+              showMenuButton={!isPermanentDrawer}
+            />
+          );
+        },
         drawerType: isPermanentDrawer ? 'permanent' : 'front',
         drawerStyle: {
           width: Math.min(width * 0.7, 300),

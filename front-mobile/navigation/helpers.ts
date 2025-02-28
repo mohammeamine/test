@@ -1,4 +1,4 @@
-import { RoleType, AdminRoutes, TeacherRoutes, StudentRoutes, ParentRoutes, AppRoutePath } from './types';
+import { RoleType, AppRoutePath } from './types';
 
 /**
  * Creates a type-safe route path for navigation
@@ -25,18 +25,18 @@ export const isValidRoute = (role: RoleType, path: string): path is AppRoutePath
   }
 };
 
-const isAdminRoute = (path: string): path is AdminRoutes => {
-  return ['dashboard', 'users', 'classes', 'reports', 'courses', 'settings', 'logs'].includes(path);
+const isAdminRoute = (path: string): path is AppRoutePath => {
+  return ['dashboard', 'users', 'classes', 'reports', 'courses', 'settings', 'logs', 'documents', 'payments'].includes(path);
 };
 
-const isTeacherRoute = (path: string): path is TeacherRoutes => {
-  return ['dashboard', 'classes', 'attendance', 'profile'].includes(path);
+const isTeacherRoute = (path: string): path is AppRoutePath => {
+  return ['dashboard', 'classes', 'students', 'assignments', 'materials', 'messages', 'documents', 'attendance', 'profile'].includes(path);
 };
 
-const isStudentRoute = (path: string): path is StudentRoutes => {
-  return ['dashboard', 'courses', 'profile'].includes(path);
+const isStudentRoute = (path: string): path is AppRoutePath => {
+  return ['dashboard', 'courses', 'assignments', 'materials', 'messages', 'documents', 'payments', 'profile'].includes(path);
 };
 
-const isParentRoute = (path: string): path is ParentRoutes => {
-  return ['dashboard', 'children', 'profile'].includes(path);
+const isParentRoute = (path: string): path is AppRoutePath => {
+  return ['dashboard', 'children', 'messages', 'documents', 'payments', 'profile'].includes(path);
 }; 

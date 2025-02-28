@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NavigationGroup, RoleType } from './types';
 
 // Material Design 3 color system
@@ -105,30 +106,15 @@ export const ROLE_COLORS: Record<RoleType, {
 // Enhanced navigation theme with Material Design 3
 export const NAVIGATION_THEME = {
   colors: {
-    background: MATERIAL_COLORS.neutral[99],
-    surface: MATERIAL_COLORS.neutral[100],
-    surfaceVariant: MATERIAL_COLORS.neutral[90],
-    onSurface: MATERIAL_COLORS.neutral[10],
-    onSurfaceVariant: MATERIAL_COLORS.neutral[30],
-    outline: MATERIAL_COLORS.neutral[50],
-    outlineVariant: MATERIAL_COLORS.neutral[80],
-    shadow: MATERIAL_COLORS.neutral[0],
-    scrim: `${MATERIAL_COLORS.neutral[0]}80`, // 50% opacity
-    inverseSurface: MATERIAL_COLORS.neutral[20],
-    inverseOnSurface: MATERIAL_COLORS.neutral[95],
-    inversePrimary: MATERIAL_COLORS.primary[80],
-    border: MATERIAL_COLORS.neutral[80],
-    card: MATERIAL_COLORS.neutral[100],
-    text: MATERIAL_COLORS.neutral[10],
-    notification: '#FF9800',
-    elevation: {
-      level0: 'transparent',
-      level1: `${MATERIAL_COLORS.neutral[0]}05`,
-      level2: `${MATERIAL_COLORS.neutral[0]}08`,
-      level3: `${MATERIAL_COLORS.neutral[0]}11`,
-      level4: `${MATERIAL_COLORS.neutral[0]}12`,
-      level5: `${MATERIAL_COLORS.neutral[0]}14`,
-    },
+    primary: '#0066cc',
+    background: '#f5f5f5',
+    surface: '#ffffff',
+    surfaceVariant: '#f0f0f0',
+    text: '#333333',
+    onSurface: '#333333',
+    onSurfaceVariant: '#666666',
+    border: '#e0e0e0',
+    notification: '#ff3b30',
   },
   spacing: {
     xs: 4,
@@ -184,55 +170,173 @@ export const NAVIGATION_GROUPS: Record<RoleType, NavigationGroup[]> = {
   admin: [
     {
       name: 'Main',
-      icon: 'grid-outline',
       routes: [
-        { name: 'Dashboard', path: 'dashboard', icon: 'home-outline' },
-        { name: 'Users', path: 'users', icon: 'people-outline' },
-        { name: 'Classes', path: 'classes', icon: 'book-outline' },
+        {
+          name: 'Dashboard',
+          path: 'dashboard',
+          icon: 'pie-chart',
+        },
+        {
+          name: 'Users',
+          path: 'users',
+          icon: 'people',
+        },
+        {
+          name: 'Classes',
+          path: 'classes',
+          icon: 'list',
+        },
+        {
+          name: 'Courses',
+          path: 'courses',
+          icon: 'book',
+        },
+        {
+          name: 'Documents',
+          path: 'documents',
+          icon: 'document-text',
+        },
+        {
+          name: 'Payments',
+          path: 'payments',
+          icon: 'card',
+        },
       ],
     },
     {
-      name: 'Management',
-      icon: 'settings-outline',
+      name: 'System',
       routes: [
-        { name: 'Reports', path: 'reports', icon: 'bar-chart-outline' },
-        { name: 'Courses', path: 'courses', icon: 'library-outline' },
-        { name: 'Settings', path: 'settings', icon: 'cog-outline' },
-        { name: 'System Logs', path: 'logs', icon: 'list-outline' },
+        {
+          name: 'Reports',
+          path: 'reports',
+          icon: 'stats-chart',
+        },
+        {
+          name: 'Settings',
+          path: 'settings',
+          icon: 'settings',
+        },
+        {
+          name: 'Logs',
+          path: 'logs',
+          icon: 'list',
+        },
       ],
     },
   ],
   teacher: [
     {
       name: 'Main',
-      icon: 'grid-outline',
       routes: [
-        { name: 'Dashboard', path: 'dashboard', icon: 'home-outline' },
-        { name: 'Classes', path: 'classes', icon: 'book-outline' },
-        { name: 'Attendance', path: 'attendance', icon: 'calendar-outline' },
-        { name: 'Profile', path: 'profile', icon: 'person-outline' },
+        {
+          name: 'Dashboard',
+          path: 'dashboard',
+          icon: 'pie-chart',
+        },
+        {
+          name: 'Classes',
+          path: 'classes',
+          icon: 'list',
+        },
+        {
+          name: 'Students',
+          path: 'students',
+          icon: 'people',
+        },
+        {
+          name: 'Assignments',
+          path: 'assignments',
+          icon: 'clipboard',
+        },
+        {
+          name: 'Materials',
+          path: 'materials',
+          icon: 'book',
+        },
+        {
+          name: 'Messages',
+          path: 'messages',
+          icon: 'chatbubbles',
+        },
+        {
+          name: 'Documents',
+          path: 'documents',
+          icon: 'document-text',
+        },
       ],
     },
   ],
   student: [
     {
       name: 'Main',
-      icon: 'grid-outline',
       routes: [
-        { name: 'Dashboard', path: 'dashboard', icon: 'home-outline' },
-        { name: 'Courses', path: 'courses', icon: 'library-outline' },
-        { name: 'Profile', path: 'profile', icon: 'person-outline' },
+        {
+          name: 'Dashboard',
+          path: 'dashboard',
+          icon: 'pie-chart',
+        },
+        {
+          name: 'Courses',
+          path: 'courses',
+          icon: 'book',
+        },
+        {
+          name: 'Assignments',
+          path: 'assignments',
+          icon: 'clipboard',
+        },
+        {
+          name: 'Materials',
+          path: 'materials',
+          icon: 'folder',
+        },
+        {
+          name: 'Messages',
+          path: 'messages',
+          icon: 'chatbubbles',
+        },
+        {
+          name: 'Documents',
+          path: 'documents',
+          icon: 'document-text',
+        },
+        {
+          name: 'Payments',
+          path: 'payments',
+          icon: 'card',
+        },
       ],
     },
   ],
   parent: [
     {
       name: 'Main',
-      icon: 'grid-outline',
       routes: [
-        { name: 'Dashboard', path: 'dashboard', icon: 'home-outline' },
-        { name: 'Children', path: 'children', icon: 'people-outline' },
-        { name: 'Profile', path: 'profile', icon: 'person-outline' },
+        {
+          name: 'Dashboard',
+          path: 'dashboard',
+          icon: 'pie-chart',
+        },
+        {
+          name: 'Children',
+          path: 'children',
+          icon: 'people',
+        },
+        {
+          name: 'Messages',
+          path: 'messages',
+          icon: 'chatbubbles',
+        },
+        {
+          name: 'Documents',
+          path: 'documents',
+          icon: 'document-text',
+        },
+        {
+          name: 'Payments',
+          path: 'payments',
+          icon: 'card',
+        },
       ],
     },
   ],

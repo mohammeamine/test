@@ -1,18 +1,24 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Text } from '../ui/Text';
-import { Ionicons } from '@expo/vector-icons';
-import { RoleType, NavigationGroup, NavigationRoute } from '../../navigation/types';
-import { ROLE_COLORS, NAVIGATION_THEME } from '../../navigation/constants';
-import { scale, verticalScale } from '../../utils/responsive';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { createRoutePath, isValidRoute } from '../../navigation/helpers';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS } from '../../theme';
+import { NavigationGroup } from '../../navigation/types';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
+
+type FontWeight = '400' | '500' | '600' | '700' | 'normal' | 'bold';
 
 interface DrawerContentProps {
-  role: RoleType;
+  role: string;
   groups: NavigationGroup[];
-  activeRoute?: string;
-  onClose?: () => void;
+  activeRoute: string;
+  onClose: () => void;
 }
 
 export const DrawerContent: React.FC<DrawerContentProps> = ({
@@ -22,62 +28,92 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
   onClose,
 }) => {
   const router = useRouter();
-  const roleColor = ROLE_COLORS[role].primary;
+  const navigation = useNavigation();
 
-  const handleNavigation = (route: NavigationRoute['path']) => {
-    if (isValidRoute(role, route)) {
-      const routePath = createRoutePath(role, route);
-      router.push(routePath);
-      onClose?.();
-    }
+  const handleNavigation = (path: string) => {
+    // @ts-ignore - navigation type mismatch
+    navigation.navigate(path);
+    navigation.dispatch(DrawerActions.closeDrawer());
+  };
+
+  const handleLogout = () => {
+    router.replace('/auth/login');
+  };
+
+  const renderItem = (route: { name: string; path: string; icon?: string }) => {
+    const isActive = activeRoute === route.path;
+    const iconName = route.icon || 'document-outline';
+
+    return (
+      <TouchableOpacity
+        key={route.path}
+        style={[
+          styles.item,
+          isActive && styles.activeItem,
+        ]}
+        onPress={() => handleNavigation(route.path)}
+      >
+        <Ionicons
+          name={iconName as any}
+          size={24}
+          color={isActive ? COLORS.primary.main : COLORS.grey[600]}
+          style={styles.icon}
+        />
+        <Text
+          style={[
+            styles.itemText,
+            isActive && styles.activeItemText,
+          ]}
+          numberOfLines={1}
+        >
+          {route.name}
+        </Text>
+        {isActive && (
+          <View style={styles.activeIndicator} />
+        )}
+      </TouchableOpacity>
+    );
   };
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { backgroundColor: roleColor }]}>
-        <Text style={styles.headerTitle}>School Management</Text>
-        <Text style={styles.roleText}>{role.charAt(0).toUpperCase() + role.slice(1)}</Text>
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText}>School Management</Text>
+        </View>
+        <Text style={styles.roleText}>
+          {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard
+        </Text>
       </View>
-
-      <ScrollView style={styles.content}>
-        {groups.map((group) => (
-          <View key={group.name} style={styles.group}>
-            <View style={styles.groupHeader}>
-              <Ionicons name={group.icon} size={20} color="#666" />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        {groups.map((group, index) => (
+          <View key={index} style={styles.group}>
+            {group.name && (
               <Text style={styles.groupTitle}>{group.name}</Text>
-            </View>
-
-            {group.routes.map((route) => (
-              <TouchableOpacity
-                key={route.path}
-                style={[
-                  styles.routeItem,
-                  activeRoute === route.path && { backgroundColor: `${roleColor}10` },
-                ]}
-                onPress={() => handleNavigation(route.path)}
-              >
-                <Ionicons
-                  name={route.icon}
-                  size={20}
-                  color={activeRoute === route.path ? roleColor : '#666'}
-                />
-                <Text
-                  style={[
-                    styles.routeText,
-                    activeRoute === route.path && { color: roleColor, fontWeight: '600' },
-                  ]}
-                >
-                  {route.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            )}
+            {group.routes.map(renderItem)}
           </View>
         ))}
       </ScrollView>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={() => router.push('/login')}>
-        <Ionicons name="log-out-outline" size={20} color="#666" />
-        <Text style={styles.logoutText}>Logout</Text>
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleLogout}
+      >
+        <Ionicons
+          name="log-out-outline"
+          size={24}
+          color={COLORS.error.main}
+          style={styles.icon}
+        />
+        <Text style={[
+          styles.itemText,
+          { color: COLORS.error.main, fontWeight: '600' as FontWeight }
+        ]}>
+          Logout
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -86,63 +122,84 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: NAVIGATION_THEME.colors.background,
+    backgroundColor: COLORS.background.light,
   },
   header: {
-    padding: NAVIGATION_THEME.spacing.md,
-    paddingTop: NAVIGATION_THEME.spacing.xl + verticalScale(20),
-    paddingBottom: NAVIGATION_THEME.spacing.xl,
+    padding: SPACING.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.grey[200],
+    alignItems: 'center',
   },
-  headerTitle: {
-    color: '#fff',
-    fontSize: scale(20),
-    fontWeight: 'bold',
-    marginBottom: NAVIGATION_THEME.spacing.xs,
+  logoContainer: {
+    marginBottom: SPACING.sm,
+  },
+  logoText: {
+    fontSize: TYPOGRAPHY.h2.fontSize,
+    fontWeight: TYPOGRAPHY.h2.fontWeight as FontWeight,
+    color: COLORS.primary.main,
+    textAlign: 'center',
   },
   roleText: {
-    color: '#fff',
-    fontSize: scale(14),
-    opacity: 0.9,
+    fontSize: TYPOGRAPHY.subtitle1.fontSize,
+    fontWeight: TYPOGRAPHY.subtitle1.fontWeight as FontWeight,
+    lineHeight: TYPOGRAPHY.subtitle1.lineHeight,
+    letterSpacing: TYPOGRAPHY.subtitle1.letterSpacing,
+    color: COLORS.grey[700],
   },
-  content: {
+  scrollView: {
     flex: 1,
   },
   group: {
-    marginBottom: NAVIGATION_THEME.spacing.md,
-  },
-  groupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: NAVIGATION_THEME.spacing.md,
-    paddingVertical: NAVIGATION_THEME.spacing.sm,
+    paddingVertical: SPACING.sm,
   },
   groupTitle: {
-    fontSize: scale(14),
-    color: '#666',
-    marginLeft: NAVIGATION_THEME.spacing.sm,
-    fontWeight: '600',
+    fontSize: TYPOGRAPHY.caption.fontSize,
+    fontWeight: TYPOGRAPHY.caption.fontWeight as FontWeight,
+    lineHeight: TYPOGRAPHY.caption.lineHeight,
+    letterSpacing: TYPOGRAPHY.caption.letterSpacing,
+    color: COLORS.grey[500],
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    textTransform: 'uppercase',
   },
-  routeItem: {
+  item: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: NAVIGATION_THEME.spacing.md,
-    marginVertical: 1,
+    padding: SPACING.md,
+    marginHorizontal: SPACING.sm,
+    borderRadius: BORDER_RADIUS.md,
   },
-  routeText: {
-    fontSize: scale(16),
-    color: '#333',
-    marginLeft: NAVIGATION_THEME.spacing.md,
+  activeItem: {
+    backgroundColor: COLORS.primary.light + '20',
+  },
+  icon: {
+    marginRight: SPACING.sm,
+  },
+  itemText: {
+    fontSize: TYPOGRAPHY.body1.fontSize,
+    fontWeight: TYPOGRAPHY.body1.fontWeight as FontWeight,
+    lineHeight: TYPOGRAPHY.body1.lineHeight,
+    letterSpacing: TYPOGRAPHY.body1.letterSpacing,
+    color: COLORS.grey[600],
+    flex: 1,
+  },
+  activeItemText: {
+    color: COLORS.primary.main,
+    fontWeight: '600' as FontWeight,
+  },
+  activeIndicator: {
+    width: 4,
+    height: 24,
+    backgroundColor: COLORS.primary.main,
+    borderRadius: BORDER_RADIUS.sm,
+    position: 'absolute',
+    right: 0,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: NAVIGATION_THEME.spacing.md,
+    padding: SPACING.lg,
     borderTopWidth: 1,
-    borderTopColor: NAVIGATION_THEME.colors.border,
-  },
-  logoutText: {
-    fontSize: scale(16),
-    color: '#666',
-    marginLeft: NAVIGATION_THEME.spacing.md,
+    borderTopColor: COLORS.grey[200],
   },
 }); 

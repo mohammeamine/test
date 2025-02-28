@@ -9,8 +9,11 @@ import { HeaderBar } from '../../../components/navigation/HeaderBar';
 // Import screen components
 import Dashboard from './dashboard';
 import Classes from './classes';
-import Attendance from './attendance';
-import Profile from './profile';
+import Documents from './documents';
+import Students from './students';
+import Assignments from './assignments';
+import Materials from './materials';
+import Messages from './messages';
 
 const Drawer = createDrawerNavigator();
 
@@ -18,14 +21,17 @@ const Drawer = createDrawerNavigator();
 const SCREEN_COMPONENTS: Record<string, React.ComponentType<any>> = {
   dashboard: Dashboard,
   classes: Classes,
-  attendance: Attendance,
-  profile: Profile,
+  documents: Documents,
+  students: Students,
+  assignments: Assignments,
+  materials: Materials,
+  messages: Messages,
 };
 
 export default function TeacherLayout() {
   const pathname = usePathname();
   const { width } = useWindowDimensions();
-  const routes = NAVIGATION_GROUPS.teacher[0].routes;
+  const allRoutes = NAVIGATION_GROUPS.teacher[0].routes;
   
   // Determine if we should use permanent drawer based on screen width
   const isPermanentDrawer = width >= 1024;
@@ -33,12 +39,15 @@ export default function TeacherLayout() {
   return (
     <Drawer.Navigator
       screenOptions={({ route }) => ({
-        header: () => (
-          <HeaderBar 
-            title={SCREEN_COMPONENTS[route.name].name || route.name}
-            showMenuButton={!isPermanentDrawer}
-          />
-        ),
+        header: () => {
+          const routeConfig = allRoutes.find(r => r.path === route.name);
+          return (
+            <HeaderBar 
+              title={routeConfig?.name || route.name} 
+              showMenuButton={!isPermanentDrawer}
+            />
+          );
+        },
         drawerType: isPermanentDrawer ? 'permanent' : 'front',
         drawerStyle: {
           width: Math.min(width * 0.7, 300),
@@ -56,12 +65,12 @@ export default function TeacherLayout() {
         <DrawerContent
           role="teacher"
           groups={NAVIGATION_GROUPS.teacher}
-          activeRoute={pathname.split('/').pop()}
+          activeRoute={pathname.split('/').pop() || ''}
           onClose={props.navigation.closeDrawer}
         />
       )}
     >
-      {routes.map((route) => (
+      {allRoutes.map((route) => (
         <Drawer.Screen
           key={route.path}
           name={route.path}

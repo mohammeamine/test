@@ -121,7 +121,7 @@ export default function LandingScreen() {
 
   return (
     <LinearGradient
-      colors={[NAVIGATION_THEME.colors.surface, NAVIGATION_THEME.colors.surfaceVariant]}
+      colors={['#ffffff', '#f5f5f5']}
       style={styles.container}
     >
       <View style={styles.flatListContainer}>
