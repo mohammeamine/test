@@ -8,9 +8,11 @@ import {
   CreditCard, 
   Library,
   Award,
-  Clock
+  Clock,
+  ClipboardCheck, // Import the icon for assignments
+  HelpCircle // Import the icon for support
 } from "lucide-react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation } from 'react-router-dom'
 
 import {
   Sidebar,
@@ -64,6 +66,16 @@ const navigation = [
     icon: FileText,
     href: "/dashboard/student/documents",
   },
+  {
+    title: "Assignments",
+    icon: ClipboardCheck,
+    href: "/dashboard/student/assignments",
+  },
+  {
+    title: "Support et Assistance", // Add the new navigation item
+    icon: HelpCircle,
+    href: "/dashboard/student/support",
+  },
 ]
 
 export function StudentSidebar() {
@@ -78,7 +90,7 @@ export function StudentSidebar() {
             <SidebarMenu>
               {navigation.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.href}>
+                  <SidebarMenuButton isActive={location.pathname === item.href}>
                     <Link to={item.href} className="flex items-center">
                       <item.icon className="h-5 w-5" />
                       <span className="ml-3">{item.title}</span>
@@ -92,4 +104,4 @@ export function StudentSidebar() {
       </SidebarContent>
     </Sidebar>
   )
-} 
+}

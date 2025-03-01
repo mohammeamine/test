@@ -19,6 +19,8 @@ import Profile from './profile';
 import Assignments from './assignments';
 import Materials from './materials';
 import Messages from './messages';
+import Attendance from './attendance'; // Import Attendance screen component
+import Support from './support'; // Import Support screen component
 
 const Drawer = createDrawerNavigator();
 
@@ -33,6 +35,8 @@ const SCREEN_COMPONENTS: Record<string, React.ComponentType<any>> = {
   assignments: Assignments,
   materials: Materials,
   messages: Messages,
+  attendance: Attendance, // Add Attendance screen component
+  support: Support, // Add Support screen component
 };
 
 export default function StudentLayout() {
@@ -107,4 +111,4 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background.light,
   },
-}); 
+});

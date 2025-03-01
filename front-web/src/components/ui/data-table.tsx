@@ -139,6 +139,7 @@ export function DataTable<T>({
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 className="rounded p-1 hover:bg-gray-100 disabled:opacity-50"
+                title="Previous Page"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
@@ -149,6 +150,7 @@ export function DataTable<T>({
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className="rounded p-1 hover:bg-gray-100 disabled:opacity-50"
+                title="Next Page"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>

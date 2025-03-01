@@ -14,6 +14,7 @@ import Students from './students';
 import Assignments from './assignments';
 import Materials from './materials';
 import Messages from './messages';
+import Attendance from './attendance'; // Import Attendance screen component
 
 const Drawer = createDrawerNavigator();
 
@@ -26,6 +27,7 @@ const SCREEN_COMPONENTS: Record<string, React.ComponentType<any>> = {
   assignments: Assignments,
   materials: Materials,
   messages: Messages,
+  attendance: Attendance, // Add Attendance screen component
 };
 
 export default function TeacherLayout() {
@@ -83,4 +85,4 @@ export default function TeacherLayout() {
       ))}
     </Drawer.Navigator>
   );
-} 
+}

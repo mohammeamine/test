@@ -45,6 +45,7 @@ export function SidebarTrigger() {
     <button
       onClick={toggle}
       className="flex h-6 w-6 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-600"
+      title="Toggle Sidebar"
     >
       <svg
         className="h-4 w-4"
@@ -128,4 +129,4 @@ export function SidebarMenuButton({
       {children}
     </Comp>
   )
-} 
+}

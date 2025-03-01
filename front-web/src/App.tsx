@@ -1,48 +1,50 @@
-import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { LandingPage } from './pages/landing'
-import { SignInPage } from './pages/auth/sign-in'
-import { SignUpPage } from './pages/auth/sign-up'
-import { ForgotPasswordPage } from './pages/auth/forgot-password'
-import { ResetPasswordPage } from './pages/auth/reset-password'
-import { AdminHomePage } from './pages/dashboard/admin/home'
-import { UsersPage } from './pages/dashboard/admin/users'
-import { ClassesPage } from './pages/dashboard/admin/classes'
-import { SettingsPage } from './pages/dashboard/admin/settings'
-import { User } from './types/auth'
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { LandingPage } from './pages/landing';
+import { SignInPage } from './pages/auth/sign-in';
+import { SignUpPage } from './pages/auth/sign-up';
+import { ForgotPasswordPage } from './pages/auth/forgot-password';
+import { ResetPasswordPage } from './pages/auth/reset-password';
+import { AdminHomePage } from './pages/dashboard/admin/home';
+import { UsersPage } from './pages/dashboard/admin/users';
+import { ClassesPage } from './pages/dashboard/admin/classes';
+import { SettingsPage } from './pages/dashboard/admin/settings';
+import { User } from './types/auth';
 
 // Student Pages
-import StudentDashboard from './pages/dashboard/student'
-import StudentCourses from './pages/dashboard/student/courses'
-import StudentMaterials from './pages/dashboard/student/materials'
-import StudentLibrary from './pages/dashboard/student/library'
-import StudentCertificates from './pages/dashboard/student/certificates'
-import StudentAttendance from './pages/dashboard/student/attendance'
-import StudentPayments from './pages/dashboard/student/payments'
-import StudentDocuments from './pages/dashboard/student/documents'
+import StudentDashboard from './pages/dashboard/student';
+import StudentCourses from './pages/dashboard/student/courses';
+import StudentMaterials from './pages/dashboard/student/materials';
+import StudentLibrary from './pages/dashboard/student/library';
+import StudentCertificates from './pages/dashboard/student/certificates';
+import StudentAttendance from './pages/dashboard/student/attendance';
+import StudentPayments from './pages/dashboard/student/payments';
+import StudentDocuments from './pages/dashboard/student/documents';
+import StudentAssignments from './pages/dashboard/student/assignments';
+import StudentSupport from './pages/dashboard/student/support'; // Import the new page
 
 // Teacher Pages
-import TeacherDashboard from './pages/dashboard/teacher'
-import TeacherClasses from './pages/dashboard/teacher/classes'
-import TeacherMaterials from './pages/dashboard/teacher/materials'
-import TeacherStudents from './pages/dashboard/teacher/students'
-import TeacherAttendance from './pages/dashboard/teacher/attendance'
-import TeacherAssignments from './pages/dashboard/teacher/assignments'
-import TeacherMessages from './pages/dashboard/teacher/messages'
-import TeacherDocuments from './pages/dashboard/teacher/documents'
+import TeacherDashboard from './pages/dashboard/teacher';
+import TeacherClasses from './pages/dashboard/teacher/classes';
+import TeacherMaterials from './pages/dashboard/teacher/materials';
+import TeacherStudents from './pages/dashboard/teacher/students';
+import TeacherAttendance from './pages/dashboard/teacher/attendance';
+import TeacherAssignments from './pages/dashboard/teacher/assignments';
+import TeacherMessages from './pages/dashboard/teacher/messages';
+import TeacherDocuments from './pages/dashboard/teacher/documents';
 
 // Parent Pages
-import ParentDashboard from './pages/dashboard/parent'
-import ParentChildren from './pages/dashboard/parent/children'
-import ParentProgress from './pages/dashboard/parent/progress'
-import ParentMessages from './pages/dashboard/parent/messages'
-import ParentPayments from './pages/dashboard/parent/payments'
-import ParentDocuments from './pages/dashboard/parent/documents'
+import ParentDashboard from './pages/dashboard/parent';
+import ParentChildren from './pages/dashboard/parent/children';
+import ParentProgress from './pages/dashboard/parent/progress';
+import ParentMessages from './pages/dashboard/parent/messages';
+import ParentPayments from './pages/dashboard/parent/payments';
+import ParentDocuments from './pages/dashboard/parent/documents';
 
-import DebugNav from "./pages/debug-nav"
+import DebugNav from "./pages/debug-nav";
 
 function App() {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // TODO: Replace this with actual authentication logic
@@ -53,9 +55,9 @@ function App() {
       firstName: 'Admin',
       lastName: 'User',
       role: 'administrator',
-    }
-    setUser(mockUser)
-  }, [])
+    };
+    setUser(mockUser);
+  }, []);
 
   return (
     <Router>
@@ -121,6 +123,14 @@ function App() {
           path="/dashboard/student/documents"
           element={user ? <StudentDocuments user={user} /> : <div>Loading...</div>}
         />
+        <Route
+          path="/dashboard/student/assignments"
+          element={user ? <StudentAssignments user={user} /> : <div>Loading...</div>}
+        />
+        <Route
+          path="/dashboard/student/support"
+          element={user ? <StudentSupport user={user} /> : <div>Loading...</div>} // Add the new route
+        />
 
         {/* Teacher Routes */}
         <Route
@@ -183,7 +193,7 @@ function App() {
         />
       </Routes>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;

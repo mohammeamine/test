@@ -46,4 +46,4 @@ export const TeacherLayout = ({ children, user }: TeacherLayoutProps) => {
       </SidebarInset>
     </SidebarProvider>
   )
-} 
+}

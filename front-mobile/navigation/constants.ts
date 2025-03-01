@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationGroup, RoleType } from './types';
-
+import { NavigationGroup, RoleType, NavigationRoute, AppRoutePath } from './types';
 // Material Design 3 color system
 export const MATERIAL_COLORS = {
   primary: {
@@ -249,6 +248,11 @@ export const NAVIGATION_GROUPS: Record<RoleType, NavigationGroup[]> = {
           icon: 'clipboard',
         },
         {
+          name: 'Attendance', // Add Attendance route
+          path: 'attendance',
+          icon: 'calendar',
+        },
+        {
           name: 'Materials',
           path: 'materials',
           icon: 'book',
@@ -286,6 +290,11 @@ export const NAVIGATION_GROUPS: Record<RoleType, NavigationGroup[]> = {
           icon: 'clipboard',
         },
         {
+          name: 'Attendance',
+          path: 'attendance',
+          icon: 'calendar',
+        },
+        {
           name: 'Materials',
           path: 'materials',
           icon: 'folder',
@@ -304,6 +313,11 @@ export const NAVIGATION_GROUPS: Record<RoleType, NavigationGroup[]> = {
           name: 'Payments',
           path: 'payments',
           icon: 'card',
+        },
+        {
+          name: 'Support', // Add Support route
+          path: 'support',
+          icon: 'help-circle',
         },
       ],
     },
@@ -340,4 +354,4 @@ export const NAVIGATION_GROUPS: Record<RoleType, NavigationGroup[]> = {
       ],
     },
   ],
-}; 
+};

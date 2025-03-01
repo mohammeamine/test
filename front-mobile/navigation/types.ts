@@ -11,6 +11,7 @@ export type AppRoutePath =
   | 'documents'
   | 'payments'
   | 'attendance'
+  | 'support'
   | 'profile'
   | 'children'
   | 'students'
