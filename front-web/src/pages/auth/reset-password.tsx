@@ -10,7 +10,8 @@ const resetPasswordSchema = z.object({
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
   confirmPassword: z.string()
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
@@ -23,6 +24,7 @@ export const ResetPasswordPage = () => {
   const token = searchParams.get('token')
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   
   const { register, handleSubmit, formState: { errors } } = useForm<UpdatePasswordData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -30,21 +32,30 @@ export const ResetPasswordPage = () => {
 
   const onSubmit = async (data: UpdatePasswordData) => {
     if (!token) {
-      console.error('No reset token provided')
+      setError('No reset token provided')
       return
     }
 
     setIsLoading(true)
+    setError(null)
+    
     try {
-      // TODO: Implement password reset logic
+      // TODO: Replace with actual API call when backend is ready
       console.log('Reset password data:', { ...data, token })
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // Mock successful password reset for development
       setIsSuccess(true)
+      
       // Redirect to sign in after 3 seconds
       setTimeout(() => {
         navigate('/auth/sign-in')
       }, 3000)
     } catch (error) {
       console.error('Reset password error:', error)
+      setError('An error occurred while resetting your password. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -54,6 +65,13 @@ export const ResetPasswordPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center">
+            <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Invalid reset link</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             This password reset link is invalid or has expired.
@@ -72,6 +90,13 @@ export const ResetPasswordPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="flex justify-center">
+            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Password reset successful</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Your password has been reset successfully. You will be redirected to the sign in page shortly.
@@ -97,6 +122,12 @@ export const ResetPasswordPage = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+          
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
@@ -134,11 +165,24 @@ export const ResetPasswordPage = () => {
               </div>
             </div>
 
+            <div className="mt-1">
+              <div className="text-sm text-gray-600">
+                <p>Password must contain:</p>
+                <ul className="list-disc pl-5 mt-1 space-y-1">
+                  <li>At least 8 characters</li>
+                  <li>At least one uppercase letter</li>
+                  <li>At least one lowercase letter</li>
+                  <li>At least one number</li>
+                  <li>At least one special character</li>
+                </ul>
+              </div>
+            </div>
+
             <div>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Resetting...' : 'Reset password'}
               </button>

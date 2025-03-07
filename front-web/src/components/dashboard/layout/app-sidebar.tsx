@@ -1,7 +1,8 @@
 "use client"
 
-import { Home, Users, Settings, BookOpen, Bell } from "lucide-react"
+import { Home, Users, Settings, BookOpen, Bell, Calendar, BookText, FileText, BarChart, LucideIcon, BookCopy, GraduationCap, PenSquare, Mail, FileCheck, CreditCard, HelpCircle } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
+import { User as UserType } from "../../../types/auth"
 
 import {
   Sidebar,
@@ -14,7 +15,13 @@ import {
   SidebarMenuItem,
 } from "../../../components/ui/sidebar"
 
-const navigation = [
+type NavigationItem = {
+  title: string
+  icon: LucideIcon
+  href: string
+}
+
+const adminNavigation: NavigationItem[] = [
   {
     title: "Dashboard",
     icon: Home,
@@ -31,6 +38,26 @@ const navigation = [
     href: "/dashboard/admin/classes",
   },
   {
+    title: "Courses",
+    icon: BookText,
+    href: "/dashboard/admin/courses",
+  },
+  {
+    title: "Course Content",
+    icon: FileText,
+    href: "/dashboard/admin/course-content",
+  },
+  {
+    title: "Events",
+    icon: Calendar,
+    href: "/dashboard/admin/events",
+  },
+  {
+    title: "Analytics",
+    icon: BarChart,
+    href: "/dashboard/admin/analytics",
+  },
+  {
     title: "Notifications",
     icon: Bell,
     href: "/dashboard/admin/notifications",
@@ -42,14 +69,194 @@ const navigation = [
   },
 ]
 
-export function AppSidebar() {
+const teacherNavigation: NavigationItem[] = [
+  {
+    title: "Dashboard",
+    icon: Home,
+    href: "/dashboard/teacher",
+  },
+  {
+    title: "Classes",
+    icon: BookOpen,
+    href: "/dashboard/teacher/classes",
+  },
+  {
+    title: "Students",
+    icon: Users,
+    href: "/dashboard/teacher/students",
+  },
+  {
+    title: "Materials",
+    icon: BookCopy,
+    href: "/dashboard/teacher/materials",
+  },
+  {
+    title: "Documents",
+    icon: FileText,
+    href: "/dashboard/teacher/documents",
+  },
+  {
+    title: "Attendance",
+    icon: FileCheck,
+    href: "/dashboard/teacher/attendance",
+  },
+  {
+    title: "Assignments",
+    icon: PenSquare,
+    href: "/dashboard/teacher/assignments",
+  },
+  {
+    title: "Messages",
+    icon: Mail,
+    href: "/dashboard/teacher/messages",
+  },
+  {
+    title: "Profile",
+    icon: Users,
+    href: "/dashboard/teacher/profile",
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    href: "/dashboard/teacher/settings",
+  },
+]
+
+const studentNavigation: NavigationItem[] = [
+  {
+    title: "Dashboard",
+    icon: Home,
+    href: "/dashboard/student",
+  },
+  {
+    title: "Courses",
+    icon: BookOpen,
+    href: "/dashboard/student/courses",
+  },
+  {
+    title: "Materials",
+    icon: BookCopy,
+    href: "/dashboard/student/materials",
+  },
+  {
+    title: "Library",
+    icon: BookText,
+    href: "/dashboard/student/library",
+  },
+  {
+    title: "Certificates",
+    icon: GraduationCap,
+    href: "/dashboard/student/certificates",
+  },
+  {
+    title: "Attendance",
+    icon: FileCheck,
+    href: "/dashboard/student/attendance",
+  },
+  {
+    title: "Payments",
+    icon: CreditCard,
+    href: "/dashboard/student/payments",
+  },
+  {
+    title: "Documents",
+    icon: FileText,
+    href: "/dashboard/student/documents",
+  },
+  {
+    title: "Assignments",
+    icon: PenSquare,
+    href: "/dashboard/student/assignments",
+  },
+  {
+    title: "Support",
+    icon: HelpCircle,
+    href: "/dashboard/student/support",
+  },
+  {
+    title: "Profile",
+    icon: Users,
+    href: "/dashboard/student/profile",
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    href: "/dashboard/student/settings",
+  },
+]
+
+const parentNavigation: NavigationItem[] = [
+  {
+    title: "Dashboard",
+    icon: Home,
+    href: "/dashboard/parent",
+  },
+  {
+    title: "Children",
+    icon: Users,
+    href: "/dashboard/parent/children",
+  },
+  {
+    title: "Progress",
+    icon: BarChart,
+    href: "/dashboard/parent/progress",
+  },
+  {
+    title: "Messages",
+    icon: Mail,
+    href: "/dashboard/parent/messages",
+  },
+  {
+    title: "Payments",
+    icon: CreditCard,
+    href: "/dashboard/parent/payments",
+  },
+  {
+    title: "Documents",
+    icon: FileText,
+    href: "/dashboard/parent/documents",
+  },
+  {
+    title: "Profile",
+    icon: Users,
+    href: "/dashboard/parent/profile",
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    href: "/dashboard/parent/settings",
+  },
+]
+
+interface AppSidebarProps {
+  user: UserType
+}
+
+export function AppSidebar({ user }: AppSidebarProps) {
   const location = useLocation()
+  
+  const getNavigationByRole = () => {
+    switch (user.role) {
+      case 'administrator':
+        return adminNavigation
+      case 'teacher':
+        return teacherNavigation
+      case 'student':
+        return studentNavigation
+      case 'parent':
+        return parentNavigation
+      default:
+        return adminNavigation
+    }
+  }
+
+  const navigation = getNavigationByRole()
 
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>{user.role.charAt(0).toUpperCase() + user.role.slice(1)} Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigation.map((item) => (
@@ -65,7 +272,26 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        {/* Quick access to debug navigation */}
+        <div className="mt-6">
+          <SidebarGroup>
+            <SidebarGroupLabel>Development</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={location.pathname === '/debug'}>
+                    <Link to="/debug" className="flex items-center text-amber-600">
+                      <HelpCircle className="h-5 w-5" />
+                      <span className="ml-3">Debug Navigation</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
       </SidebarContent>
     </Sidebar>
   )
-} 
+}

@@ -1,131 +1,86 @@
-import { 
-  GraduationCap, 
-  BookOpen, 
-  CreditCard, 
-  Library,
-  Award,
-  Clock,
-  ArrowRight
-} from "lucide-react"
-import { Link } from "react-router-dom"
+import { StudentLayout } from "../../../components/dashboard/layout/student-layout"
+import { StudentDashboard as StudentDashboardComponent } from "../../../components/dashboard/student/student-dashboard"
 import { User } from "../../../types/auth"
 
 interface StudentDashboardProps {
   user: User
 }
 
-const features = [
+// Mock data for demonstration
+const mockGrades = [
+  { subject: 'Mathematics', grade: 85, date: '2025-02-15', teacher: 'Mr. Smith', feedback: 'Good work on calculus problems' },
+  { subject: 'Science', grade: 92, date: '2025-02-10', teacher: 'Mrs. Davis', feedback: 'Excellent lab report' },
+  { subject: 'History', grade: 78, date: '2025-02-05', teacher: 'Mr. Wilson', feedback: 'Need more detail in essays' },
+  { subject: 'English', grade: 88, date: '2025-01-28', teacher: 'Ms. Brown', feedback: 'Strong analysis of literature' },
+  { subject: 'Computer Science', grade: 95, date: '2025-01-20', teacher: 'Mr. Taylor', feedback: 'Outstanding programming skills' },
+];
+
+const mockAssignments = [
+  { id: 'a1', title: 'Math Problem Set', subject: 'Mathematics', dueDate: '2025-03-01', description: 'Complete problems 1-20', status: 'pending' as const },
+  { id: 'a2', title: 'Science Lab Report', subject: 'Science', dueDate: '2025-02-25', description: 'Write up experiment results', status: 'submitted' as const },
+  { id: 'a3', title: 'History Essay', subject: 'History', dueDate: '2025-02-20', description: 'Research paper on World War II', status: 'graded' as const, grade: 85 },
+  { id: 'a4', title: 'English Book Review', subject: 'English', dueDate: '2025-02-15', description: 'Review of To Kill a Mockingbird', status: 'graded' as const, grade: 90 },
+  { id: 'a5', title: 'Programming Project', subject: 'Computer Science', dueDate: '2025-03-10', description: 'Build a simple web application', status: 'pending' as const },
+];
+
+const mockSchedule = [
   {
-    name: "Course Registration",
-    description: "Browse and register for available courses",
-    icon: GraduationCap,
-    href: "/dashboard/student/courses",
-    color: "bg-blue-500",
+    day: 'Monday',
+    periods: [
+      { time: '08:00 - 09:30', subject: 'Mathematics', teacher: 'Mr. Smith', room: 'Room 101' },
+      { time: '09:45 - 11:15', subject: 'Science', teacher: 'Mrs. Davis', room: 'Lab 3' },
+      { time: '11:30 - 13:00', subject: 'English', teacher: 'Ms. Brown', room: 'Room 205' },
+      { time: '14:00 - 15:30', subject: 'Computer Science', teacher: 'Mr. Taylor', room: 'Computer Lab' },
+    ],
   },
   {
-    name: "Course Materials",
-    description: "Access your course materials and resources",
-    icon: BookOpen,
-    href: "/dashboard/student/materials",
-    color: "bg-green-500",
+    day: 'Tuesday',
+    periods: [
+      { time: '08:00 - 09:30', subject: 'History', teacher: 'Mr. Wilson', room: 'Room 302' },
+      { time: '09:45 - 11:15', subject: 'Physical Education', teacher: 'Coach Johnson', room: 'Gymnasium' },
+      { time: '11:30 - 13:00', subject: 'Art', teacher: 'Ms. Garcia', room: 'Art Studio' },
+      { time: '14:00 - 15:30', subject: 'Mathematics', teacher: 'Mr. Smith', room: 'Room 101' },
+    ],
   },
   {
-    name: "Digital Library",
-    description: "Explore our digital library resources",
-    icon: Library,
-    href: "/dashboard/student/library",
-    color: "bg-purple-500",
+    day: 'Wednesday',
+    periods: [
+      { time: '08:00 - 09:30', subject: 'Science', teacher: 'Mrs. Davis', room: 'Lab 3' },
+      { time: '09:45 - 11:15', subject: 'English', teacher: 'Ms. Brown', room: 'Room 205' },
+      { time: '11:30 - 13:00', subject: 'Computer Science', teacher: 'Mr. Taylor', room: 'Computer Lab' },
+      { time: '14:00 - 15:30', subject: 'History', teacher: 'Mr. Wilson', room: 'Room 302' },
+    ],
   },
-  {
-    name: "Certificates",
-    description: "View and download your certificates",
-    icon: Award,
-    href: "/dashboard/student/certificates",
-    color: "bg-yellow-500",
-  },
-  {
-    name: "Attendance",
-    description: "Check your attendance records",
-    icon: Clock,
-    href: "/dashboard/student/attendance",
-    color: "bg-pink-500",
-  },
-  {
-    name: "Payments",
-    description: "Manage your payments and invoices",
-    icon: CreditCard,
-    href: "/dashboard/student/payments",
-    color: "bg-indigo-500",
-  },
-]
+];
 
 export default function StudentDashboard({ user }: StudentDashboardProps) {
+  const handleDownloadTranscript = () => {
+    console.log('Downloading transcript');
+    alert('Transcript downloaded successfully');
+  };
+
+  const handleSubmitAssignment = (assignmentId: string, file: File) => {
+    console.log(`Submitting assignment ${assignmentId} with file ${file.name}`);
+    alert(`Assignment ${assignmentId} submitted successfully`);
+  };
+
+  const handlePaymentComplete = (paymentId: string) => {
+    console.log(`Payment completed with ID: ${paymentId}`);
+  };
+
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user.firstName}!</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Access your courses, materials, and manage your academic journey
-        </p>
+    <StudentLayout user={user}>
+      <div className="container mx-auto py-6">
+        <StudentDashboardComponent
+          studentName={`${user.firstName} ${user.lastName}`}
+          grades={mockGrades}
+          assignments={mockAssignments}
+          schedule={mockSchedule}
+          onDownloadTranscript={handleDownloadTranscript}
+          onSubmitAssignment={handleSubmitAssignment}
+          onPaymentComplete={handlePaymentComplete}
+        />
       </div>
-
-      {/* Quick Actions Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {features.map((feature) => (
-          <Link
-            key={feature.name}
-            to={feature.href}
-            className="group relative overflow-hidden rounded-lg border bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <div className="flex items-center">
-              <div className={`${feature.color} rounded-lg p-3`}>
-                <feature.icon className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4 flex-1">
-                <h3 className="font-semibold text-gray-900">{feature.name}</h3>
-                <p className="mt-1 text-sm text-gray-500">{feature.description}</p>
-              </div>
-              <ArrowRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1" />
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-        <div className="mt-4 rounded-lg border bg-white shadow">
-          <div className="divide-y">
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Course Material Updated</p>
-                  <p className="text-sm text-gray-500">New materials added to Mathematics 101</p>
-                </div>
-                <span className="text-sm text-gray-500">2 hours ago</span>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Payment Due</p>
-                  <p className="text-sm text-gray-500">Upcoming payment for Spring Semester</p>
-                </div>
-                <span className="text-sm text-gray-500">1 day ago</span>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Certificate Available</p>
-                  <p className="text-sm text-gray-500">Introduction to Programming course completed</p>
-                </div>
-                <span className="text-sm text-gray-500">3 days ago</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    </StudentLayout>
   )
-} 
+}

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_URL, FEATURES } from '../utils/config';
+import { FEATURES } from '../utils/config';
+import { apiClient } from '../utils/api-client';
 
 export interface Payment {
   id: string;
@@ -48,6 +49,9 @@ export interface PaymentMethod {
 }
 
 class PaymentService {
+  private readonly basePath = "/payments";
+  
+  // Placeholder data for when backend is disabled
   private PLACEHOLDER_PAYMENTS: Payment[] = [
     {
       id: '1',
@@ -104,287 +108,202 @@ class PaymentService {
     },
   ];
 
-  private async getAuthToken(): Promise<string | null> {
-    return await AsyncStorage.getItem('authToken');
-  }
-
-  private async getHeaders(): Promise<Headers> {
-    const token = await this.getAuthToken();
-    return new Headers({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    });
-  }
-
   async getAllPayments(): Promise<Payment[]> {
     try {
-      // Check if offline mode is enabled
-      const offlineMode = await AsyncStorage.getItem('offlineMode') === 'true' || !FEATURES.enableBackend;
-      
-      if (offlineMode) {
+      const { data } = await apiClient.get<Payment[]>(this.basePath);
+      return data;
+    } catch (error) {
+      if (!FEATURES.enableBackend) {
         return this.PLACEHOLDER_PAYMENTS;
       }
-
-      const response = await fetch(`${API_URL}/payments`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch payments');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      // Return placeholder data in case of error
-      return this.PLACEHOLDER_PAYMENTS;
+      throw error;
     }
   }
 
   async getPaymentById(id: string): Promise<Payment> {
     try {
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/${id}`, {
-        method: 'GET',
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch payment');
-      }
-
-      return await response.json();
+      const { data } = await apiClient.get<Payment>(`${this.basePath}/${id}`);
+      return data;
     } catch (error) {
-      console.error('Error fetching payment:', error);
+      if (!FEATURES.enableBackend) {
+        const payment = this.PLACEHOLDER_PAYMENTS.find((p: Payment) => p.id === id);
+        if (payment) return payment;
+        throw new Error('Payment not found');
+      }
       throw error;
     }
   }
 
   async createPaymentIntent(params: CreatePaymentParams): Promise<PaymentIntent> {
     try {
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/create-intent`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create payment intent');
-      }
-
-      return await response.json();
+      const { data } = await apiClient.post<PaymentIntent>(`${this.basePath}/intent`, params);
+      return data;
     } catch (error) {
-      console.error('Error creating payment intent:', error);
+      if (!FEATURES.enableBackend) {
+        return {
+          id: 'pi_mock_' + Date.now(),
+          clientSecret: 'mock_secret_' + Date.now(),
+          amount: params.amount,
+          currency: params.currency,
+          status: 'requires_payment_method'
+        };
+      }
       throw error;
     }
   }
 
   async confirmPayment(paymentIntentId: string, paymentMethodId: string): Promise<Payment> {
     try {
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/confirm`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          paymentIntentId,
-          paymentMethodId,
-        }),
+      const { data } = await apiClient.post<Payment>(`${this.basePath}/confirm`, {
+        paymentIntentId,
+        paymentMethodId
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to confirm payment');
-      }
-
-      return await response.json();
+      return data;
     } catch (error) {
-      console.error('Error confirming payment:', error);
+      if (!FEATURES.enableBackend) {
+        return {
+          id: 'pay_mock_' + Date.now(),
+          amount: 100,
+          currency: 'USD',
+          status: 'completed',
+          description: 'Mock payment',
+          createdAt: new Date()
+        };
+      }
       throw error;
     }
   }
 
   async refundPayment(params: RefundParams): Promise<Payment> {
     try {
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/${params.paymentId}/refund`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(params),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to refund payment');
-      }
-
-      return await response.json();
+      const { data } = await apiClient.post<Payment>(`${this.basePath}/refund`, params);
+      return data;
     } catch (error) {
-      console.error('Error refunding payment:', error);
+      if (!FEATURES.enableBackend) {
+        const payment = this.PLACEHOLDER_PAYMENTS.find((p: Payment) => p.id === params.paymentId);
+        if (!payment) throw new Error('Payment not found');
+        return {
+          ...payment,
+          status: 'refunded',
+          updatedAt: new Date()
+        };
+      }
       throw error;
     }
   }
 
   async getPaymentMethods(): Promise<PaymentMethod[]> {
     try {
-      // Check if offline mode is enabled
-      const offlineMode = await AsyncStorage.getItem('offlineMode') === 'true' || !FEATURES.enableBackend;
-      
-      if (offlineMode) {
+      const { data } = await apiClient.get<PaymentMethod[]>(`${this.basePath}/methods`);
+      return data;
+    } catch (error) {
+      if (!FEATURES.enableBackend) {
         return this.PLACEHOLDER_PAYMENT_METHODS;
       }
-
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/methods`, {
-        method: 'GET',
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch payment methods');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching payment methods:', error);
-      // Return placeholder data in case of error
-      return this.PLACEHOLDER_PAYMENT_METHODS;
+      throw error;
     }
   }
 
   async addPaymentMethod(paymentMethodData: any): Promise<PaymentMethod> {
     try {
-      // Check if offline mode is enabled
-      const offlineMode = await AsyncStorage.getItem('offlineMode') === 'true' || !FEATURES.enableBackend;
-      
-      if (offlineMode) {
-        // Simulate adding a payment method in offline mode
+      const { data } = await apiClient.post<PaymentMethod>(`${this.basePath}/methods`, paymentMethodData);
+      return data;
+    } catch (error) {
+      if (!FEATURES.enableBackend) {
         const newMethod: PaymentMethod = {
-          id: Math.random().toString(36).substr(2, 9),
-          type: paymentMethodData.type,
-          last4: paymentMethodData.card.number.slice(-4),
-          expiryMonth: paymentMethodData.card.exp_month.toString().padStart(2, '0'),
-          expiryYear: paymentMethodData.card.exp_year.toString().slice(-2),
-          isDefault: this.PLACEHOLDER_PAYMENT_METHODS.length === 0,
+          id: 'pm_mock_' + Date.now(),
+          type: paymentMethodData.type || 'card',
+          last4: paymentMethodData.last4 || '4242',
+          expiryMonth: paymentMethodData.expiryMonth || '12',
+          expiryYear: paymentMethodData.expiryYear || '2025',
+          isDefault: false
         };
-        this.PLACEHOLDER_PAYMENT_METHODS.push(newMethod);
         return newMethod;
       }
-
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/methods`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(paymentMethodData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add payment method');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error adding payment method:', error);
       throw error;
     }
   }
 
   async deletePaymentMethod(methodId: string): Promise<void> {
     try {
-      // Check if offline mode is enabled
-      const offlineMode = await AsyncStorage.getItem('offlineMode') === 'true' || !FEATURES.enableBackend;
-      
-      if (offlineMode) {
-        // Simulate deleting a payment method in offline mode
-        const index = this.PLACEHOLDER_PAYMENT_METHODS.findIndex(m => m.id === methodId);
-        if (index !== -1) {
-          this.PLACEHOLDER_PAYMENT_METHODS.splice(index, 1);
-        }
+      await apiClient.delete(`${this.basePath}/methods/${methodId}`);
+    } catch (error) {
+      if (!FEATURES.enableBackend) {
+        // Mock successful deletion
         return;
       }
-
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/methods/${methodId}`, {
-        method: 'DELETE',
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete payment method');
-      }
-    } catch (error) {
-      console.error('Error deleting payment method:', error);
       throw error;
     }
   }
 
   async setDefaultPaymentMethod(methodId: string): Promise<PaymentMethod> {
     try {
-      // Check if offline mode is enabled
-      const offlineMode = await AsyncStorage.getItem('offlineMode') === 'true' || !FEATURES.enableBackend;
-      
-      if (offlineMode) {
-        // Simulate setting default payment method in offline mode
-        this.PLACEHOLDER_PAYMENT_METHODS = this.PLACEHOLDER_PAYMENT_METHODS.map(method => ({
-          ...method,
-          isDefault: method.id === methodId,
-        }));
-        return this.PLACEHOLDER_PAYMENT_METHODS.find(m => m.id === methodId)!;
-      }
-
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/methods/${methodId}/default`, {
-        method: 'POST',
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to set default payment method');
-      }
-
-      return await response.json();
+      const { data } = await apiClient.put<PaymentMethod>(`${this.basePath}/methods/${methodId}/default`, {});
+      return data;
     } catch (error) {
-      console.error('Error setting default payment method:', error);
+      if (!FEATURES.enableBackend) {
+        const method = this.PLACEHOLDER_PAYMENT_METHODS.find((m: PaymentMethod) => m.id === methodId);
+        if (!method) throw new Error('Payment method not found');
+        return {
+          ...method,
+          isDefault: true
+        };
+      }
       throw error;
     }
   }
 
   async downloadReceipt(id: string): Promise<Blob> {
     try {
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/${id}/receipt`, {
-        method: 'GET',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/pdf',
-        },
+      const response = await fetch(`${this.basePath}/${id}/receipt`, {
+        headers: await this.getHeaders(),
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to download receipt');
       }
-
+      
       return await response.blob();
     } catch (error) {
-      console.error('Error downloading receipt:', error);
+      if (!FEATURES.enableBackend) {
+        // Mock a PDF blob
+        return new Blob(['Mock PDF content'], { type: 'application/pdf' });
+      }
       throw error;
     }
   }
 
   async downloadInvoice(id: string): Promise<Blob> {
     try {
-      const headers = await this.getHeaders();
-      const response = await fetch(`${API_URL}/payments/${id}/invoice`, {
-        method: 'GET',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/pdf',
-        },
+      const response = await fetch(`${this.basePath}/${id}/invoice`, {
+        headers: await this.getHeaders(),
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to download invoice');
       }
-
+      
       return await response.blob();
     } catch (error) {
-      console.error('Error downloading invoice:', error);
+      if (!FEATURES.enableBackend) {
+        // Mock a PDF blob
+        return new Blob(['Mock PDF content'], { type: 'application/pdf' });
+      }
       throw error;
     }
+  }
+  
+  private async getHeaders(): Promise<Headers> {
+    const token = await AsyncStorage.getItem('authToken');
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+    });
+    
+    if (token) {
+      headers.append('Authorization', `Bearer ${token}`);
+    }
+    
+    return headers;
   }
 }
 

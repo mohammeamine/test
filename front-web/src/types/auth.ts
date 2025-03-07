@@ -9,6 +9,8 @@ export interface User {
   profilePicture?: string
   phoneNumber?: string
   studentId?: string
+  createdAt?: string
+  bio?: string
 }
 
 export interface SignUpData {
@@ -40,4 +42,5 @@ export interface UpdateProfileData {
   lastName: string
   phoneNumber?: string
   profilePicture?: File
+  bio?: string
 }

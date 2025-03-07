@@ -1,15 +1,22 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { LandingPage } from './pages/landing';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import LandingPage from './pages/landing';
 import { SignInPage } from './pages/auth/sign-in';
 import { SignUpPage } from './pages/auth/sign-up';
 import { ForgotPasswordPage } from './pages/auth/forgot-password';
 import { ResetPasswordPage } from './pages/auth/reset-password';
+import DebugNav from "./pages/debug-nav";
+
+// Admin Pages
 import { AdminHomePage } from './pages/dashboard/admin/home';
 import { UsersPage } from './pages/dashboard/admin/users';
 import { ClassesPage } from './pages/dashboard/admin/classes';
-import { SettingsPage } from './pages/dashboard/admin/settings';
-import { User } from './types/auth';
+import { CoursesPage } from './pages/dashboard/admin/courses';
+import { CourseContentPage } from './pages/dashboard/admin/course-content';
+import { AnalyticsPage } from './pages/dashboard/admin/analytics';
+import EventsPage from './pages/dashboard/admin/events';
+import { NotificationsPage } from './pages/dashboard/admin/notifications';
+import { SettingsPage as AdminSettingsPage } from './pages/dashboard/admin/settings';
 
 // Student Pages
 import StudentDashboard from './pages/dashboard/student';
@@ -21,7 +28,7 @@ import StudentAttendance from './pages/dashboard/student/attendance';
 import StudentPayments from './pages/dashboard/student/payments';
 import StudentDocuments from './pages/dashboard/student/documents';
 import StudentAssignments from './pages/dashboard/student/assignments';
-import StudentSupport from './pages/dashboard/student/support'; // Import the new page
+import StudentSupport from './pages/dashboard/student/support';
 
 // Teacher Pages
 import TeacherDashboard from './pages/dashboard/teacher';
@@ -29,6 +36,7 @@ import TeacherClasses from './pages/dashboard/teacher/classes';
 import TeacherMaterials from './pages/dashboard/teacher/materials';
 import TeacherStudents from './pages/dashboard/teacher/students';
 import TeacherAttendance from './pages/dashboard/teacher/attendance';
+import TeacherGrading from './pages/dashboard/teacher/grading';
 import TeacherAssignments from './pages/dashboard/teacher/assignments';
 import TeacherMessages from './pages/dashboard/teacher/messages';
 import TeacherDocuments from './pages/dashboard/teacher/documents';
@@ -37,11 +45,57 @@ import TeacherDocuments from './pages/dashboard/teacher/documents';
 import ParentDashboard from './pages/dashboard/parent';
 import ParentChildren from './pages/dashboard/parent/children';
 import ParentProgress from './pages/dashboard/parent/progress';
+import ParentMonitoring from './pages/dashboard/parent/monitoring';
 import ParentMessages from './pages/dashboard/parent/messages';
 import ParentPayments from './pages/dashboard/parent/payments';
 import ParentDocuments from './pages/dashboard/parent/documents';
 
-import DebugNav from "./pages/debug-nav";
+// Shared Pages
+import ProfilePage from './pages/dashboard/profile';
+import SettingsPage from './pages/dashboard/settings';
+
+import { User } from './types/auth';
+import { ProtectedRoute } from './components/auth/protected-route';
+
+// Keyboard shortcut handler component
+const KeyboardShortcuts = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Debug navigation shortcut (Ctrl+D or Cmd+D)
+      if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+        event.preventDefault();
+        navigate('/debug');
+      }
+      
+      // Profile shortcut (Ctrl+P or Cmd+P)
+      if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
+        event.preventDefault();
+        navigate('/dashboard/profile');
+      }
+      
+      // Settings shortcut (Ctrl+, or Cmd+,)
+      if ((event.ctrlKey || event.metaKey) && event.key === ',') {
+        event.preventDefault();
+        navigate('/dashboard/settings');
+      }
+      
+      // Home shortcut (Alt+H)
+      if (event.altKey && event.key === 'h') {
+        event.preventDefault();
+        navigate('/dashboard');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [navigate]);
+
+  return null;
+};
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -55,141 +109,289 @@ function App() {
       firstName: 'Admin',
       lastName: 'User',
       role: 'administrator',
+      createdAt: new Date().toISOString(),
     };
     setUser(mockUser);
   }, []);
 
+  const mockAdmin: User = {
+    id: '1',
+    email: 'admin@example.com',
+    firstName: 'Admin',
+    lastName: 'User',
+    role: 'administrator',
+    createdAt: new Date().toISOString(),
+  };
+
+  const mockStudent: User = {
+    id: '2',
+    email: 'student@example.com',
+    firstName: 'Student',
+    lastName: 'User',
+    role: 'student',
+    createdAt: new Date().toISOString(),
+  };
+
+  const mockTeacher: User = {
+    id: '3',
+    email: 'teacher@example.com',
+    firstName: 'Teacher',
+    lastName: 'User',
+    role: 'teacher',
+    createdAt: new Date().toISOString(),
+  };
+
+  const mockParent: User = {
+    id: '4',
+    email: 'parent@example.com',
+    firstName: 'Parent',
+    lastName: 'User',
+    role: 'parent',
+    createdAt: new Date().toISOString(),
+  };
+
   return (
     <Router>
+      <KeyboardShortcuts />
       <Routes>
-        {/* Debug Route - Remove in production */}
-        <Route path="/debug" element={<DebugNav />} />
-
-        {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth/sign-in" element={<SignInPage />} />
         <Route path="/auth/sign-up" element={<SignUpPage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/debug" element={<DebugNav />} />
+
+        {/* Debug routes that bypass authentication */}
+        <Route path="/debug/administrator" element={<AdminHomePage user={mockAdmin} />} />
+        <Route path="/debug/administrator/users" element={<UsersPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/classes" element={<ClassesPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/courses" element={<CoursesPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/course/:id" element={<CourseContentPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/analytics" element={<AnalyticsPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/events" element={<EventsPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/notifications" element={<NotificationsPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/settings" element={<AdminSettingsPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/profile" element={<ProfilePage user={mockAdmin} />} />
+        
+        <Route path="/debug/student" element={<StudentDashboard user={mockStudent} />} />
+        <Route path="/debug/student/courses" element={<StudentCourses user={mockStudent} />} />
+        <Route path="/debug/student/materials" element={<StudentMaterials user={mockStudent} />} />
+        <Route path="/debug/student/library" element={<StudentLibrary user={mockStudent} />} />
+        <Route path="/debug/student/certificates" element={<StudentCertificates user={mockStudent} />} />
+        <Route path="/debug/student/attendance" element={<StudentAttendance user={mockStudent} />} />
+        <Route path="/debug/student/payments" element={<StudentPayments user={mockStudent} />} />
+        <Route path="/debug/student/documents" element={<StudentDocuments user={mockStudent} />} />
+        <Route path="/debug/student/assignments" element={<StudentAssignments user={mockStudent} />} />
+        <Route path="/debug/student/support" element={<StudentSupport user={mockStudent} />} />
+        <Route path="/debug/student/profile" element={<ProfilePage user={mockStudent} />} />
+        <Route path="/debug/student/settings" element={<SettingsPage user={mockStudent} />} />
+        
+        <Route path="/debug/teacher" element={<TeacherDashboard user={mockTeacher} />} />
+        <Route path="/debug/teacher/classes" element={<TeacherClasses user={mockTeacher} />} />
+        <Route path="/debug/teacher/materials" element={<TeacherMaterials user={mockTeacher} />} />
+        <Route path="/debug/teacher/students" element={<TeacherStudents user={mockTeacher} />} />
+        <Route path="/debug/teacher/attendance" element={<TeacherAttendance user={mockTeacher} />} />
+        <Route path="/debug/teacher/grading" element={<TeacherGrading user={mockTeacher} />} />
+        <Route path="/debug/teacher/assignments" element={<TeacherAssignments user={mockTeacher} />} />
+        <Route path="/debug/teacher/messages" element={<TeacherMessages user={mockTeacher} />} />
+        <Route path="/debug/teacher/documents" element={<TeacherDocuments user={mockTeacher} />} />
+        <Route path="/debug/teacher/profile" element={<ProfilePage user={mockTeacher} />} />
+        <Route path="/debug/teacher/settings" element={<SettingsPage user={mockTeacher} />} />
+        
+        <Route path="/debug/parent" element={<ParentDashboard user={mockParent} />} />
+        <Route path="/debug/parent/children" element={<ParentChildren user={mockParent} />} />
+        <Route path="/debug/parent/progress" element={<ParentProgress user={mockParent} />} />
+        <Route path="/debug/parent/monitoring" element={<ParentMonitoring user={mockParent} />} />
+        <Route path="/debug/parent/messages" element={<ParentMessages user={mockParent} />} />
+        <Route path="/debug/parent/payments" element={<ParentPayments user={mockParent} />} />
+        <Route path="/debug/parent/documents" element={<ParentDocuments user={mockParent} />} />
+        <Route path="/debug/parent/profile" element={<ProfilePage user={mockParent} />} />
+        <Route path="/debug/parent/settings" element={<SettingsPage user={mockParent} />} />
+        
+        {/* Common Routes for all authenticated users */}
+        <Route 
+          path="/dashboard/profile" 
+          element={user ? <ProfilePage user={user} /> : <div>Loading...</div>} 
+        />
+        <Route 
+          path="/dashboard/settings" 
+          element={user ? <SettingsPage user={user} /> : <div>Loading...</div>} 
+        />
 
         {/* Admin Routes */}
         <Route
           path="/dashboard/admin"
-          element={user ? <AdminHomePage user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'administrator' ? <AdminHomePage user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/admin/users"
-          element={user ? <UsersPage user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'administrator' ? <UsersPage user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/admin/classes"
-          element={user ? <ClassesPage user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'administrator' ? <ClassesPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/admin/courses"
+          element={user && user.role === 'administrator' ? <CoursesPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/admin/course/:id"
+          element={user && user.role === 'administrator' ? <CourseContentPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/admin/analytics"
+          element={user && user.role === 'administrator' ? <AnalyticsPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/admin/events"
+          element={user && user.role === 'administrator' ? <EventsPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/admin/notifications"
+          element={user && user.role === 'administrator' ? <NotificationsPage user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/admin/settings"
-          element={user ? <SettingsPage user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'administrator' ? <AdminSettingsPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/admin/profile"
+          element={user && user.role === 'administrator' ? <ProfilePage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        
+        {/* Administrator Routes (alias for Admin) */}
+        <Route
+          path="/dashboard/administrator"
+          element={user && user.role === 'administrator' ? <AdminHomePage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/users"
+          element={user && user.role === 'administrator' ? <UsersPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/classes"
+          element={user && user.role === 'administrator' ? <ClassesPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/courses"
+          element={user && user.role === 'administrator' ? <CoursesPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/course/:id"
+          element={user && user.role === 'administrator' ? <CourseContentPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/analytics"
+          element={user && user.role === 'administrator' ? <AnalyticsPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/events"
+          element={user && user.role === 'administrator' ? <EventsPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/notifications"
+          element={user && user.role === 'administrator' ? <NotificationsPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/settings"
+          element={user && user.role === 'administrator' ? <AdminSettingsPage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/administrator/profile"
+          element={user && user.role === 'administrator' ? <ProfilePage user={user} /> : <Navigate to="/auth/sign-in" />}
         />
 
         {/* Student Routes */}
         <Route
           path="/dashboard/student"
-          element={user ? <StudentDashboard user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentDashboard user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/courses"
-          element={user ? <StudentCourses user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentCourses user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/materials"
-          element={user ? <StudentMaterials user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentMaterials user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/library"
-          element={user ? <StudentLibrary user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentLibrary user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/certificates"
-          element={user ? <StudentCertificates user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentCertificates user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/attendance"
-          element={user ? <StudentAttendance user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentAttendance user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/payments"
-          element={user ? <StudentPayments user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentPayments user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/documents"
-          element={user ? <StudentDocuments user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentDocuments user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/assignments"
-          element={user ? <StudentAssignments user={user} /> : <div>Loading...</div>}
+          element={user && user.role === 'student' ? <StudentAssignments user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
           path="/dashboard/student/support"
-          element={user ? <StudentSupport user={user} /> : <div>Loading...</div>} // Add the new route
+          element={user && user.role === 'student' ? <StudentSupport user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/student/profile"
+          element={user && user.role === 'student' ? <ProfilePage user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/student/settings"
+          element={user && user.role === 'student' ? <SettingsPage user={user} /> : <Navigate to="/auth/sign-in" />}
         />
 
         {/* Teacher Routes */}
         <Route
-          path="/dashboard/teacher"
-          element={user ? <TeacherDashboard user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/teacher/classes"
-          element={user ? <TeacherClasses user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/teacher/materials"
-          element={user ? <TeacherMaterials user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/teacher/students"
-          element={user ? <TeacherStudents user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/teacher/attendance"
-          element={user ? <TeacherAttendance user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/teacher/assignments"
-          element={user ? <TeacherAssignments user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/teacher/messages"
-          element={user ? <TeacherMessages user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/teacher/documents"
-          element={user ? <TeacherDocuments user={user} /> : <div>Loading...</div>}
+          path="/dashboard/teacher/*"
+          element={
+            <ProtectedRoute userRole="teacher">
+              <Routes>
+                <Route path="/" element={<TeacherDashboard user={user as User} />} />
+                <Route path="/classes" element={<TeacherClasses user={user as User} />} />
+                <Route path="/materials" element={<TeacherMaterials user={user as User} />} />
+                <Route path="/students" element={<TeacherStudents user={user as User} />} />
+                <Route path="/attendance" element={<TeacherAttendance user={user as User} />} />
+                <Route path="/grading" element={<TeacherGrading user={user as User} />} />
+                <Route path="/assignments" element={<TeacherAssignments user={user as User} />} />
+                <Route path="/messages" element={<TeacherMessages user={user as User} />} />
+                <Route path="/documents" element={<TeacherDocuments user={user as User} />} />
+                <Route path="/profile" element={<ProfilePage user={user as User} />} />
+                <Route path="/settings" element={<SettingsPage user={user as User} />} />
+              </Routes>
+            </ProtectedRoute>
+          }
         />
 
         {/* Parent Routes */}
         <Route
-          path="/dashboard/parent"
-          element={user ? <ParentDashboard user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/parent/children"
-          element={user ? <ParentChildren user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/parent/progress"
-          element={user ? <ParentProgress user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/parent/messages"
-          element={user ? <ParentMessages user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/parent/payments"
-          element={user ? <ParentPayments user={user} /> : <div>Loading...</div>}
-        />
-        <Route
-          path="/dashboard/parent/documents"
-          element={user ? <ParentDocuments user={user} /> : <div>Loading...</div>}
+          path="/dashboard/parent/*"
+          element={
+            <ProtectedRoute userRole="parent">
+              <Routes>
+                <Route path="/" element={<ParentDashboard user={user as User} />} />
+                <Route path="/children" element={<ParentChildren user={user as User} />} />
+                <Route path="/progress" element={<ParentProgress user={user as User} />} />
+                <Route path="/monitoring" element={<ParentMonitoring user={user as User} />} />
+                <Route path="/messages" element={<ParentMessages user={user as User} />} />
+                <Route path="/payments" element={<ParentPayments user={user as User} />} />
+                <Route path="/documents" element={<ParentDocuments user={user as User} />} />
+                <Route path="/profile" element={<ProfilePage user={user as User} />} />
+                <Route path="/settings" element={<SettingsPage user={user as User} />} />
+              </Routes>
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </Router>

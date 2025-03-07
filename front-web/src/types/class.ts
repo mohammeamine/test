@@ -4,15 +4,15 @@ export interface Class {
   id: string
   name: string
   grade: string
-  teacher: User
-  studentsCount: number
-  schedule: {
-    day: string
-    startTime: string
-    endTime: string
-  }[]
-  room: string
   subject: string
-  status: 'active' | 'inactive'
-  academicYear: string
+  teacherId?: string
+  teacher?: User
+  description?: string
+  schedule?: string
+  capacity?: number
+  studentsCount?: number
+  room?: string
+  status?: 'active' | 'inactive'
+  academicYear?: string
+  createdAt?: string
 }

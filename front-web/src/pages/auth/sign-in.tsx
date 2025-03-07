@@ -2,27 +2,60 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link } from 'react-router-dom'
-import type { SignInData } from '../../types/auth'
+import { Link, useNavigate } from 'react-router-dom'
 
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  rememberMe: z.boolean().optional(),
 })
 
-export const SignInPage = () => {
+type SignInFormData = z.infer<typeof signInSchema>
+
+const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm<SignInData>({
+  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  
+  const { register, handleSubmit, formState: { errors } } = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
+    defaultValues: {
+      rememberMe: false
+    }
   })
 
-  const onSubmit = async (data: SignInData) => {
+  const onSubmit = async (data: SignInFormData) => {
     setIsLoading(true)
+    setError(null)
+    
     try {
-      // TODO: Implement sign in logic
+      // TODO: Replace with actual API call when backend is ready
       console.log('Sign in data:', data)
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Mock authentication for development
+      if (data.email === 'admin@example.com' && data.password === 'password123') {
+        // Store token in localStorage or sessionStorage based on rememberMe
+        const storage = data.rememberMe ? localStorage : sessionStorage
+        storage.setItem('authToken', 'mock-jwt-token')
+        storage.setItem('user', JSON.stringify({
+          id: '1',
+          email: data.email,
+          firstName: 'Admin',
+          lastName: 'User',
+          role: 'administrator',
+        }))
+        
+        // Redirect to dashboard based on role
+        navigate('/dashboard/admin')
+      } else {
+        setError('Invalid email or password')
+      }
     } catch (error) {
       console.error('Sign in error:', error)
+      setError('An error occurred during sign in. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -42,6 +75,12 @@ export const SignInPage = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+          
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -82,18 +121,18 @@ export const SignInPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
-                  id="remember-me"
-                  name="remember-me"
+                  id="rememberMe"
                   type="checkbox"
+                  {...register('rememberMe')}
                   className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
                   Remember me
                 </label>
               </div>
 
               <div className="text-sm">
-                <Link to="/auth/reset-password" className="font-medium text-primary hover:text-primary/90">
+                <Link to="/auth/forgot-password" className="font-medium text-primary hover:text-primary/90">
                   Forgot your password?
                 </Link>
               </div>
@@ -103,7 +142,7 @@ export const SignInPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
@@ -114,3 +153,6 @@ export const SignInPage = () => {
     </div>
   )
 }
+
+export const SignInPage = SignIn
+export default SignIn

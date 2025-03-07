@@ -4,7 +4,8 @@ import {
   MessageSquare,
   CreditCard,
   FileText,
-  BarChart
+  BarChart,
+  LineChart
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
@@ -34,6 +35,11 @@ const navigation = [
     title: "Academic Progress",
     icon: BarChart,
     href: "/dashboard/parent/progress",
+  },
+  {
+    title: "Student Monitoring",
+    icon: LineChart,
+    href: "/dashboard/parent/monitoring",
   },
   {
     title: "Messages",

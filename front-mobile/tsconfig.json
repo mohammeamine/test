@@ -9,6 +9,7 @@
     "paths": {
       "@/*": ["./*"]
     },
+    "lib": ["ES2015", "DOM"],
     "types": [
       "node",
       "react",

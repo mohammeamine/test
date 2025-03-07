@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,7 +7,7 @@ import {
   Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Text } from '../../components/ui/Text';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -15,33 +15,32 @@ import { Input } from '../../components/ui/Input';
 import { scale, verticalScale } from '../../utils/responsive';
 import { NAVIGATION_THEME } from '../../navigation/constants';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../components/auth/AuthProvider';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const { signIn, isLoading, error, clearError } = useAuth();
+
+  useEffect(() => {
+    // Check if there's a message in the URL params
+    if (params.message) {
+      setSuccessMessage(params.message as string);
+    }
+  }, [params]);
 
   const handleLogin = async () => {
-    try {
-      if (!email.trim() || !password.trim()) {
-        throw new Error('Please fill in all fields');
-      }
-      
-      setError('');
-      setLoading(true);
-      
-      // TODO: Implement actual login logic here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      router.push('/(app)/admin/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to login');
-    } finally {
-      setLoading(false);
+    if (!email.trim() || !password.trim()) {
+      clearError();
+      setSuccessMessage('');
+      return;
     }
+    
+    await signIn({ email, password });
   };
 
   return (
@@ -65,12 +64,21 @@ export default function LoginScreen() {
           </View>
 
           <Card variant="elevated" style={styles.formCard}>
+            {successMessage ? (
+              <View style={styles.successMessage}>
+                <Text variant="body2" style={styles.successMessageText}>
+                  {successMessage}
+                </Text>
+              </View>
+            ) : null}
+
             <Input
               label="Email Address"
               value={email}
               onChangeText={text => {
                 setEmail(text);
-                setError('');
+                clearError();
+                setSuccessMessage('');
               }}
               placeholder="Enter your email"
               keyboardType="email-address"
@@ -84,7 +92,8 @@ export default function LoginScreen() {
               value={password}
               onChangeText={text => {
                 setPassword(text);
-                setError('');
+                clearError();
+                setSuccessMessage('');
               }}
               placeholder="Enter your password"
               secureTextEntry={!showPassword}
@@ -106,7 +115,7 @@ export default function LoginScreen() {
             <Button
               title="Sign In"
               onPress={handleLogin}
-              loading={loading}
+              loading={isLoading}
               style={styles.loginButton}
               size="large"
             />
@@ -216,5 +225,16 @@ const styles = StyleSheet.create({
   signUpLink: {
     color: NAVIGATION_THEME.colors.onSurface,
     fontWeight: '600',
+  },
+  successMessage: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    padding: scale(12),
+    borderRadius: scale(8),
+    marginBottom: verticalScale(16),
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
+  },
+  successMessageText: {
+    color: '#2E7D32',
   },
 });

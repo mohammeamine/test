@@ -1,170 +1,336 @@
 import { useState } from 'react'
+import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { mockUsers } from '../../../data'
+import type { User } from '../../../types/auth'
+import { UserFormModal, UserFormData } from '../../../components/dashboard/users/user-form-modal'
 import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout'
-import { User } from '../../../types/auth'
+import toast, { Toaster } from 'react-hot-toast'
 
 interface UsersPageProps {
   user: User
 }
 
 export const UsersPage = ({ user }: UsersPageProps) => {
+  const [users, setUsers] = useState<User[]>(mockUsers)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedRole, setSelectedRole] = useState<string>('all')
-  
-  // Mock data - Replace with actual API call
-  const users: User[] = [
-    {
-      id: '1',
-      email: 'john.doe@example.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      role: 'teacher',
-      phoneNumber: '+1234567890',
-    },
-    {
-      id: '2',
-      email: 'jane.smith@example.com',
-      firstName: 'Jane',
-      lastName: 'Smith',
-      role: 'student',
-      phoneNumber: '+1234567891',
-    },
-    // Add more mock users as needed
-  ]
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([])
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesRole = selectedRole === 'all' || user.role === selectedRole
+    const matchesRole = selectedRoles.length === 0 || selectedRoles.includes(user.role);
+    
+    return matchesSearch && matchesRole;
+  });
 
-    return matchesSearch && matchesRole
-  })
+  const handleRoleToggle = (role: string) => {
+    setSelectedRoles(prev => 
+      prev.includes(role) 
+        ? prev.filter(r => r !== role) 
+        : [...prev, role]
+    );
+  };
+
+  const handleAddUser = async (data: UserFormData) => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create a new user with a unique ID
+      const newUser: User = {
+        id: `user-${Date.now()}`,
+        ...data,
+        createdAt: new Date().toISOString(),
+      };
+      
+      setUsers(prev => [...prev, newUser]);
+      setIsAddUserModalOpen(false);
+      toast.success('User added successfully');
+    } catch (error) {
+      console.error('Error adding user:', error);
+      toast.error('Failed to add user');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditUser = async (data: UserFormData) => {
+    if (!selectedUser) return;
+    
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update the user
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === selectedUser.id 
+            ? { ...user, ...data } 
+            : user
+        )
+      );
+      
+      setIsEditUserModalOpen(false);
+      setSelectedUser(null);
+      toast.success('User updated successfully');
+    } catch (error) {
+      console.error('Error editing user:', error);
+      toast.error('Failed to update user');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Delete the user
+      setUsers(prev => prev.filter(user => user.id !== selectedUser.id));
+      
+      setIsDeleteModalOpen(false);
+      setSelectedUser(null);
+      toast.success('User deleted successfully');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openEditModal = (user: User) => {
+    setSelectedUser(user);
+    setIsEditUserModalOpen(true);
+  };
+
+  const openDeleteModal = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
+  };
 
   return (
     <DashboardLayout user={user}>
-      <div className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="sm:flex sm:items-center">
-          <div className="sm:flex-auto">
-            <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
-            <p className="mt-2 text-sm text-gray-700">
-              A list of all users in the system including their name, email, role, and contact information.
-            </p>
-          </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 sm:w-auto"
-            >
-              Add user
-            </button>
-          </div>
+      <Toaster />
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Users</h1>
+          <button
+            onClick={() => setIsAddUserModalOpen(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          >
+            <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+            Add User
+          </button>
         </div>
 
-        <div className="mt-8 flex flex-col sm:flex-row gap-4">
-          <div className="sm:w-64">
-            <label htmlFor="search" className="sr-only">
-              Search users
-            </label>
-            <input
-              type="search"
-              name="search"
-              id="search"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <div className="sm:w-48">
-            <select
-              id="role"
-              name="role"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-            >
-              <option value="all">All roles</option>
-              <option value="administrator">Administrator</option>
-              <option value="teacher">Teacher</option>
-              <option value="student">Student</option>
-              <option value="parent">Parent</option>
-            </select>
-          </div>
-        </div>
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div className="relative rounded-md w-full md:w-64">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </div>
+              <input
+                type="text"
+                className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                placeholder="Search users..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
 
-        <div className="mt-8 flex flex-col">
-          <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                        Name
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Email
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Role
-                      </th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                        Phone
-                      </th>
-                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                        <span className="sr-only">Actions</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
-                    {filteredUsers.map((user) => (
-                      <tr key={user.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
-                              {user.profilePicture ? (
-                                <img className="h-10 w-10 rounded-full" src={user.profilePicture} alt="" />
-                              ) : (
-                                <div className="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center">
-                                  {user.firstName[0]}
-                                  {user.lastName[0]}
-                                </div>
-                              )}
-                            </div>
-                            <div className="ml-4">
-                              <div className="font-medium text-gray-900">{user.firstName} {user.lastName}</div>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-gray-500 self-center mr-2">Filter by role:</span>
+              {['administrator', 'teacher', 'student', 'parent'].map((role) => (
+                <button
+                  key={role}
+                  onClick={() => handleRoleToggle(role)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    selectedRoles.includes(role)
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                  }`}
+                >
+                  {role.charAt(0).toUpperCase() + role.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center">
+                            <span className="text-gray-500 font-medium">
+                              {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.firstName} {user.lastName}
                             </div>
                           </div>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{user.email}</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          <span className="inline-flex rounded-full px-2 text-xs font-semibold leading-5 capitalize" 
-                                style={{ 
-                                  backgroundColor: user.role === 'administrator' ? '#FEE2E2' : 
-                                                 user.role === 'teacher' ? '#DBEAFE' : 
-                                                 user.role === 'student' ? '#D1FAE5' : '#FEF3C7',
-                                  color: user.role === 'administrator' ? '#991B1B' : 
-                                         user.role === 'teacher' ? '#1E40AF' : 
-                                         user.role === 'student' ? '#065F46' : '#92400E'
-                                }}>
-                            {user.role}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{user.phoneNumber || '-'}</td>
-                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          <button className="text-primary hover:text-primary-dark mr-4">Edit</button>
-                          <button className="text-red-600 hover:text-red-900">Delete</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{user.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          ${user.role === 'administrator' ? 'bg-purple-100 text-purple-800' : ''}
+                          ${user.role === 'teacher' ? 'bg-blue-100 text-blue-800' : ''}
+                          ${user.role === 'student' ? 'bg-green-100 text-green-800' : ''}
+                          ${user.role === 'parent' ? 'bg-yellow-100 text-yellow-800' : ''}
+                        `}>
+                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.phoneNumber || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => openEditModal(user)}
+                          className="text-primary hover:text-primary/90 mr-4"
+                        >
+                          <PencilIcon className="h-5 w-5" aria-hidden="true" />
+                          <span className="sr-only">Edit</span>
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(user)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <TrashIcon className="h-5 w-5" aria-hidden="true" />
+                          <span className="sr-only">Delete</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                      No users found matching your search criteria.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Add User Modal */}
+        <UserFormModal
+          isOpen={isAddUserModalOpen}
+          onClose={() => setIsAddUserModalOpen(false)}
+          onSubmit={handleAddUser}
+          title="Add New User"
+        />
+
+        {/* Edit User Modal */}
+        {selectedUser && (
+          <UserFormModal
+            isOpen={isEditUserModalOpen}
+            onClose={() => {
+              setIsEditUserModalOpen(false);
+              setSelectedUser(null);
+            }}
+            onSubmit={handleEditUser}
+            user={selectedUser}
+            title="Edit User"
+          />
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {isDeleteModalOpen && selectedUser && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              </div>
+
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+                    </div>
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                      <h3 className="text-lg leading-6 font-medium text-gray-900">Delete User</h3>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                          Are you sure you want to delete {selectedUser.firstName} {selectedUser.lastName}? This action cannot be undone.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    type="button"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                    onClick={handleDeleteUser}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Deleting...' : 'Delete'}
+                  </button>
+                  <button
+                    type="button"
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                    onClick={() => {
+                      setIsDeleteModalOpen(false);
+                      setSelectedUser(null);
+                    }}
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </DashboardLayout>
   )

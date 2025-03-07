@@ -6,7 +6,8 @@ import {
   Users,
   Calendar,
   ClipboardCheck,
-  MessageSquare
+  MessageSquare,
+  Award
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
@@ -46,6 +47,11 @@ const navigation = [
     title: "Attendance",
     icon: Calendar,
     href: "/dashboard/teacher/attendance",
+  },
+  {
+    title: "Grading",
+    icon: Award,
+    href: "/dashboard/teacher/grading",
   },
   {
     title: "Assignments",
