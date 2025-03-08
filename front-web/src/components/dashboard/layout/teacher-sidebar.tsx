@@ -9,7 +9,11 @@ import {
   MessageSquare,
   Award,
   BarChart3,
-  BookMarked
+  BookMarked,
+  Clock,
+  MessageCircle,
+  FileBarChart,
+  HelpCircle
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
@@ -51,7 +55,12 @@ const navigation = [
     href: "/dashboard/teacher/attendance",
   },
   {
-    title: "Calendar & Scheduling",
+    title: "Schedule",
+    icon: Clock,
+    href: "/dashboard/teacher/schedule",
+  },
+  {
+    title: "Calendar",
     icon: Calendar,
     href: "/dashboard/teacher/calendar",
   },
@@ -79,6 +88,26 @@ const navigation = [
     title: "Analytics",
     icon: BarChart3,
     href: "/dashboard/teacher/analytics",
+  },
+  {
+    title: "Reports",
+    icon: FileBarChart,
+    href: "/dashboard/teacher/reports",
+  },
+  {
+    title: "Feedback",
+    icon: MessageCircle,
+    href: "/dashboard/teacher/feedback",
+  },
+  {
+    title: "Forum",
+    icon: MessageSquare,
+    href: "/dashboard/shared/forum",
+  },
+  {
+    title: "Contact & Support",
+    icon: HelpCircle,
+    href: "/dashboard/shared/contact",
   },
   {
     title: "Messages",

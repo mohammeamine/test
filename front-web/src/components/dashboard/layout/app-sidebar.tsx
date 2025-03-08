@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Users, Settings, BookOpen, Bell, Calendar, BookText, FileText, BarChart, LucideIcon, BookCopy, GraduationCap, PenSquare, Mail, FileCheck, CreditCard, HelpCircle } from "lucide-react"
+import { Home, Users, Settings, BookOpen, Bell, Calendar, BookText, FileText, BarChart, LucideIcon, BookCopy, GraduationCap, PenSquare, Mail, FileCheck, CreditCard, HelpCircle, MessageSquare } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import { User as UserType } from "../../../types/auth"
 
@@ -48,6 +48,11 @@ const adminNavigation: NavigationItem[] = [
     href: "/dashboard/admin/course-content",
   },
   {
+    title: "Departments",
+    icon: BookOpen,
+    href: "/dashboard/admin/departments",
+  },
+  {
     title: "Events",
     icon: Calendar,
     href: "/dashboard/admin/events",
@@ -58,6 +63,16 @@ const adminNavigation: NavigationItem[] = [
     href: "/dashboard/admin/analytics",
   },
   {
+    title: "Reports",
+    icon: FileText,
+    href: "/dashboard/admin/reports",
+  },
+  {
+    title: "Finance",
+    icon: CreditCard,
+    href: "/dashboard/admin/finance",
+  },
+  {
     title: "Notifications",
     icon: Bell,
     href: "/dashboard/admin/notifications",
@@ -66,6 +81,21 @@ const adminNavigation: NavigationItem[] = [
     title: "Settings",
     icon: Settings,
     href: "/dashboard/admin/settings",
+  },
+  {
+    title: "System Settings",
+    icon: Settings,
+    href: "/dashboard/admin/system-settings",
+  },
+  {
+    title: "Contact & Support",
+    icon: HelpCircle,
+    href: "/dashboard/admin/contact",
+  },
+  {
+    title: "Forum",
+    icon: MessageSquare,
+    href: "/dashboard/shared/forum",
   },
 ]
 
@@ -119,6 +149,16 @@ const teacherNavigation: NavigationItem[] = [
     title: "Settings",
     icon: Settings,
     href: "/dashboard/teacher/settings",
+  },
+  {
+    title: "Contact & Support",
+    icon: HelpCircle,
+    href: "/dashboard/shared/contact",
+  },
+  {
+    title: "Forum",
+    icon: MessageSquare,
+    href: "/dashboard/shared/forum",
   },
 ]
 
@@ -183,6 +223,16 @@ const studentNavigation: NavigationItem[] = [
     icon: Settings,
     href: "/dashboard/student/settings",
   },
+  {
+    title: "Contact & Support",
+    icon: HelpCircle,
+    href: "/dashboard/shared/contact",
+  },
+  {
+    title: "Forum",
+    icon: MessageSquare,
+    href: "/dashboard/shared/forum",
+  },
 ]
 
 const parentNavigation: NavigationItem[] = [
@@ -225,6 +275,16 @@ const parentNavigation: NavigationItem[] = [
     title: "Settings",
     icon: Settings,
     href: "/dashboard/parent/settings",
+  },
+  {
+    title: "Contact & Support",
+    icon: HelpCircle,
+    href: "/dashboard/shared/contact",
+  },
+  {
+    title: "Forum",
+    icon: MessageSquare,
+    href: "/dashboard/shared/forum",
   },
 ]
 

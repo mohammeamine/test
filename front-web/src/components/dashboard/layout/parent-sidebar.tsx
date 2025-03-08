@@ -5,7 +5,8 @@ import {
   CreditCard,
   FileText,
   BarChart,
-  LineChart
+  LineChart,
+  HelpCircle
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
@@ -55,6 +56,16 @@ const navigation = [
     title: "Documents",
     icon: FileText,
     href: "/dashboard/parent/documents",
+  },
+  {
+    title: "Forum",
+    icon: MessageSquare,
+    href: "/dashboard/shared/forum",
+  },
+  {
+    title: "Contact & Support",
+    icon: HelpCircle,
+    href: "/dashboard/shared/contact",
   },
 ]
 

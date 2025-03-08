@@ -74,6 +74,10 @@ import { ParentFeedback } from './pages/dashboard/parent/feedback';
 // Shared Pages
 import ProfilePage from './pages/dashboard/profile';
 import SettingsPage from './pages/dashboard/settings';
+import { ContactPage } from './pages/dashboard/shared/contact';
+import { ForumPage } from './pages/dashboard/shared/forum';
+import { CreatePostPage } from './pages/dashboard/shared/forum/create';
+import { PostPage } from './pages/dashboard/shared/forum/post';
 
 import { User } from './types/auth';
 import { ProtectedRoute } from './components/auth/protected-route';
@@ -249,6 +253,20 @@ function App() {
         <Route path="/debug/parent/profile" element={<ProfilePage user={mockParent} />} />
         <Route path="/debug/parent/settings" element={<SettingsPage user={mockParent} />} />
         
+        {/* Debug Contact Form Routes */}
+        <Route path="/debug/administrator/contact" element={<ContactPage user={mockAdmin} />} />
+        <Route path="/debug/teacher/contact" element={<ContactPage user={mockTeacher} />} />
+        <Route path="/debug/student/contact" element={<ContactPage user={mockStudent} />} />
+        <Route path="/debug/parent/contact" element={<ContactPage user={mockParent} />} />
+
+        {/* Shared Contact Form Route */}
+        <Route
+          path="/dashboard/shared/contact"
+          element={
+            user ? <ContactPage user={user} /> : <Navigate to="/auth/sign-in" />
+          }
+        />
+        
         {/* Common Routes for all authenticated users */}
         <Route 
           path="/dashboard/profile" 
@@ -261,86 +279,28 @@ function App() {
 
         {/* Admin Routes */}
         <Route
-          path="/dashboard/admin"
-          element={user && user.role === 'administrator' ? <AdminHomePage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/users"
-          element={user && user.role === 'administrator' ? <UsersPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/classes"
-          element={user && user.role === 'administrator' ? <ClassesPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/courses"
-          element={user && user.role === 'administrator' ? <CoursesPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/course/:id"
-          element={user && user.role === 'administrator' ? <CourseContentPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/analytics"
-          element={user && user.role === 'administrator' ? <AnalyticsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/events"
-          element={user && user.role === 'administrator' ? <EventsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/notifications"
-          element={user && user.role === 'administrator' ? <NotificationsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/settings"
-          element={user && user.role === 'administrator' ? <AdminSettingsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/admin/profile"
-          element={user && user.role === 'administrator' ? <ProfilePage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        
-        {/* Administrator Routes (alias for Admin) */}
-        <Route
-          path="/dashboard/administrator"
-          element={user && user.role === 'administrator' ? <AdminHomePage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/users"
-          element={user && user.role === 'administrator' ? <UsersPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/classes"
-          element={user && user.role === 'administrator' ? <ClassesPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/courses"
-          element={user && user.role === 'administrator' ? <CoursesPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/course/:id"
-          element={user && user.role === 'administrator' ? <CourseContentPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/analytics"
-          element={user && user.role === 'administrator' ? <AnalyticsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/events"
-          element={user && user.role === 'administrator' ? <EventsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/notifications"
-          element={user && user.role === 'administrator' ? <NotificationsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/settings"
-          element={user && user.role === 'administrator' ? <AdminSettingsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/administrator/profile"
-          element={user && user.role === 'administrator' ? <ProfilePage user={user} /> : <Navigate to="/auth/sign-in" />}
+          path="/dashboard/admin/*"
+          element={
+            <ProtectedRoute userRole="administrator">
+              <Routes>
+                <Route path="/" element={<AdminHomePage user={user as User} />} />
+                <Route path="/users" element={<UsersPage user={user as User} />} />
+                <Route path="/classes" element={<ClassesPage user={user as User} />} />
+                <Route path="/courses" element={<CoursesPage user={user as User} />} />
+                <Route path="/course/:id" element={<CourseContentPage user={user as User} />} />
+                <Route path="/analytics" element={<AnalyticsPage user={user as User} />} />
+                <Route path="/events" element={<EventsPage user={user as User} />} />
+                <Route path="/notifications" element={<NotificationsPage user={user as User} />} />
+                <Route path="/settings" element={<AdminSettingsPage user={user as User} />} />
+                <Route path="/departments" element={<DepartmentsPage user={user as User} />} />
+                <Route path="/reports" element={<ReportsPage user={user as User} />} />
+                <Route path="/finance" element={<FinancePage user={user as User} />} />
+                <Route path="/system-settings" element={<SystemSettingsPage user={user as User} />} />
+                <Route path="/contact" element={<ContactPage user={user as User} />} />
+                <Route path="/profile" element={<ProfilePage user={user as User} />} />
+              </Routes>
+            </ProtectedRoute>
+          }
         />
 
         {/* Student Routes */}
@@ -455,6 +415,26 @@ function App() {
                 <Route path="/settings" element={<SettingsPage user={user as User} />} />
               </Routes>
             </ProtectedRoute>
+          }
+        />
+
+        {/* Forum Routes */}
+        <Route
+          path="/dashboard/shared/forum"
+          element={
+            user ? <ForumPage user={user} /> : <Navigate to="/auth/sign-in" />
+          }
+        />
+        <Route
+          path="/dashboard/shared/forum/create"
+          element={
+            user ? <CreatePostPage user={user} /> : <Navigate to="/auth/sign-in" />
+          }
+        />
+        <Route
+          path="/dashboard/shared/forum/post/:postId"
+          element={
+            user ? <PostPage user={user} /> : <Navigate to="/auth/sign-in" />
           }
         />
       </Routes>

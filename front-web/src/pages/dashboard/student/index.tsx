@@ -1,4 +1,4 @@
-import { StudentLayout } from "../../../components/dashboard/layout/student-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { StudentDashboard as StudentDashboardComponent } from "../../../components/dashboard/student/student-dashboard"
 import { User } from "../../../types/auth"
 
@@ -69,8 +69,8 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
   };
 
   return (
-    <StudentLayout user={user}>
-      <div className="container mx-auto py-6">
+    <DashboardLayout user={user}>
+      <div className="p-6">
         <StudentDashboardComponent
           studentName={`${user.firstName} ${user.lastName}`}
           grades={mockGrades}
@@ -81,6 +81,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           onPaymentComplete={handlePaymentComplete}
         />
       </div>
-    </StudentLayout>
+    </DashboardLayout>
   )
 }

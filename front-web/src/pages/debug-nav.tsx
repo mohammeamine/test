@@ -55,6 +55,9 @@ export default function DebugNav() {
             <Link to="/debug/student/feedback" className="p-3 rounded border hover:bg-gray-50">
               Feedback
             </Link>
+            <Link to="/debug/student/contact" className="p-3 rounded border hover:bg-gray-50">
+              Contact & Support
+            </Link>
           </div>
         </div>
 
@@ -104,6 +107,9 @@ export default function DebugNav() {
             <Link to="/debug/teacher/reports" className="p-3 rounded border hover:bg-gray-50">
               Reports
             </Link>
+            <Link to="/debug/teacher/contact" className="p-3 rounded border hover:bg-gray-50">
+              Contact & Support
+            </Link>
           </div>
         </div>
 
@@ -149,6 +155,9 @@ export default function DebugNav() {
             </Link>
             <Link to="/debug/parent/feedback" className="p-3 rounded border hover:bg-gray-50">
               Teacher Feedback
+            </Link>
+            <Link to="/debug/parent/contact" className="p-3 rounded border hover:bg-gray-50">
+              Contact & Support
             </Link>
           </div>
         </div>
@@ -196,6 +205,9 @@ export default function DebugNav() {
             <Link to="/debug/administrator/system" className="p-3 rounded border hover:bg-gray-50">
               System Settings
             </Link>
+            <Link to="/debug/administrator/contact" className="p-3 rounded border hover:bg-gray-50">
+              Contact & Support
+            </Link>
           </div>
         </div>
 
@@ -220,6 +232,25 @@ export default function DebugNav() {
             </Link>
             <Link to="/auth/verify-email" className="p-3 rounded border hover:bg-gray-50">
               Verify Email
+            </Link>
+          </div>
+        </div>
+
+        {/* Shared Routes */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4 text-gray-600">Shared Pages</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <Link to="/dashboard/shared/contact" className="p-3 rounded border hover:bg-gray-50 bg-yellow-50">
+              Universal Contact Form
+            </Link>
+            <Link to="/dashboard/shared/forum" className="p-3 rounded border hover:bg-gray-50 bg-yellow-50">
+              School Forum
+            </Link>
+            <Link to="/dashboard/shared/forum/create" className="p-3 rounded border hover:bg-gray-50 bg-yellow-50">
+              Create Forum Post
+            </Link>
+            <Link to="/dashboard/shared/forum/post/post-1" className="p-3 rounded border hover:bg-gray-50 bg-yellow-50">
+              View Forum Post
             </Link>
           </div>
         </div>
