@@ -10,7 +10,8 @@ import {
   Award,
   Clock,
   ClipboardCheck, // Import the icon for assignments
-  HelpCircle // Import the icon for support
+  HelpCircle, // Import the icon for support
+  Calendar // Import the icon for schedule
 } from "lucide-react"
 import { Link, useLocation } from 'react-router-dom'
 
@@ -75,6 +76,16 @@ const navigation = [
     title: "Support et Assistance", // Add the new navigation item
     icon: HelpCircle,
     href: "/dashboard/student/support",
+  },
+  {
+    title: "Schedule", // Add the new navigation item
+    icon: Calendar,
+    href: "/dashboard/student/schedule",
+  },
+  {
+    title: "Grades", // Add the new navigation item
+    icon: GraduationCap,
+    href: "/dashboard/student/grades",
   },
 ]
 

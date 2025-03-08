@@ -7,7 +7,9 @@ import {
   Calendar,
   ClipboardCheck,
   MessageSquare,
-  Award
+  Award,
+  BarChart3,
+  BookMarked
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
@@ -45,8 +47,18 @@ const navigation = [
   },
   {
     title: "Attendance",
-    icon: Calendar,
+    icon: ClipboardCheck,
     href: "/dashboard/teacher/attendance",
+  },
+  {
+    title: "Calendar & Scheduling",
+    icon: Calendar,
+    href: "/dashboard/teacher/calendar",
+  },
+  {
+    title: "Curriculum",
+    icon: BookMarked,
+    href: "/dashboard/teacher/curriculum",
   },
   {
     title: "Grading",
@@ -54,9 +66,19 @@ const navigation = [
     href: "/dashboard/teacher/grading",
   },
   {
+    title: "Grades",
+    icon: Award,
+    href: "/dashboard/teacher/grades",
+  },
+  {
     title: "Assignments",
     icon: ClipboardCheck,
     href: "/dashboard/teacher/assignments",
+  },
+  {
+    title: "Analytics",
+    icon: BarChart3,
+    href: "/dashboard/teacher/analytics",
   },
   {
     title: "Messages",

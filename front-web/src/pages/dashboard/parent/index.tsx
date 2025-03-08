@@ -1,8 +1,8 @@
 import { User } from "../../../types/auth"
 import { ParentLayout } from "../../../components/dashboard/layout/parent-layout"
+import { useNavigate } from "react-router-dom"
 import {
   GraduationCap,
-  Calendar,
   Bell,
   BookOpen,
   Clock,
@@ -16,6 +16,8 @@ interface ParentDashboardProps {
 }
 
 export default function ParentDashboard({ user }: ParentDashboardProps) {
+  const navigate = useNavigate();
+
   return (
     <ParentLayout user={user}>
       <div className="p-6 space-y-6">
@@ -79,7 +81,10 @@ export default function ParentDashboard({ user }: ParentDashboardProps) {
               </div>
             </div>
             <div className="mt-4">
-              <button className="w-full rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100">
+              <button 
+                onClick={() => navigate(`/dashboard/parent/children/1`)}
+                className="w-full rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100"
+              >
                 View Details
               </button>
             </div>
@@ -112,7 +117,10 @@ export default function ParentDashboard({ user }: ParentDashboardProps) {
               </div>
             </div>
             <div className="mt-4">
-              <button className="w-full rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100">
+              <button 
+                onClick={() => navigate(`/dashboard/parent/children/2`)}
+                className="w-full rounded-md bg-blue-50 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100"
+              >
                 View Details
               </button>
             </div>
@@ -182,4 +190,4 @@ export default function ParentDashboard({ user }: ParentDashboardProps) {
       </div>
     </ParentLayout>
   )
-} 
+}

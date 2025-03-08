@@ -1,17 +1,27 @@
 import { useState } from "react";
 import { User } from "../../../types/auth";
 import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout";
+import { GradeEntryModal } from "../../../components/dashboard/teacher/grade-entry-modal";
+import { FeedbackSystem } from "../../../components/dashboard/teacher/feedback-system";
 import { 
   ClipboardCheck, Search, Plus, Calendar, Clock, 
   CheckCircle2, XCircle, Bell, FileText, PenTool, 
-  BarChart, Download, Upload, MessageSquare 
+  BarChart, Download, Upload, MessageSquare,
+  Filter, ChevronDown
 } from "lucide-react";
 
 interface TeacherAssignmentsProps {
   user: User;
 }
 
-// Types pour les devoirs
+interface Student {
+  id: string;
+  name: string;
+  currentGrade?: number;
+  submissionDate?: string;
+  status: "submitted" | "not_submitted" | "late";
+}
+
 interface Assignment {
   id: string;
   title: string;
@@ -20,9 +30,15 @@ interface Assignment {
   status: 'pending' | 'graded' | 'overdue';
   submissionCount: number;
   totalStudents: number;
+  students?: Student[];
+  rubric?: {
+    id: string;
+    name: string;
+    description: string;
+    maxPoints: number;
+  }[];
 }
 
-// Types pour les contrôles et examens
 interface Exam {
   id: string;
   title: string;
@@ -30,9 +46,9 @@ interface Exam {
   date: string;
   type: 'quiz' | 'exam';
   status: 'scheduled' | 'completed';
+  students?: Student[];
 }
 
-// Types pour les évaluations
 interface Evaluation {
   id: string;
   title: string;
@@ -40,130 +56,220 @@ interface Evaluation {
   date: string;
   type: 'test' | 'project';
   status: 'pending' | 'completed';
+  students?: Student[];
 }
 
-// Types pour les templates de feedback
 interface FeedbackTemplate {
   id: string;
   title: string;
   content: string;
+  category: string;
 }
 
 export default function TeacherAssignments({ user }: TeacherAssignmentsProps) {
-  // États pour la gestion des onglets
   const [activeTab, setActiveTab] = useState<"assignments" | "exams" | "evaluations">("assignments");
-
-  // États pour les modales
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showGradeModal, setShowGradeModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<string | null>(null);
-
-  // États pour les filtres
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"dueDate" | "title" | "submissions">("dueDate");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  // Données fictives pour les devoirs
-  const assignments: Assignment[] = [
+  // Mock student data
+  const mockStudents: Student[] = [
+    {
+      id: "s1",
+      name: "John Smith",
+      status: "submitted",
+      submissionDate: "2025-03-05",
+      currentGrade: 85
+    },
+    {
+      id: "s2",
+      name: "Emma Johnson",
+      status: "late",
+      submissionDate: "2025-03-06"
+    },
+    {
+      id: "s3",
+      name: "Michael Brown",
+      status: "not_submitted"
+    }
+  ];
+
+  // Mock assignments data with students
+  const [assignments, setAssignments] = useState<Assignment[]>([
     { 
       id: "a1", 
       title: "Calculus Quiz #3", 
       course: "Mathematics 101", 
-      dueDate: "Mar 15, 2024",
+      dueDate: "2025-03-15",
       status: "pending",
       submissionCount: 18,
-      totalStudents: 24
+      totalStudents: 24,
+      students: mockStudents,
+      rubric: [
+        {
+          id: "r1",
+          name: "Problem Solving",
+          description: "Ability to solve complex mathematical problems",
+          maxPoints: 40
+        },
+        {
+          id: "r2",
+          name: "Methodology",
+          description: "Clear presentation of solution steps",
+          maxPoints: 30
+        },
+        {
+          id: "r3",
+          name: "Accuracy",
+          description: "Correctness of calculations and final answers",
+          maxPoints: 30
+        }
+      ]
     },
     { 
       id: "a2", 
       title: "Lab Report #2", 
       course: "Physics 201", 
-      dueDate: "Mar 20, 2024",
+      dueDate: "2025-03-20",
       status: "graded",
       submissionCount: 22,
-      totalStudents: 22
+      totalStudents: 22,
+      students: mockStudents
     },
     { 
       id: "a3", 
       title: "Literary Analysis Essay", 
       course: "English Literature", 
-      dueDate: "Mar 18, 2024",
+      dueDate: "2025-03-18",
       status: "overdue",
       submissionCount: 15,
-      totalStudents: 26
-    },
-  ];
+      totalStudents: 26,
+      students: mockStudents
+    }
+  ]);
 
-  // Données fictives pour les contrôles et examens
-  const exams: Exam[] = [
-    { 
-      id: "e1", 
-      title: "Midterm Exam", 
-      course: "Physics 201", 
-      date: "Mar 25, 2024",
-      type: 'exam',
-      status: 'scheduled'
+  // Mock feedback templates
+  const [feedbackTemplates, setFeedbackTemplates] = useState<FeedbackTemplate[]>([
+    {
+      id: "ft1",
+      title: "Excellent Work",
+      content: "Outstanding work! Your analysis demonstrates a deep understanding of the concepts and excellent attention to detail.",
+      category: "positive"
     },
-    { 
-      id: "e2", 
-      title: "Quiz #1", 
-      course: "Mathematics 101", 
-      date: "Mar 30, 2024",
-      type: 'quiz',
-      status: 'scheduled'
+    {
+      id: "ft2",
+      title: "Good Effort - Needs Improvement",
+      content: "Good effort on this assignment. To improve, focus on [specific area] and consider [suggestion].",
+      category: "constructive"
     },
-  ];
+    {
+      id: "ft3",
+      title: "Incomplete Submission",
+      content: "Your submission is incomplete. Please ensure you address all requirements and resubmit.",
+      category: "improvement"
+    }
+  ]);
 
-  // Données fictives pour les évaluations
-  const evaluations: Evaluation[] = [
-    { 
-      id: "ev1", 
-      title: "Final Project", 
-      course: "English Literature", 
-      date: "Apr 10, 2024",
-      type: 'project',
-      status: 'pending'
-    },
-    { 
-      id: "ev2", 
-      title: "Unit Test", 
-      course: "Mathematics 101", 
-      date: "Apr 5, 2024",
-      type: 'test',
-      status: 'pending'
-    },
-  ];
-
-  // Templates de feedback prédéfinis
-  const feedbackTemplates: FeedbackTemplate[] = [
-    { id: "f1", title: "Excellent Work", content: "Excellent travail! Votre analyse est approfondie et montre une réelle compréhension des concepts." },
-    { id: "f2", title: "Good Effort", content: "Bon effort. Il y a des points qui nécessitent plus de développement, mais vous êtes sur la bonne voie." },
-    { id: "f3", title: "Needs Improvement", content: "Ce travail nécessite des améliorations. Veuillez revoir les concepts de base et me contacter pour une aide supplémentaire." },
-  ];
-
-  // Filtrer les devoirs en fonction du statut
-  const filteredAssignments = filterStatus === "all" 
-    ? assignments 
-    : assignments.filter(a => a.status === filterStatus);
-
-  // Gestionnaire pour l'assignation d'un nouveau devoir
   const handleCreateAssignment = () => {
     setShowCreateModal(true);
   };
 
-  // Gestionnaire pour la correction en ligne
-  const handleGradeAssignment = (id: string) => {
-    setSelectedAssignment(id);
-    setShowFeedbackModal(true);
+  const handleGradeAssignment = (assignment: Assignment) => {
+    setSelectedAssignment(assignment);
+    setShowGradeModal(true);
   };
+
+  const handleSaveGrades = (grades: { studentId: string; grade: number; feedback: string }[]) => {
+    if (!selectedAssignment) return;
+
+    // Update assignments with new grades
+    setAssignments(prevAssignments => 
+      prevAssignments.map(assignment => {
+        if (assignment.id === selectedAssignment.id) {
+          return {
+            ...assignment,
+            status: "graded",
+            students: assignment.students?.map(student => {
+              const gradeData = grades.find(g => g.studentId === student.id);
+              if (gradeData) {
+                return {
+                  ...student,
+                  currentGrade: gradeData.grade
+                };
+              }
+              return student;
+            })
+          };
+        }
+        return assignment;
+      })
+    );
+
+    setShowGradeModal(false);
+  };
+
+  const handleAddFeedbackTemplate = (template: Omit<FeedbackTemplate, "id">) => {
+    const newTemplate: FeedbackTemplate = {
+      ...template,
+      id: Math.random().toString(36).substr(2, 9)
+    };
+    setFeedbackTemplates([...feedbackTemplates, newTemplate]);
+  };
+
+  const handleDeleteFeedbackTemplate = (id: string) => {
+    setFeedbackTemplates(templates => templates.filter(t => t.id !== id));
+  };
+
+  const handleSaveRubric = (assignmentId: string, criteria: Assignment["rubric"]) => {
+    setAssignments(prevAssignments =>
+      prevAssignments.map(assignment =>
+        assignment.id === assignmentId
+          ? { ...assignment, rubric: criteria }
+          : assignment
+      )
+    );
+  };
+
+  const filteredAssignments = assignments
+    .filter(assignment => {
+      const matchesStatus = filterStatus === "all" || assignment.status === filterStatus;
+      const matchesSearch = 
+        assignment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        assignment.course.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesStatus && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "dueDate") {
+        return sortOrder === "asc"
+          ? new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+          : new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+      }
+      if (sortBy === "submissions") {
+        return sortOrder === "asc"
+          ? a.submissionCount - b.submissionCount
+          : b.submissionCount - a.submissionCount;
+      }
+      return sortOrder === "asc"
+        ? a.title.localeCompare(b.title)
+        : b.title.localeCompare(a.title);
+    });
 
   return (
     <TeacherLayout user={user}>
       <div className="p-6 space-y-6">
-        {/* En-tête avec navigation par onglets */}
+        {/* Header with navigation tabs */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestion des évaluations</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Assignment Management</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Créez, assignez et gérez les évaluations de vos classes
+              Create, manage, and grade assignments for your classes
             </p>
           </div>
           <div className="flex gap-2">
@@ -172,7 +278,7 @@ export default function TeacherAssignments({ user }: TeacherAssignmentsProps) {
               className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
               <Plus className="h-4 w-4" />
-              Créer
+              Create
             </button>
             <button className="flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50">
               <Bell className="h-4 w-4" />
@@ -181,434 +287,148 @@ export default function TeacherAssignments({ user }: TeacherAssignmentsProps) {
           </div>
         </div>
 
-        {/* Navigation par onglets */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab("assignments")}
-              className={`px-1 py-4 text-sm font-medium ${
-                activeTab === "assignments"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500 hover:border-b-2 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <ClipboardCheck className="h-4 w-4" />
-                Devoirs
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab("exams")}
-              className={`px-1 py-4 text-sm font-medium ${
-                activeTab === "exams"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500 hover:border-b-2 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Contrôles & Examens
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab("evaluations")}
-              className={`px-1 py-4 text-sm font-medium ${
-                activeTab === "evaluations"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500 hover:border-b-2 hover:border-gray-300 hover:text-gray-700"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                <BarChart className="h-4 w-4" />
-                Évaluations
-              </span>
-            </button>
-          </nav>
-        </div>
-
-        {/* Statistiques */}
-        <div className="grid gap-6 md:grid-cols-4">
-          <div className="rounded-lg border bg-white p-6">
-            <h3 className="text-sm font-medium text-gray-500">Total des devoirs</h3>
-            <p className="mt-2 text-3xl font-semibold text-gray-900">24</p>
-            <p className="mt-1 text-sm text-gray-500">Ce semestre</p>
+        {/* Search and Filters */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search assignments..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-md border border-gray-300 pl-9 pr-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            />
           </div>
-          <div className="rounded-lg border bg-white p-6">
-            <h3 className="text-sm font-medium text-gray-500">À corriger</h3>
-            <p className="mt-2 text-3xl font-semibold text-yellow-600">8</p>
-            <p className="mt-1 text-sm text-gray-500">En attente de notation</p>
+          <div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full rounded-md border border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="graded">Graded</option>
+              <option value="overdue">Overdue</option>
+            </select>
           </div>
-          <div className="rounded-lg border bg-white p-6">
-            <h3 className="text-sm font-medium text-gray-500">Complétés</h3>
-            <p className="mt-2 text-3xl font-semibold text-green-600">12</p>
-            <p className="mt-1 text-sm text-gray-500">Notés et rendus</p>
+          <div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="w-full rounded-md border border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="dueDate">Sort by Due Date</option>
+              <option value="title">Sort by Title</option>
+              <option value="submissions">Sort by Submissions</option>
+            </select>
           </div>
-          <div className="rounded-lg border bg-white p-6">
-            <h3 className="text-sm font-medium text-gray-500">À échéance proche</h3>
-            <p className="mt-2 text-3xl font-semibold text-red-600">4</p>
-            <p className="mt-1 text-sm text-gray-500">Dans les 7 jours</p>
+          <div>
+            <button
+              onClick={() => setSortOrder(order => order === "asc" ? "desc" : "asc")}
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 py-2 text-sm font-medium hover:bg-gray-50"
+            >
+              {sortOrder === "asc" ? "Ascending" : "Descending"}
+              <ChevronDown className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        {/* Contenu en fonction de l'onglet actif */}
-        {activeTab === "assignments" && (
-          <>
-            {/* Barre de recherche et filtres */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-              <label htmlFor="filterStatus" className="sr-only">Filter by status</label>
-              <select 
-                id="filterStatus"
-                className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                onChange={(e) => setFilterStatus(e.target.value)}
-                value={filterStatus}
-              >
-                <option value="all">Tous les statuts</option>
-                <option value="pending">En attente</option>
-                <option value="graded">Corrigés</option>
-                <option value="overdue">En retard</option>
-              </select>
-            </div>
-
-            {/* Liste des devoirs */}
-            <div className="rounded-lg border bg-white overflow-hidden">
-              <div className="divide-y">
-                {filteredAssignments.map((assignment) => (
-                  <div key={assignment.id} className="p-4">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`rounded-lg p-2 ${
-                          assignment.status === 'graded' ? 'bg-green-100' : 
-                          assignment.status === 'overdue' ? 'bg-red-100' : 'bg-yellow-100'
-                        }`}>
-                          <ClipboardCheck className={`h-5 w-5 ${
-                            assignment.status === 'graded' ? 'text-green-600' : 
-                            assignment.status === 'overdue' ? 'text-red-600' : 'text-yellow-600'
-                          }`} />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{assignment.title}</h3>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                            <span>{assignment.course}</span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              Dû le {assignment.dueDate}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Upload className="h-4 w-4" />
-                              {assignment.submissionCount}/{assignment.totalStudents} rendus
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-2 sm:mt-0">
-                        {assignment.status !== 'graded' && (
-                          <button 
-                            onClick={() => handleGradeAssignment(assignment.id)}
-                            className="rounded-md bg-blue-50 px-3 py-1 text-sm font-medium text-blue-600 hover:bg-blue-100"
-                          >
-                            Corriger
-                          </button>
-                        )}
-                        <button className="rounded-md bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100">
-                          Détails
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {activeTab === "exams" && (
-          <>
-            {/* Liste des contrôles et examens */}
-            <div className="rounded-lg border bg-white overflow-hidden">
-              <div className="divide-y">
-                {exams.map((exam) => (
-                  <div key={exam.id} className="p-4">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`rounded-lg p-2 ${
-                          exam.status === 'completed' ? 'bg-green-100' : 'bg-yellow-100'
-                        }`}>
-                          <FileText className={`h-5 w-5 ${
-                            exam.status === 'completed' ? 'text-green-600' : 'text-yellow-600'
-                          }`} />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{exam.title}</h3>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                            <span>{exam.course}</span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              Date: {exam.date}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {exam.type === 'quiz' ? 'Quiz' : 'Examen'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-2 sm:mt-0">
-                        <button className="rounded-md bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100">
-                          Détails
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {activeTab === "evaluations" && (
-          <>
-            {/* Liste des évaluations */}
-            <div className="rounded-lg border bg-white overflow-hidden">
-              <div className="divide-y">
-                {evaluations.map((evaluation) => (
-                  <div key={evaluation.id} className="p-4">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`rounded-lg p-2 ${
-                          evaluation.status === 'completed' ? 'bg-green-100' : 'bg-yellow-100'
-                        }`}>
-                          <BarChart className={`h-5 w-5 ${
-                            evaluation.status === 'completed' ? 'text-green-600' : 'text-yellow-600'
-                          }`} />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{evaluation.title}</h3>
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                            <span>{evaluation.course}</span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              Date: {evaluation.date}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              {evaluation.type === 'test' ? 'Test' : 'Projet'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 mt-2 sm:mt-0">
-                        <button className="rounded-md bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100">
-                          Détails
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Modal pour créer un nouveau devoir */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold mb-4">Créer une nouvelle évaluation</h2>
-              <div className="space-y-4">
+        {/* Assignment List */}
+        <div className="space-y-4">
+          {filteredAssignments.map(assignment => (
+            <div
+              key={assignment.id}
+              className="rounded-lg border bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type d'évaluation</label>
-                  <select id="evaluationType" className="w-full rounded-lg border border-gray-300 py-2 px-3" title="Sélectionnez le type d'évaluation">
-                    <option value="assignment">Devoir</option>
-                    <option value="quiz">Quiz</option>
-                    <option value="exam">Examen</option>
-                    <option value="project">Projet</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
-                  <input type="text" className="w-full rounded-lg border border-gray-300 py-2 px-3" placeholder="Entrez le titre" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cours</label>
-                  <select id="courseSelect" title="Sélectionnez un cours" className="w-full rounded-lg border border-gray-300 py-2 px-3">
-                    <option value="math101">Mathematics 101</option>
-                    <option value="phys201">Physics 201</option>
-                    <option value="eng101">English Literature</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
-                  <textarea className="w-full rounded-lg border border-gray-300 py-2 px-3 min-h-[100px]" placeholder="Entrez les instructions" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date d'assignation</label>
-                    <input type="date" className="w-full rounded-lg border border-gray-300 py-2 px-3" title="Date d'assignation" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date d'échéance</label>
-                    <input type="date" className="w-full rounded-lg border border-gray-300 py-2 px-3" title="Date d'échéance" />
+                  <h3 className="text-lg font-medium text-gray-900">{assignment.title}</h3>
+                  <p className="mt-1 text-sm text-gray-500">{assignment.course}</p>
+                  <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Upload className="h-4 w-4" />
+                      {assignment.submissionCount}/{assignment.totalStudents} Submissions
+                    </span>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Points possibles</label>
-                  <input type="number" className="w-full rounded-lg border border-gray-300 py-2 px-3" placeholder="Entrez les points possibles" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pièces jointes</label>
-                  <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
-                    <p className="text-sm text-gray-500">Glissez-déposez des fichiers ici ou</p>
-                    <button className="mt-2 text-sm font-medium text-blue-600">Parcourir les fichiers</button>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3 mt-6">
-                  <button 
-                    onClick={() => setShowCreateModal(false)}
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      assignment.status === "graded"
+                        ? "bg-green-100 text-green-800"
+                        : assignment.status === "overdue"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
                   >
-                    Annuler
-                  </button>
-                  <button className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                    Créer et assigner
-                  </button>
+                    {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                  </span>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal pour la correction avec feedback */}
-        {showFeedbackModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Correction: Calculus Quiz #3</h2>
+              <div className="mt-4 flex items-center justify-end gap-2">
                 <button
-                  onClick={() => setShowFeedbackModal(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                  title="Close"
+                  onClick={() => handleGradeAssignment(assignment)}
+                  className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                 >
-                  <XCircle className="h-6 w-6" />
+                  <PenTool className="h-4 w-4" />
+                  Grade
+                </button>
+                <button className="flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  <MessageSquare className="h-4 w-4" />
+                  Feedback
+                </button>
+                <button className="flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  <Download className="h-4 w-4" />
+                  Download All
                 </button>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 space-y-4">
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Travail de l'étudiant</h3>
-                    <div className="border-t pt-2">
-                      <p className="text-gray-600 text-sm">Document PDF soumis par l'étudiant...</p>
-                      <div className="mt-2 p-4 bg-gray-100 rounded text-sm">
-                        <p>Contenu du devoir de l'étudiant serait affiché ici</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">Grille de notation</h3>
-                    <div className="space-y-3 mt-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded" title="Compréhension des concepts fondamentaux" />
-                          <span className="text-sm">Compréhension des concepts fondamentaux</span>
-                        </div>
-                        <select title="Choose a score" className="rounded border border-gray-300 text-sm p-1">
-                          <option value="5">5/5 pts</option>
-                          <option value="4">4/5 pts</option>
-                          <option value="3">3/5 pts</option>
-                          <option value="2">2/5 pts</option>
-                          <option value="1">1/5 pts</option>
-                          <option value="0">0/5 pts</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded" title="Application des formules" />
-                          <span className="text-sm">Application des formules</span>
-                        </div>
-                        <select title="Points for fundamental concepts" className="rounded border border-gray-300 text-sm p-1">
-                          <option value="10">10/10 pts</option>
-                          <option value="9">9/10 pts</option>
-                          <option value="8">8/10 pts</option>
-                          <option value="7">7/10 pts</option>
-                          <option value="6">6/10 pts</option>
-                          <option value="5">5/10 pts</option>
-                          <option value="0">0/10 pts</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <input type="checkbox" className="rounded" title="Résolution de problèmes" />
-                          <span className="text-sm">Résolution de problèmes</span>
-                        </div>
-                        <select title="Points for problem solving" className="rounded border border-gray-300 text-sm p-1">
-                          <option value="10">10/10 pts</option>
-                          <option value="8">8/10 pts</option>
-                          <option value="6">6/10 pts</option>
-                          <option value="4">4/10 pts</option>
-                          <option value="2">2/10 pts</option>
-                          <option value="0">0/10 pts</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="mt-4 pt-3 border-t flex justify-between items-center">
-                      <span className="font-medium">Total:</span>
-                      <span className="font-medium">18/25 points (72%)</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="lg:col-span-2 space-y-4">
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-3">Feedback détaillé</h3>
-                    <div className="mb-3">
-                      <label className="block text-sm text-gray-600 mb-1">Templates de feedback</label>
-                      <select title="Templates de feedback disponibles" className="w-full rounded border border-gray-300 text-sm p-2">
-                        <option value="">Sélectionner un template...</option>
-                        {feedbackTemplates.map(template => (
-                          <option key={template.id} value={template.id}>{template.title}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <textarea 
-                      className="w-full rounded-lg border border-gray-300 p-3 min-h-[150px] text-sm"
-                      placeholder="Saisissez vos commentaires détaillés ici..."
-                    />
-                    <div className="flex justify-between items-center mt-3">
-                      <button className="text-sm text-blue-600">Enregistrer comme template</button>
-                      <div className="flex items-center gap-1">
-                        <PenTool className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm text-gray-500">Annotations: 3</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="border rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-3">Actions</h3>
-                    <div className="space-y-3">
-                      <button className="w-full flex items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Enregistrer et publier les notes
-                      </button>
-                      <button className="w-full flex items-center justify-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        <Clock className="h-4 w-4" />
-                        Enregistrer comme brouillon
-                      </button>
-                      <button className="w-full flex items-center justify-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        <MessageSquare className="h-4 w-4" />
-                        Demander une révision
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
+
+      {/* Grade Entry Modal */}
+      {showGradeModal && selectedAssignment && (
+        <GradeEntryModal
+          isOpen={showGradeModal}
+          onClose={() => setShowGradeModal(false)}
+          assignmentTitle={selectedAssignment.title}
+          courseId={selectedAssignment.course}
+          students={selectedAssignment.students || []}
+          onSaveGrades={handleSaveGrades}
+        />
+      )}
+
+      {/* Feedback System Modal */}
+      {showFeedbackModal && selectedAssignment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-4xl rounded-lg bg-white p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Feedback System</h2>
+              <button
+                onClick={() => setShowFeedbackModal(false)}
+                className="rounded-full p-1 hover:bg-gray-100"
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+            <FeedbackSystem
+              onSaveFeedback={(feedback) => {
+                console.log("Saving feedback:", feedback);
+                setShowFeedbackModal(false);
+              }}
+              onSaveRubric={(criteria) => handleSaveRubric(selectedAssignment.id, criteria)}
+              templates={feedbackTemplates}
+              onAddTemplate={handleAddFeedbackTemplate}
+              onDeleteTemplate={handleDeleteFeedbackTemplate}
+            />
+          </div>
+        </div>
+      )}
     </TeacherLayout>
   );
 }

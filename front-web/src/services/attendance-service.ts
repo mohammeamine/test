@@ -23,45 +23,39 @@ export interface AttendanceFilters {
   sortDirection?: 'asc' | 'desc';
 }
 
+interface BulkAttendanceRecord {
+  studentId: string;
+  status: 'present' | 'absent' | 'late' | 'excused';
+  note?: string;
+  timeIn?: string;
+  timeOut?: string;
+}
+
 export interface BulkAttendanceData {
   classId: string;
   date: string;
-  records: {
-    studentId: string;
-    status: 'present' | 'absent' | 'late' | 'excused';
-    notes?: string;
-  }[];
+  records: BulkAttendanceRecord[];
 }
 
 export interface AttendanceStats {
-  totalClasses: number;
+  totalStudents: number;
   presentCount: number;
   absentCount: number;
   lateCount: number;
   excusedCount: number;
   attendanceRate: number;
-  studentStats?: {
-    studentId: string;
-    studentName: string;
-    presentCount: number;
-    absentCount: number;
-    lateCount: number;
-    excusedCount: number;
-    attendanceRate: number;
-  }[];
-  classStats?: {
-    classId: string;
-    className: string;
-    presentCount: number;
-    absentCount: number;
-    lateCount: number;
-    excusedCount: number;
-    attendanceRate: number;
-  }[];
+}
+
+interface ReportOptions {
+  classId: string;
+  startDate: string;
+  endDate: string;
+  format: 'pdf' | 'csv';
 }
 
 export class AttendanceService {
   private basePath = '/attendance';
+  private baseUrl = '/api/attendance';
 
   /**
    * Get attendance records with optional filtering
@@ -207,4 +201,98 @@ export class AttendanceService {
     // Return mock download URL
     return `https://example.com/reports/${classId}_${new Date().toISOString().split('T')[0]}.${format}`;
   }
-} 
+
+  /**
+   * Submit bulk attendance records for a class
+   */
+  async submitBulkAttendance(data: BulkAttendanceData): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/bulk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to submit attendance');
+    }
+  }
+
+  /**
+   * Get attendance statistics for a class
+   */
+  async getAttendanceStats(filters?: {
+    classId?: string;
+    studentId?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<AttendanceStats> {
+    const queryParams = new URLSearchParams(filters as Record<string, string>);
+    const response = await fetch(`${this.baseUrl}/stats?${queryParams}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch attendance statistics');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get attendance records for a specific class on a specific date
+   */
+  async getClassAttendance(classId: string, date: string): Promise<BulkAttendanceRecord[]> {
+    const response = await fetch(`${this.baseUrl}/class/${classId}/date/${date}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch class attendance');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Send notifications to parents of absent students
+   */
+  async notifyAbsentStudents(
+    classId: string,
+    date: string,
+    message?: string
+  ): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/notify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        classId,
+        date,
+        message,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to send notifications');
+    }
+  }
+
+  /**
+   * Generate attendance report
+   */
+  async generateAttendanceReport(options: ReportOptions): Promise<ArrayBuffer> {
+    const queryParams = new URLSearchParams({
+      classId: options.classId,
+      startDate: options.startDate,
+      endDate: options.endDate,
+      format: options.format,
+    });
+
+    const response = await fetch(`${this.baseUrl}/report?${queryParams}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to generate report');
+    }
+
+    return response.arrayBuffer();
+  }
+}

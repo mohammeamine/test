@@ -5,18 +5,25 @@ import { SignInPage } from './pages/auth/sign-in';
 import { SignUpPage } from './pages/auth/sign-up';
 import { ForgotPasswordPage } from './pages/auth/forgot-password';
 import { ResetPasswordPage } from './pages/auth/reset-password';
-import DebugNav from "./pages/debug-nav";
+import { VerifyEmailPage } from '@/pages/auth/verify-email';
+import DebugNav from "@/pages/debug-nav";
+import { Toaster } from 'sonner';
+import './index.css';
 
 // Admin Pages
-import { AdminHomePage } from './pages/dashboard/admin/home';
-import { UsersPage } from './pages/dashboard/admin/users';
-import { ClassesPage } from './pages/dashboard/admin/classes';
-import { CoursesPage } from './pages/dashboard/admin/courses';
-import { CourseContentPage } from './pages/dashboard/admin/course-content';
-import { AnalyticsPage } from './pages/dashboard/admin/analytics';
-import EventsPage from './pages/dashboard/admin/events';
-import { NotificationsPage } from './pages/dashboard/admin/notifications';
-import { SettingsPage as AdminSettingsPage } from './pages/dashboard/admin/settings';
+import { AdminHomePage } from '@/pages/dashboard/admin/home';
+import { UsersPage } from '@/pages/dashboard/admin/users';
+import { ClassesPage } from '@/pages/dashboard/admin/classes';
+import { CoursesPage } from '@/pages/dashboard/admin/courses';
+import { CourseContentPage } from '@/pages/dashboard/admin/course-content';
+import { AnalyticsPage } from '@/pages/dashboard/admin/analytics';
+import EventsPage from '@/pages/dashboard/admin/events';
+import { NotificationsPage } from '@/pages/dashboard/admin/notifications';
+import { SettingsPage as AdminSettingsPage } from '@/pages/dashboard/admin/settings';
+import { DepartmentsPage } from '@/pages/dashboard/admin/departments';
+import { ReportsPage } from '@/pages/dashboard/admin/reports';
+import { FinancePage } from '@/pages/dashboard/admin/finance';
+import { SystemSettingsPage } from '@/pages/dashboard/admin/system-settings';
 
 // Student Pages
 import StudentDashboard from './pages/dashboard/student';
@@ -29,6 +36,9 @@ import StudentPayments from './pages/dashboard/student/payments';
 import StudentDocuments from './pages/dashboard/student/documents';
 import StudentAssignments from './pages/dashboard/student/assignments';
 import StudentSupport from './pages/dashboard/student/support';
+import { StudentFeedback } from './pages/dashboard/student/feedback';
+import { StudentSchedule } from './pages/dashboard/student/schedule';
+import { StudentGrades } from './pages/dashboard/student/grades';
 
 // Teacher Pages
 import TeacherDashboard from './pages/dashboard/teacher';
@@ -40,6 +50,13 @@ import TeacherGrading from './pages/dashboard/teacher/grading';
 import TeacherAssignments from './pages/dashboard/teacher/assignments';
 import TeacherMessages from './pages/dashboard/teacher/messages';
 import TeacherDocuments from './pages/dashboard/teacher/documents';
+import TeacherCalendar from './pages/dashboard/teacher/calendar';
+import TeacherAnalytics from './pages/dashboard/teacher/analytics';
+import TeacherGrades from './pages/dashboard/teacher/grades';
+import TeacherCurriculum from './pages/dashboard/teacher/curriculum';
+import { TeacherSchedule } from './pages/dashboard/teacher/schedule';
+import { TeacherFeedback } from './pages/dashboard/teacher/feedback';
+import { TeacherReports } from './pages/dashboard/teacher/reports';
 
 // Parent Pages
 import ParentDashboard from './pages/dashboard/parent';
@@ -49,6 +66,10 @@ import ParentMonitoring from './pages/dashboard/parent/monitoring';
 import ParentMessages from './pages/dashboard/parent/messages';
 import ParentPayments from './pages/dashboard/parent/payments';
 import ParentDocuments from './pages/dashboard/parent/documents';
+import { ParentAttendance } from './pages/dashboard/parent/attendance';
+import { ParentGrades } from './pages/dashboard/parent/grades';
+import { ParentSchedule } from './pages/dashboard/parent/schedule';
+import { ParentFeedback } from './pages/dashboard/parent/feedback';
 
 // Shared Pages
 import ProfilePage from './pages/dashboard/profile';
@@ -152,6 +173,7 @@ function App() {
 
   return (
     <Router>
+      <Toaster position="top-right" richColors />
       <KeyboardShortcuts />
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -159,6 +181,7 @@ function App() {
         <Route path="/auth/sign-up" element={<SignUpPage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/auth/verify-email" element={<VerifyEmailPage />} />
         <Route path="/debug" element={<DebugNav />} />
 
         {/* Debug routes that bypass authentication */}
@@ -170,6 +193,10 @@ function App() {
         <Route path="/debug/administrator/analytics" element={<AnalyticsPage user={mockAdmin} />} />
         <Route path="/debug/administrator/events" element={<EventsPage user={mockAdmin} />} />
         <Route path="/debug/administrator/notifications" element={<NotificationsPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/departments" element={<DepartmentsPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/reports" element={<ReportsPage user={mockAdmin} />} />
+        <Route path="/debug/administrator/finance" element={<FinancePage user={mockAdmin} />} />
+        <Route path="/debug/administrator/system" element={<SystemSettingsPage user={mockAdmin} />} />
         <Route path="/debug/administrator/settings" element={<AdminSettingsPage user={mockAdmin} />} />
         <Route path="/debug/administrator/profile" element={<ProfilePage user={mockAdmin} />} />
         
@@ -183,6 +210,9 @@ function App() {
         <Route path="/debug/student/documents" element={<StudentDocuments user={mockStudent} />} />
         <Route path="/debug/student/assignments" element={<StudentAssignments user={mockStudent} />} />
         <Route path="/debug/student/support" element={<StudentSupport user={mockStudent} />} />
+        <Route path="/debug/student/feedback" element={<StudentFeedback user={mockStudent} />} />
+        <Route path="/debug/student/schedule" element={<StudentSchedule user={mockStudent} />} />
+        <Route path="/debug/student/grades" element={<StudentGrades user={mockStudent} />} />
         <Route path="/debug/student/profile" element={<ProfilePage user={mockStudent} />} />
         <Route path="/debug/student/settings" element={<SettingsPage user={mockStudent} />} />
         
@@ -197,6 +227,13 @@ function App() {
         <Route path="/debug/teacher/documents" element={<TeacherDocuments user={mockTeacher} />} />
         <Route path="/debug/teacher/profile" element={<ProfilePage user={mockTeacher} />} />
         <Route path="/debug/teacher/settings" element={<SettingsPage user={mockTeacher} />} />
+        <Route path="/debug/teacher/calendar" element={<TeacherCalendar user={mockTeacher} />} />
+        <Route path="/debug/teacher/analytics" element={<TeacherAnalytics user={mockTeacher} />} />
+        <Route path="/debug/teacher/grades" element={<TeacherGrades user={mockTeacher} />} />
+        <Route path="/debug/teacher/curriculum" element={<TeacherCurriculum user={mockTeacher} />} />
+        <Route path="/debug/teacher/schedule" element={<TeacherSchedule user={mockTeacher} />} />
+        <Route path="/debug/teacher/feedback" element={<TeacherFeedback user={mockTeacher} />} />
+        <Route path="/debug/teacher/reports" element={<TeacherReports user={mockTeacher} />} />
         
         <Route path="/debug/parent" element={<ParentDashboard user={mockParent} />} />
         <Route path="/debug/parent/children" element={<ParentChildren user={mockParent} />} />
@@ -205,6 +242,10 @@ function App() {
         <Route path="/debug/parent/messages" element={<ParentMessages user={mockParent} />} />
         <Route path="/debug/parent/payments" element={<ParentPayments user={mockParent} />} />
         <Route path="/debug/parent/documents" element={<ParentDocuments user={mockParent} />} />
+        <Route path="/debug/parent/attendance" element={<ParentAttendance user={mockParent} />} />
+        <Route path="/debug/parent/grades" element={<ParentGrades user={mockParent} />} />
+        <Route path="/debug/parent/schedule" element={<ParentSchedule user={mockParent} />} />
+        <Route path="/debug/parent/feedback" element={<ParentFeedback user={mockParent} />} />
         <Route path="/debug/parent/profile" element={<ProfilePage user={mockParent} />} />
         <Route path="/debug/parent/settings" element={<SettingsPage user={mockParent} />} />
         
@@ -344,6 +385,18 @@ function App() {
           element={user && user.role === 'student' ? <StudentSupport user={user} /> : <Navigate to="/auth/sign-in" />}
         />
         <Route
+          path="/dashboard/student/feedback"
+          element={user && user.role === 'student' ? <StudentFeedback user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/student/schedule"
+          element={user && user.role === 'student' ? <StudentSchedule user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
+          path="/dashboard/student/grades"
+          element={user && user.role === 'student' ? <StudentGrades user={user} /> : <Navigate to="/auth/sign-in" />}
+        />
+        <Route
           path="/dashboard/student/profile"
           element={user && user.role === 'student' ? <ProfilePage user={user} /> : <Navigate to="/auth/sign-in" />}
         />
@@ -367,6 +420,13 @@ function App() {
                 <Route path="/assignments" element={<TeacherAssignments user={user as User} />} />
                 <Route path="/messages" element={<TeacherMessages user={user as User} />} />
                 <Route path="/documents" element={<TeacherDocuments user={user as User} />} />
+                <Route path="/calendar" element={<TeacherCalendar user={user as User} />} />
+                <Route path="/analytics" element={<TeacherAnalytics user={user as User} />} />
+                <Route path="/grades" element={<TeacherGrades user={user as User} />} />
+                <Route path="/curriculum" element={<TeacherCurriculum user={user as User} />} />
+                <Route path="/schedule" element={<TeacherSchedule user={user as User} />} />
+                <Route path="/feedback" element={<TeacherFeedback user={user as User} />} />
+                <Route path="/reports" element={<TeacherReports user={user as User} />} />
                 <Route path="/profile" element={<ProfilePage user={user as User} />} />
                 <Route path="/settings" element={<SettingsPage user={user as User} />} />
               </Routes>
@@ -387,6 +447,10 @@ function App() {
                 <Route path="/messages" element={<ParentMessages user={user as User} />} />
                 <Route path="/payments" element={<ParentPayments user={user as User} />} />
                 <Route path="/documents" element={<ParentDocuments user={user as User} />} />
+                <Route path="/attendance" element={<ParentAttendance user={user as User} />} />
+                <Route path="/grades" element={<ParentGrades user={user as User} />} />
+                <Route path="/schedule" element={<ParentSchedule user={user as User} />} />
+                <Route path="/feedback" element={<ParentFeedback user={user as User} />} />
                 <Route path="/profile" element={<ProfilePage user={user as User} />} />
                 <Route path="/settings" element={<SettingsPage user={user as User} />} />
               </Routes>

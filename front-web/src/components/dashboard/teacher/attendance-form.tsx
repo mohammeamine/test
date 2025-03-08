@@ -15,15 +15,18 @@ import { Button } from '../../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/table';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Textarea } from '../../ui/textarea';
 
 const attendanceSchema = z.object({
   classId: z.string().min(1, 'Class is required'),
   date: z.string().min(1, 'Date is required'),
   attendance: z.array(z.object({
     studentId: z.string(),
-    present: z.boolean(),
+    status: z.enum(['present', 'absent', 'late', 'excused']),
     note: z.string().optional(),
+    timeIn: z.string().optional(),
+    timeOut: z.string().optional(),
   })),
 });
 
@@ -45,9 +48,18 @@ interface AttendanceFormProps {
   onSubmit: (data: AttendanceFormData) => void;
 }
 
+type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
+
+interface StudentAttendance {
+  status: AttendanceStatus;
+  note: string;
+  timeIn?: string;
+  timeOut?: string;
+}
+
 export function AttendanceForm({ classes, onSubmit }: AttendanceFormProps) {
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
-  const [attendanceData, setAttendanceData] = useState<{ [key: string]: boolean }>({});
+  const [attendanceData, setAttendanceData] = useState<{ [key: string]: StudentAttendance }>({});
 
   const form = useForm<AttendanceFormData>({
     resolver: zodResolver(attendanceSchema),
@@ -63,9 +75,12 @@ export function AttendanceForm({ classes, onSubmit }: AttendanceFormProps) {
     setSelectedClass(selected || null);
     if (selected) {
       const initialAttendance = selected.students.reduce((acc, student) => {
-        acc[student.id] = true;
+        acc[student.id] = {
+          status: 'present',
+          note: '',
+        };
         return acc;
-      }, {} as { [key: string]: boolean });
+      }, {} as { [key: string]: StudentAttendance });
       setAttendanceData(initialAttendance);
     }
   };
@@ -75,8 +90,7 @@ export function AttendanceForm({ classes, onSubmit }: AttendanceFormProps) {
 
     const attendance = selectedClass.students.map(student => ({
       studentId: student.id,
-      present: attendanceData[student.id] || false,
-      note: '',
+      ...attendanceData[student.id],
     }));
 
     onSubmit({
@@ -85,11 +99,40 @@ export function AttendanceForm({ classes, onSubmit }: AttendanceFormProps) {
     });
   };
 
-  const toggleAttendance = (studentId: string) => {
+  const updateStudentAttendance = (studentId: string, updates: Partial<StudentAttendance>) => {
     setAttendanceData(prev => ({
       ...prev,
-      [studentId]: !prev[studentId],
+      [studentId]: {
+        ...prev[studentId],
+        ...updates,
+      },
     }));
+  };
+
+  const getStatusIcon = (status: AttendanceStatus) => {
+    switch (status) {
+      case 'present':
+        return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'absent':
+        return <XCircle className="h-5 w-5 text-red-600" />;
+      case 'late':
+        return <Clock className="h-5 w-5 text-yellow-600" />;
+      case 'excused':
+        return <AlertCircle className="h-5 w-5 text-blue-600" />;
+    }
+  };
+
+  const getStatusColor = (status: AttendanceStatus) => {
+    switch (status) {
+      case 'present':
+        return 'text-green-600';
+      case 'absent':
+        return 'text-red-600';
+      case 'late':
+        return 'text-yellow-600';
+      case 'excused':
+        return 'text-blue-600';
+    }
   };
 
   return (
@@ -153,8 +196,10 @@ export function AttendanceForm({ classes, onSubmit }: AttendanceFormProps) {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Student Name</TableHead>
-                      <TableHead>Attendance</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Time In</TableHead>
+                      <TableHead>Time Out</TableHead>
+                      <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -162,24 +207,72 @@ export function AttendanceForm({ classes, onSubmit }: AttendanceFormProps) {
                       <TableRow key={student.id}>
                         <TableCell>{student.name}</TableCell>
                         <TableCell>
-                          {attendanceData[student.id] ? (
-                            <span className="text-green-600">Present</span>
-                          ) : (
-                            <span className="text-red-600">Absent</span>
-                          )}
+                          <Select
+                            value={attendanceData[student.id]?.status}
+                            onValueChange={(value: AttendanceStatus) => 
+                              updateStudentAttendance(student.id, { status: value })
+                            }
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="present">
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                  Present
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="absent">
+                                <div className="flex items-center gap-2">
+                                  <XCircle className="h-4 w-4 text-red-600" />
+                                  Absent
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="late">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-yellow-600" />
+                                  Late
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="excused">
+                                <div className="flex items-center gap-2">
+                                  <AlertCircle className="h-4 w-4 text-blue-600" />
+                                  Excused
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={() => toggleAttendance(student.id)}
-                          >
-                            {attendanceData[student.id] ? (
-                              <CheckCircle className="h-5 w-5 text-green-600" />
-                            ) : (
-                              <XCircle className="h-5 w-5 text-red-600" />
-                            )}
-                          </Button>
+                          <Input
+                            type="time"
+                            value={attendanceData[student.id]?.timeIn || ''}
+                            onChange={(e) => 
+                              updateStudentAttendance(student.id, { timeIn: e.target.value })
+                            }
+                            className="w-[120px]"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="time"
+                            value={attendanceData[student.id]?.timeOut || ''}
+                            onChange={(e) => 
+                              updateStudentAttendance(student.id, { timeOut: e.target.value })
+                            }
+                            className="w-[120px]"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Textarea
+                            value={attendanceData[student.id]?.note || ''}
+                            onChange={(e) => 
+                              updateStudentAttendance(student.id, { note: e.target.value })
+                            }
+                            placeholder="Add notes..."
+                            className="min-h-[60px] w-full"
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

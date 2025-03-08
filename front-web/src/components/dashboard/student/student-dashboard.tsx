@@ -74,6 +74,11 @@ export function StudentDashboard({
 
   return (
     <div className="space-y-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Welcome back, {studentName}</h1>
+        <p className="text-gray-600">Here's an overview of your academic progress</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>

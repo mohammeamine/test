@@ -9,6 +9,7 @@ export interface NavItem {
 
 interface SidebarProps {
   isOpen: boolean
+  // Reserved for future use - will be used for user-specific navigation items
   user: User
 }
 

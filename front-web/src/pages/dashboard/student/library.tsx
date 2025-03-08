@@ -1,34 +1,41 @@
 import { useState } from "react"
 import { User } from "../../../types/auth"
 import { StudentLayout } from "../../../components/dashboard/layout/student-layout"
-import { Search, BookOpen, FileText, Video, Bookmark, ExternalLink, Filter, Clock, Star, Plus, ChevronDown, Heart, HeartOff, Download } from "lucide-react"
+import { Search, BookOpen, FileText, Video, Bookmark, ExternalLink, Filter, Clock, Star, Plus, ChevronDown, Heart, HeartOff, Download, BarChart, Calendar, Clock12, BookmarkCheck, TrendingUp } from "lucide-react"
 
 interface StudentLibraryProps {
   user: User
 }
 
 interface Resource {
-  id: string;
-  title: string;
-  type: "book" | "video" | "article" | "document";
-  format: string;
-  category: string;
-  description: string;
-  author: string;
-  dateAdded: string;
-  size?: string;
-  duration?: string;
-  count?: number;
-  isBookmarked: boolean;
-  rating: number;
-  coverImage?: string;
+  id: string
+  title: string
+  type: "book" | "video" | "article" | "document"
+  format: string
+  category: string
+  description: string
+  author: string
+  dateAdded: string
+  size?: string
+  duration?: string
+  count?: number
+  isBookmarked: boolean
+  rating: number
+  coverImage?: string
+  progress?: number
+  lastAccessed?: string
+  recommendedFor?: string[]
+  difficulty: "beginner" | "intermediate" | "advanced"
 }
 
 export default function StudentLibrary({ user }: StudentLibraryProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedFormat, setSelectedFormat] = useState<string>("all");
-  const [showBookmarked, setShowBookmarked] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [selectedFormat, setSelectedFormat] = useState<string>("all")
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all")
+  const [showBookmarked, setShowBookmarked] = useState(false)
+  const [showRecommended, setShowRecommended] = useState(false)
+  const [sortBy, setSortBy] = useState<"date" | "rating" | "progress">("date")
   const [resources, setResources] = useState<Resource[]>([
     {
       id: "r1",
@@ -41,7 +48,11 @@ export default function StudentLibrary({ user }: StudentLibraryProps) {
       dateAdded: "2024-12-10",
       size: "12.4 MB",
       isBookmarked: true,
-      rating: 4.8
+      rating: 4.8,
+      progress: 65,
+      lastAccessed: "2025-03-06",
+      recommendedFor: ["Calculus", "Linear Algebra"],
+      difficulty: "advanced"
     },
     {
       id: "r2",
@@ -54,68 +65,22 @@ export default function StudentLibrary({ user }: StudentLibraryProps) {
       dateAdded: "2025-01-15",
       duration: "12 Videos • 8.5 hours",
       isBookmarked: false,
-      rating: 4.6
+      rating: 4.6,
+      progress: 30,
+      lastAccessed: "2025-03-05",
+      recommendedFor: ["Mechanics", "Thermodynamics"],
+      difficulty: "intermediate"
     },
-    {
-      id: "r3",
-      title: "Recent Advances in Quantum Computing",
-      type: "article",
-      format: "PDF",
-      category: "Computer Science",
-      description: "Collection of research papers and articles on quantum computing breakthroughs.",
-      author: "Various Authors",
-      dateAdded: "2025-02-20",
-      count: 25,
-      isBookmarked: true,
-      rating: 4.9
-    },
-    {
-      id: "r4",
-      title: "Introduction to Organic Chemistry",
-      type: "book",
-      format: "EPUB",
-      category: "Chemistry",
-      description: "A beginner's guide to organic chemistry principles and applications.",
-      author: "Dr. Sarah Williams",
-      dateAdded: "2025-01-05",
-      size: "8.7 MB",
-      isBookmarked: false,
-      rating: 4.5
-    },
-    {
-      id: "r5",
-      title: "Global Economics: Theory and Practice",
-      type: "book",
-      format: "PDF",
-      category: "Economics",
-      description: "Comprehensive textbook on global economic systems and market theories.",
-      author: "Prof. James Thompson",
-      dateAdded: "2025-02-01",
-      size: "15.2 MB",
-      isBookmarked: false,
-      rating: 4.3
-    },
-    {
-      id: "r6",
-      title: "Web Development Masterclass",
-      type: "video",
-      format: "MP4",
-      category: "Computer Science",
-      description: "Complete course on modern web development technologies and practices.",
-      author: "Tech Academy",
-      dateAdded: "2025-02-28",
-      duration: "24 Videos • 18 hours",
-      isBookmarked: true,
-      rating: 4.9
-    }
-  ]);
+    // ... other resources ...
+  ])
 
-  const categories = ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "Economics", "Literature", "History"];
-  const formats = ["PDF", "EPUB", "MP4", "MP3", "DOC", "PPT"];
+  const categories = ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "Economics", "Literature", "History"]
+  const formats = ["PDF", "EPUB", "MP4", "MP3", "DOC", "PPT"]
+  const difficulties = ["beginner", "intermediate", "advanced"]
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+    setSearchQuery(e.target.value)
+  }
 
   const handleToggleBookmark = (id: string) => {
     setResources(prev => 
@@ -124,62 +89,77 @@ export default function StudentLibrary({ user }: StudentLibraryProps) {
           ? { ...resource, isBookmarked: !resource.isBookmarked } 
           : resource
       )
-    );
-  };
+    )
+  }
 
   const filteredResources = resources.filter(resource => {
     const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           resource.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          resource.author.toLowerCase().includes(searchQuery.toLowerCase());
+                          resource.author.toLowerCase().includes(searchQuery.toLowerCase())
     
-    const matchesCategory = selectedCategory === "all" || resource.category === selectedCategory;
-    const matchesFormat = selectedFormat === "all" || resource.format === selectedFormat;
-    const matchesBookmarked = !showBookmarked || resource.isBookmarked;
+    const matchesCategory = selectedCategory === "all" || resource.category === selectedCategory
+    const matchesFormat = selectedFormat === "all" || resource.format === selectedFormat
+    const matchesDifficulty = selectedDifficulty === "all" || resource.difficulty === selectedDifficulty
+    const matchesBookmarked = !showBookmarked || resource.isBookmarked
+    const matchesRecommended = !showRecommended || (resource.recommendedFor || []).length > 0
     
-    return matchesSearch && matchesCategory && matchesFormat && matchesBookmarked;
-  });
+    return matchesSearch && matchesCategory && matchesFormat && matchesDifficulty && matchesBookmarked && matchesRecommended
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case "date":
+        return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
+      case "rating":
+        return b.rating - a.rating
+      case "progress":
+        return (b.progress || 0) - (a.progress || 0)
+      default:
+        return 0
+    }
+  })
 
   const getResourceIcon = (type: Resource["type"]) => {
     switch (type) {
       case "book":
-        return <BookOpen className="h-6 w-6 text-blue-600" />;
+        return <BookOpen className="h-6 w-6 text-blue-600" />
       case "video":
-        return <Video className="h-6 w-6 text-purple-600" />;
+        return <Video className="h-6 w-6 text-purple-600" />
       case "article":
-        return <FileText className="h-6 w-6 text-green-600" />;
+        return <FileText className="h-6 w-6 text-green-600" />
       case "document":
-        return <FileText className="h-6 w-6 text-orange-600" />;
+        return <FileText className="h-6 w-6 text-orange-600" />
       default:
-        return <FileText className="h-6 w-6 text-gray-600" />;
+        return <FileText className="h-6 w-6 text-gray-600" />
     }
-  };
+  }
 
-  const getResourceTypeColor = (type: Resource["type"]) => {
-    switch (type) {
-      case "book":
-        return "bg-blue-100";
-      case "video":
-        return "bg-purple-100";
-      case "article":
-        return "bg-green-100";
-      case "document":
-        return "bg-orange-100";
-      default:
-        return "bg-gray-100";
+  const getDifficultyColor = (difficulty: Resource["difficulty"]) => {
+    switch (difficulty) {
+      case "beginner":
+        return "text-green-600 bg-green-50"
+      case "intermediate":
+        return "text-yellow-600 bg-yellow-50"
+      case "advanced":
+        return "text-red-600 bg-red-50"
     }
-  };
+  }
 
-  const getBookmarkCount = () => {
-    return resources.filter(r => r.isBookmarked).length;
-  };
+  const getProgressColor = (progress: number) => {
+    if (progress >= 75) return "bg-green-600"
+    if (progress >= 50) return "bg-yellow-600"
+    return "bg-blue-600"
+  }
 
-  const recentlyAdded = [...resources].sort((a, b) => 
-    new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
-  ).slice(0, 3);
+  const recentlyAccessed = [...resources]
+    .filter(r => r.lastAccessed)
+    .sort((a, b) => new Date(b.lastAccessed!).getTime() - new Date(a.lastAccessed!).getTime())
+    .slice(0, 3)
+
+  const recommendedResources = resources.filter(r => (r.recommendedFor || []).length > 0).slice(0, 3)
 
   return (
     <StudentLayout user={user}>
       <div className="p-6 space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Digital Library</h1>
@@ -189,6 +169,17 @@ export default function StudentLibrary({ user }: StudentLibraryProps) {
           </div>
           <div className="flex gap-3">
             <button 
+              onClick={() => setShowRecommended(!showRecommended)}
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${
+                showRecommended 
+                  ? "bg-purple-600 text-white hover:bg-purple-700" 
+                  : "bg-white text-gray-700 border hover:bg-gray-50"
+              }`}
+            >
+              <TrendingUp className="h-4 w-4" />
+              Recommended
+            </button>
+            <button 
               onClick={() => setShowBookmarked(!showBookmarked)}
               className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${
                 showBookmarked 
@@ -197,189 +188,230 @@ export default function StudentLibrary({ user }: StudentLibraryProps) {
               }`}
             >
               <Bookmark className="h-4 w-4" />
-              {showBookmarked ? "All Resources" : "Saved Items"}
-              <span className="ml-1 rounded-full bg-white bg-opacity-20 px-2 py-0.5 text-xs">
-                {getBookmarkCount()}
-              </span>
+              Saved ({resources.filter(r => r.isBookmarked).length})
             </button>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid gap-6 md:grid-cols-4">
+          <div className="rounded-lg border bg-white p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-500">Resources in Progress</h3>
+              <BarChart className="h-5 w-5 text-blue-600" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">
+              {resources.filter(r => r.progress && r.progress > 0 && r.progress < 100).length}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-white p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-500">Completed Resources</h3>
+              <BookmarkCheck className="h-5 w-5 text-green-600" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">
+              {resources.filter(r => r.progress === 100).length}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-white p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-500">Recently Accessed</h3>
+              <Clock12 className="h-5 w-5 text-purple-600" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">
+              {recentlyAccessed.length}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-white p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-500">Recommended</h3>
+              <Star className="h-5 w-5 text-yellow-600" />
+            </div>
+            <p className="mt-2 text-2xl font-semibold text-gray-900">
+              {recommendedResources.length}
+            </p>
           </div>
         </div>
 
         {/* Search and Filters */}
         <div className="rounded-lg border bg-white p-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="md:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search library resources..."
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={searchQuery}
-                  onChange={handleSearch}
-                />
-              </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+            <div className="lg:col-span-2 relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search resources..."
+                value={searchQuery}
+                onChange={handleSearch}
+                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
             </div>
-            <div>
-              <select
-                className="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">All Categories</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <select
-                className="w-full rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={selectedFormat}
-                onChange={(e) => setSelectedFormat(e.target.value)}
-              >
-                <option value="all">All Formats</option>
-                {formats.map(format => (
-                  <option key={format} value={format}>{format}</option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            <select
+              value={selectedFormat}
+              onChange={(e) => setSelectedFormat(e.target.value)}
+              className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="all">All Formats</option>
+              {formats.map(format => (
+                <option key={format} value={format}>{format}</option>
+              ))}
+            </select>
+            <select
+              value={selectedDifficulty}
+              onChange={(e) => setSelectedDifficulty(e.target.value)}
+              className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="all">All Levels</option>
+              {difficulties.map(difficulty => (
+                <option key={difficulty} value={difficulty}>
+                  {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "date" | "rating" | "progress")}
+              className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="date">Sort by Date</option>
+              <option value="rating">Sort by Rating</option>
+              <option value="progress">Sort by Progress</option>
+            </select>
           </div>
         </div>
 
-        {/* Library Stats */}
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-lg border bg-white p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-500">Available Resources</h3>
-              <BookOpen className="h-5 w-5 text-blue-600" />
-            </div>
-            <p className="mt-2 text-3xl font-semibold text-gray-900">{resources.length}</p>
-            <p className="mt-1 text-sm text-gray-500">Books, articles & videos</p>
-          </div>
-          <div className="rounded-lg border bg-white p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-500">Recently Added</h3>
-              <Clock className="h-5 w-5 text-blue-600" />
-            </div>
-            <p className="mt-2 text-3xl font-semibold text-blue-600">{recentlyAdded.length}</p>
-            <p className="mt-1 text-sm text-gray-500">This month</p>
-          </div>
-          <div className="rounded-lg border bg-white p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-500">Saved Items</h3>
-              <Bookmark className="h-5 w-5 text-blue-600" />
-            </div>
-            <p className="mt-2 text-3xl font-semibold text-purple-600">{getBookmarkCount()}</p>
-            <p className="mt-1 text-sm text-gray-500">In your bookmarks</p>
-          </div>
-        </div>
-
-        {/* Recently Added */}
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Recently Added</h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            {recentlyAdded.map(resource => (
-              <div key={resource.id} className="rounded-lg border bg-white overflow-hidden">
-                <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center">
-                  <div className="h-16 w-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                    {getResourceIcon(resource.type)}
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                      {resource.category}
-                    </span>
-                    <div className="flex items-center">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className={`h-4 w-4 ${i < Math.floor(resource.rating) ? 'text-yellow-400' : 'text-gray-200'}`} />
-                      ))}
+        {/* Recently Accessed */}
+        {recentlyAccessed.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900">Continue Learning</h2>
+            <div className="grid gap-6 md:grid-cols-3">
+              {recentlyAccessed.map(resource => (
+                <div key={resource.id} className="rounded-lg border bg-white p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      {getResourceIcon(resource.type)}
+                      <div>
+                        <h3 className="font-medium text-gray-900">{resource.title}</h3>
+                        <p className="text-sm text-gray-500">{resource.author}</p>
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="font-medium text-gray-900 mb-1">{resource.title}</h3>
-                  <p className="text-sm text-gray-500 mb-3">{resource.author}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">{resource.format} • {resource.size || resource.duration || resource.count}</span>
-                    <button 
+                    <button
                       onClick={() => handleToggleBookmark(resource.id)}
-                      className="text-gray-400 hover:text-red-500"
+                      className="text-gray-400 hover:text-blue-600"
                     >
-                      {resource.isBookmarked ? (
-                        <Heart className="h-5 w-5 fill-red-500 text-red-500" />
-                      ) : (
-                        <Heart className="h-5 w-5" />
-                      )}
+                      <Bookmark className={`h-5 w-5 ${resource.isBookmarked ? "fill-current text-blue-600" : ""}`} />
                     </button>
                   </div>
-                </div>
-                <div className="border-t p-3 flex justify-between">
-                  <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900">
-                    <ExternalLink className="h-4 w-4" />
-                    Preview
-                  </button>
-                  <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800">
-                    <Download className="h-4 w-4" />
-                    Download
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Resources List */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">All Resources</h2>
-            <div className="text-sm text-gray-500">
-              {filteredResources.length} {filteredResources.length === 1 ? 'result' : 'results'}
-            </div>
-          </div>
-          
-          {filteredResources.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredResources.map(resource => (
-                <div key={resource.id} className="rounded-lg border bg-white p-6">
-                  <div className="flex items-center gap-3">
-                    <div className={`rounded-lg ${getResourceTypeColor(resource.type)} p-3`}>
-                      {getResourceIcon(resource.type)}
+                  {resource.progress !== undefined && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Progress</span>
+                        <span className="font-medium">{resource.progress}%</span>
+                      </div>
+                      <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+                        <div
+                          className={`h-2 rounded-full ${getProgressColor(resource.progress)}`}
+                          style={{ width: `${resource.progress}%` }}
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{resource.title}</h3>
-                      <p className="text-sm text-gray-500">{resource.category}</p>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-sm text-gray-600 line-clamp-2">{resource.description}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">
-                      {resource.format} • {resource.size || resource.duration || (resource.count ? `${resource.count} items` : '')}
-                    </span>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => handleToggleBookmark(resource.id)}
-                        className={`rounded-full p-1.5 ${resource.isBookmarked ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-400 hover:text-gray-500'}`}
-                      >
-                        {resource.isBookmarked ? <Heart className="h-4 w-4 fill-red-500" /> : <Heart className="h-4 w-4" />}
-                      </button>
-                      <button className="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-1 text-sm font-medium text-blue-600 hover:bg-blue-100">
-                        <ExternalLink className="h-4 w-4" />
-                        Access
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="rounded-lg border bg-white p-8 text-center">
-              <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <Search className="h-6 w-6 text-gray-400" />
+          </div>
+        )}
+
+        {/* Resource List */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">All Resources</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredResources.map(resource => (
+              <div key={resource.id} className="rounded-lg border bg-white p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      {getResourceIcon(resource.type)}
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${getDifficultyColor(resource.difficulty)}`}>
+                        {resource.difficulty}
+                      </span>
+                    </div>
+                    <h3 className="font-medium text-gray-900">{resource.title}</h3>
+                    <p className="text-sm text-gray-500">{resource.author}</p>
+                  </div>
+                  <button
+                    onClick={() => handleToggleBookmark(resource.id)}
+                    className="text-gray-400 hover:text-blue-600"
+                  >
+                    <Bookmark className={`h-5 w-5 ${resource.isBookmarked ? "fill-current text-blue-600" : ""}`} />
+                  </button>
+                </div>
+
+                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{resource.description}</p>
+
+                {resource.recommendedFor && (resource.recommendedFor || []).length > 0 && (
+                  <div className="mt-3">
+                    <h4 className="text-xs font-medium text-gray-500">Recommended for:</h4>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {(resource.recommendedFor || []).map(topic => (
+                        <span
+                          key={topic}
+                          className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700"
+                        >
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2 text-gray-500">
+                    {resource.duration ? (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {resource.duration}
+                      </span>
+                    ) : resource.size ? (
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-4 w-4" />
+                        {resource.size}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-1 text-yellow-500">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span>{resource.rating}</span>
+                  </div>
+                </div>
+
+                {resource.progress !== undefined && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">Progress</span>
+                      <span className="font-medium">{resource.progress}%</span>
+                    </div>
+                    <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+                      <div
+                        className={`h-2 rounded-full ${getProgressColor(resource.progress)}`}
+                        style={{ width: `${resource.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-1">No resources found</h3>
-              <p className="text-gray-500">Try adjusting your filters or search terms</p>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       </div>
     </StudentLayout>

@@ -13,6 +13,14 @@ interface TeacherGradingPageProps {
   user: User;
 }
 
+interface GradeSubmissionData {
+  studentId: string;
+  subject: string;
+  grade: string;
+  examDate: string;
+  comments?: string;
+}
+
 // Mock data
 const mockStudents = [
   { id: 's1', name: 'John Doe' },
@@ -43,7 +51,7 @@ export default function TeacherGradingPage({ user }: TeacherGradingPageProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleSubmitGrade = (data: any) => {
+  const handleSubmitGrade = (data: GradeSubmissionData) => {
     // In a real app, this would send data to an API
     console.log('Submitting grade:', data);
     

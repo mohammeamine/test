@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
-import { X, Upload, AlertCircle } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 
 interface AssignmentSubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // Will be used for API integration to identify the assignment being submitted
   assignmentId: string;
   assignmentTitle: string;
   onSubmit: (files: File[], comment: string) => void;
