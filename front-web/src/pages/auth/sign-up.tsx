@@ -1,39 +1,10 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
-import type { UserRole } from '../../types/auth'
-
-const signUpSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number')
-    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
-  confirmPassword: z.string(),
-  firstName: z.string().min(2, 'First name is required'),
-  lastName: z.string().min(2, 'Last name is required'),
-  role: z.enum(['administrator', 'teacher', 'student', 'parent'] as const),
-  phoneNumber: z.string().optional(),
-  acceptTerms: z.boolean().refine(val => val === true, {
-    message: 'You must accept the terms and conditions'
-  })
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-type SignUpFormData = z.infer<typeof signUpSchema>;
-
-const roles: { value: UserRole; label: string }[] = [
-  { value: 'administrator', label: 'Administrator' },
-  { value: 'teacher', label: 'Teacher' },
-  { value: 'student', label: 'Student' },
-  { value: 'parent', label: 'Parent' },
-]
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signUpSchema } from '../../validations/auth';
+import type { SignUpFormData } from '../../types/auth';
+import { authService } from '../../services/auth.service';
 
 export const SignUpPage = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -57,22 +28,33 @@ export const SignUpPage = () => {
       // Remove confirmPassword and acceptTerms from data before sending to API
       const { confirmPassword, acceptTerms, ...signUpData } = data
       
-      // TODO: Replace with actual API call when backend is ready
-      console.log('Sign up data:', signUpData)
+      const response = await authService.register(signUpData);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Store auth data
+      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
       
-      // Mock registration for development
-      setSuccess('Account created successfully! Redirecting to login...')
+      setSuccess('Registration successful! Redirecting to dashboard...');
       
-      // Redirect to sign in page after a delay
+      // Redirect based on user role after a short delay
       setTimeout(() => {
-        navigate('/auth/sign-in')
-      }, 2000)
-    } catch (error) {
-      console.error('Sign up error:', error)
-      setError('An error occurred during registration. Please try again.')
+        switch (response.user.role) {
+          case 'administrator':
+            navigate('/admin/dashboard');
+            break;
+          case 'teacher':
+            navigate('/teacher/dashboard');
+            break;
+          case 'student':
+            navigate('/student/dashboard');
+            break;
+          default:
+            navigate('/dashboard');
+        }
+      }, 1500);
+      
+    } catch (err: any) {
+      setError(err.message || 'Failed to register. Please try again.');
     } finally {
       setIsLoading(false)
     }
@@ -81,30 +63,26 @@ export const SignUpPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your account</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/auth/sign-in" className="font-medium text-primary hover:text-primary/90">
-            sign in to your account
-          </Link>
-        </p>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Create your account
+        </h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-              <span className="block sm:inline">{error}</span>
-            </div>
-          )}
-          
-          {success && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
-              <span className="block sm:inline">{success}</span>
-            </div>
-          )}
-          
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+                {error}
+              </div>
+            )}
+            
+            {success && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+                {success}
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -114,8 +92,10 @@ export const SignUpPage = () => {
                   id="email"
                   type="email"
                   autoComplete="email"
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                   {...register('email')}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 />
                 {errors.email && (
                   <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
@@ -123,54 +103,20 @@ export const SignUpPage = () => {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  type="password"
-                  autoComplete="new-password"
-                  {...register('password')}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                />
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
-                )}
-              </div>
-            </div>
-            
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  {...register('confirmPassword')}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                />
-                {errors.confirmPassword && (
-                  <p className="mt-2 text-sm text-red-600">{errors.confirmPassword.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
                   First name
                 </label>
                 <div className="mt-1">
                   <input
-                    id="firstName"
                     type="text"
+                    id="firstName"
                     autoComplete="given-name"
+                    className={`appearance-none block w-full px-3 py-2 border ${
+                      errors.firstName ? 'border-red-300' : 'border-gray-300'
+                    } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                     {...register('firstName')}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                   />
                   {errors.firstName && (
                     <p className="mt-2 text-sm text-red-600">{errors.firstName.message}</p>
@@ -184,16 +130,38 @@ export const SignUpPage = () => {
                 </label>
                 <div className="mt-1">
                   <input
-                    id="lastName"
                     type="text"
+                    id="lastName"
                     autoComplete="family-name"
+                    className={`appearance-none block w-full px-3 py-2 border ${
+                      errors.lastName ? 'border-red-300' : 'border-gray-300'
+                    } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                     {...register('lastName')}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                   />
                   {errors.lastName && (
                     <p className="mt-2 text-sm text-red-600">{errors.lastName.message}</p>
                   )}
                 </div>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+                Phone number
+              </label>
+              <div className="mt-1">
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  autoComplete="tel"
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.phoneNumber ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
+                  {...register('phoneNumber')}
+                />
+                {errors.phoneNumber && (
+                  <p className="mt-2 text-sm text-red-600">{errors.phoneNumber.message}</p>
+                )}
               </div>
             </div>
 
@@ -204,15 +172,14 @@ export const SignUpPage = () => {
               <div className="mt-1">
                 <select
                   id="role"
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.role ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                   {...register('role')}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 >
                   <option value="">Select a role</option>
-                  {roles.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
                 </select>
                 {errors.role && (
                   <p className="mt-2 text-sm text-red-600">{errors.role.message}</p>
@@ -221,51 +188,101 @@ export const SignUpPage = () => {
             </div>
 
             <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
-                Phone number (optional)
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
               </label>
               <div className="mt-1">
                 <input
-                  id="phoneNumber"
-                  type="tel"
-                  autoComplete="tel"
-                  {...register('phoneNumber')}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                  placeholder="+1 (555) 123-4567"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
+                  {...register('password')}
                 />
-                {errors.phoneNumber && (
-                  <p className="mt-2 text-sm text-red-600">{errors.phoneNumber.message}</p>
+                {errors.password && (
+                  <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
                 )}
               </div>
             </div>
-            
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirm password
+              </label>
+              <div className="mt-1">
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  autoComplete="new-password"
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
+                  {...register('confirmPassword')}
+                />
+                {errors.confirmPassword && (
+                  <p className="mt-2 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center">
               <input
                 id="acceptTerms"
                 type="checkbox"
+                className={`h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded ${
+                  errors.acceptTerms ? 'border-red-300' : ''
+                }`}
                 {...register('acceptTerms')}
-                className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
               />
               <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
-                I accept the <a href="#" className="text-primary hover:underline">Terms and Conditions</a> and <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+                I accept the{' '}
+                <a href="/terms" className="text-primary hover:text-primary/80">
+                  Terms and Conditions
+                </a>
               </label>
             </div>
             {errors.acceptTerms && (
-              <p className="text-sm text-red-600">{errors.acceptTerms.message}</p>
+              <p className="mt-2 text-sm text-red-600">{errors.acceptTerms.message}</p>
             )}
 
             <div>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed"
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 {isLoading ? 'Creating account...' : 'Create account'}
               </button>
             </div>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Already have an account?</span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <a
+                href="/auth/sign-in"
+                className="w-full flex justify-center py-2 px-4 border border-primary rounded-md shadow-sm text-sm font-medium text-primary bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              >
+                Sign in
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
 }
+
+export default SignUpPage;

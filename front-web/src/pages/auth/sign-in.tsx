@@ -1,18 +1,12 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { signInSchema } from '@/validations/auth';
+import type { SignInFormData } from '@/types/auth';
+import { authService } from '@/services/auth.service';
 
-const signInSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  rememberMe: z.boolean().optional(),
-})
-
-type SignInFormData = z.infer<typeof signInSchema>
-
-const SignIn = () => {
+export const SignInPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -29,33 +23,41 @@ const SignIn = () => {
     setError(null)
     
     try {
-      // TODO: Replace with actual API call when backend is ready
-      console.log('Sign in data:', data)
+      console.log('Attempting login with:', { email: data.email });
+      const response = await authService.login(data);
+      console.log('Login response:', response);
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock authentication for development
-      if (data.email === 'admin@example.com' && data.password === 'password123') {
-        // Store token in localStorage or sessionStorage based on rememberMe
-        const storage = data.rememberMe ? localStorage : sessionStorage
-        storage.setItem('authToken', 'mock-jwt-token')
-        storage.setItem('user', JSON.stringify({
-          id: '1',
-          email: data.email,
-          firstName: 'Admin',
-          lastName: 'User',
-          role: 'administrator',
-        }))
-        
-        // Redirect to dashboard based on role
-        navigate('/dashboard/admin')
-      } else {
-        setError('Invalid email or password')
+      if (!response || !response.token || !response.user) {
+        throw new Error('Invalid response from server');
       }
-    } catch (error) {
-      console.error('Sign in error:', error)
-      setError('An error occurred during sign in. Please try again.')
+
+      // Store auth data based on rememberMe preference
+      const storage = data.rememberMe ? localStorage : sessionStorage;
+      storage.setItem('auth_token', response.token);
+      storage.setItem('user', JSON.stringify(response.user));
+      
+      console.log('User role:', response.user.role);
+      // Redirect based on user role
+      switch (response.user.role) {
+        case 'administrator':
+          navigate('/dashboard/admin');
+          break;
+        case 'teacher':
+          navigate('/dashboard/teacher');
+          break;
+        case 'student':
+          navigate('/student/dashboard');
+          break;
+        case 'parent':
+          navigate('/dashboard/parent');
+          break;
+        default:
+          console.error('Unknown role:', response.user.role);
+          navigate('/dashboard');
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to sign in. Please check your credentials.');
     } finally {
       setIsLoading(false)
     }
@@ -64,24 +66,20 @@ const SignIn = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/auth/sign-up" className="font-medium text-primary hover:text-primary/90">
-            create a new account
-          </Link>
-        </p>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Sign in to your account
+        </h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-              <span className="block sm:inline">{error}</span>
-            </div>
-          )}
-          
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+                {error}
+              </div>
+            )}
+            
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -91,8 +89,10 @@ const SignIn = () => {
                   id="email"
                   type="email"
                   autoComplete="email"
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                   {...register('email')}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 />
                 {errors.email && (
                   <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
@@ -109,8 +109,10 @@ const SignIn = () => {
                   id="password"
                   type="password"
                   autoComplete="current-password"
+                  className={`appearance-none block w-full px-3 py-2 border ${
+                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  } rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                   {...register('password')}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 />
                 {errors.password && (
                   <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
@@ -123,8 +125,8 @@ const SignIn = () => {
                 <input
                   id="rememberMe"
                   type="checkbox"
-                  {...register('rememberMe')}
                   className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  {...register('rememberMe')}
                 />
                 <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
                   Remember me
@@ -132,9 +134,9 @@ const SignIn = () => {
               </div>
 
               <div className="text-sm">
-                <Link to="/auth/forgot-password" className="font-medium text-primary hover:text-primary/90">
+                <a href="/auth/forgot-password" className="font-medium text-primary hover:text-primary/80">
                   Forgot your password?
-                </Link>
+                </a>
               </div>
             </div>
 
@@ -142,17 +144,38 @@ const SignIn = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed"
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+                  isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
           </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <a
+                href="/auth/sign-up"
+                className="w-full flex justify-center py-2 px-4 border border-primary rounded-md shadow-sm text-sm font-medium text-primary bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              >
+                Sign up
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-export const SignInPage = SignIn
-export default SignIn
+export default SignInPage;

@@ -1,9 +1,104 @@
 import { Link } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { User, UserRole } from "@/types/auth"
+import { saveAuthToken } from "@/lib/api-client"
 
 export default function DebugNav() {
+  const [selectedRole, setSelectedRole] = useState<UserRole>('administrator')
+  const [mockToken, setMockToken] = useState<string | null>(null)
+
+  // Generate a mock JWT token
+  const generateMockToken = (role: UserRole): string => {
+    // Create a simple mock payload
+    const payload = {
+      userId: role === 'administrator' ? '1' : role === 'teacher' ? '2' : role === 'student' ? '3' : '4',
+      email: `${role}@school.com`,
+      role: role,
+      exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours from now
+      iat: Math.floor(Date.now() / 1000)
+    }
+    
+    // Encode to base64
+    const encodedPayload = btoa(JSON.stringify(payload))
+    // Simple mock token (this is not a real JWT, just for development)
+    return `mock.${encodedPayload}.signature`
+  }
+
+  // Create mock user
+  const createMockUser = (role: UserRole): User => {
+    return {
+      id: role === 'administrator' ? '1' : role === 'teacher' ? '2' : role === 'student' ? '3' : '4',
+      email: `${role}@school.com`,
+      firstName: role.charAt(0).toUpperCase() + role.slice(1),
+      lastName: 'User',
+      role: role,
+      createdAt: new Date().toISOString()
+    }
+  }
+
+  const setAuthAsRole = (role: UserRole) => {
+    setSelectedRole(role)
+    const mockUser = createMockUser(role)
+    const token = generateMockToken(role)
+    
+    // Save user to localStorage
+    localStorage.setItem('user', JSON.stringify(mockUser))
+    localStorage.setItem('authToken', token)
+    
+    // Set in API client
+    saveAuthToken(token)
+    
+    setMockToken(token)
+  }
+
+  useEffect(() => {
+    // Set default role when component mounts
+    setAuthAsRole(selectedRole)
+  }, [])
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Debug Navigation</h1>
+      
+      {/* Role Selector */}
+      <div className="mb-8 p-4 border rounded-lg bg-gray-50">
+        <h2 className="text-lg font-semibold mb-3">Quick Authentication</h2>
+        <p className="mb-4 text-sm text-gray-600">
+          Select a role to automatically log in as that user type. This will set mock authentication tokens.
+        </p>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setAuthAsRole('administrator')}
+            className={`px-4 py-2 rounded-md ${selectedRole === 'administrator' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            Administrator
+          </button>
+          <button 
+            onClick={() => setAuthAsRole('teacher')}
+            className={`px-4 py-2 rounded-md ${selectedRole === 'teacher' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
+          >
+            Teacher
+          </button>
+          <button 
+            onClick={() => setAuthAsRole('student')}
+            className={`px-4 py-2 rounded-md ${selectedRole === 'student' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
+          >
+            Student
+          </button>
+          <button 
+            onClick={() => setAuthAsRole('parent')}
+            className={`px-4 py-2 rounded-md ${selectedRole === 'parent' ? 'bg-orange-600 text-white' : 'bg-gray-200'}`}
+          >
+            Parent
+          </button>
+        </div>
+        {mockToken && (
+          <div className="mt-4 text-xs text-gray-500">
+            <p>Mock token set! You can now access protected routes without logging in.</p>
+            <p>Current role: <span className="font-semibold">{selectedRole}</span></p>
+          </div>
+        )}
+      </div>
       
       <div className="space-y-8">
         {/* Student Routes */}
@@ -249,12 +344,25 @@ export default function DebugNav() {
             <Link to="/dashboard/shared/forum/create" className="p-3 rounded border hover:bg-gray-50 bg-yellow-50">
               Create Forum Post
             </Link>
-            <Link to="/dashboard/shared/forum/post/post-1" className="p-3 rounded border hover:bg-gray-50 bg-yellow-50">
-              View Forum Post
+            <Link to="/dashboard/shared/forum/post/1" className="p-3 rounded border hover:bg-gray-50 bg-yellow-50">
+              View Forum Thread
+            </Link>
+          </div>
+        </div>
+        
+        {/* Non-Debug Access */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4 text-gray-600">Regular Routes</h2>
+          <p className="mb-4 text-sm text-gray-600">
+            Access the regular application routes with your mock authentication
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <Link to="/dashboard" className="p-3 rounded border hover:bg-gray-50 bg-blue-50 font-semibold">
+              Go to Main Dashboard
             </Link>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,434 +1,286 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "../../../types/auth";
 import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout";
-import { GradeEntryModal } from "../../../components/dashboard/teacher/grade-entry-modal";
-import { FeedbackSystem } from "../../../components/dashboard/teacher/feedback-system";
-import { 
-  ClipboardCheck, Search, Plus, Calendar, Clock, 
-  CheckCircle2, XCircle, Bell, FileText, PenTool, 
-  BarChart, Download, Upload, MessageSquare,
-  Filter, ChevronDown
-} from "lucide-react";
+import { AssignmentCard } from "../../../components/dashboard/shared/assignment-card";
+import { AssignmentForm } from "../../../components/dashboard/shared/assignment-form";
+import { AssignmentGrading } from "../../../components/dashboard/teacher/assignment-grading";
+import { Search, Plus } from "lucide-react";
+import { Assignment, AssignmentWithDetails, SubmissionWithDetails } from "@/types/assignment";
+import { assignmentService } from "../../../services/assignment.service";
+import { Dialog } from "@headlessui/react";
+import { ApiRequestError } from '../../../types/api';
 
 interface TeacherAssignmentsProps {
   user: User;
 }
 
-interface Student {
-  id: string;
-  name: string;
-  currentGrade?: number;
-  submissionDate?: string;
-  status: "submitted" | "not_submitted" | "late";
-}
-
-interface Assignment {
-  id: string;
-  title: string;
-  course: string;
-  dueDate: string;
-  status: 'pending' | 'graded' | 'overdue';
-  submissionCount: number;
-  totalStudents: number;
-  students?: Student[];
-  rubric?: {
-    id: string;
-    name: string;
-    description: string;
-    maxPoints: number;
-  }[];
-}
-
-interface Exam {
-  id: string;
-  title: string;
-  course: string;
-  date: string;
-  type: 'quiz' | 'exam';
-  status: 'scheduled' | 'completed';
-  students?: Student[];
-}
-
-interface Evaluation {
-  id: string;
-  title: string;
-  course: string;
-  date: string;
-  type: 'test' | 'project';
-  status: 'pending' | 'completed';
-  students?: Student[];
-}
-
-interface FeedbackTemplate {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-}
-
 export default function TeacherAssignments({ user }: TeacherAssignmentsProps) {
-  const [activeTab, setActiveTab] = useState<"assignments" | "exams" | "evaluations">("assignments");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showGradeModal, setShowGradeModal] = useState(false);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"dueDate" | "title" | "submissions">("dueDate");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [selectedStatus, setSelectedStatus] = useState<Assignment["status"] | "all">("all");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<AssignmentWithDetails | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<SubmissionWithDetails | null>(null);
+  const [assignments, setAssignments] = useState<AssignmentWithDetails[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Mock student data
-  const mockStudents: Student[] = [
-    {
-      id: "s1",
-      name: "John Smith",
-      status: "submitted",
-      submissionDate: "2025-03-05",
-      currentGrade: 85
-    },
-    {
-      id: "s2",
-      name: "Emma Johnson",
-      status: "late",
-      submissionDate: "2025-03-06"
-    },
-    {
-      id: "s3",
-      name: "Michael Brown",
-      status: "not_submitted"
-    }
-  ];
-
-  // Mock assignments data with students
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    { 
-      id: "a1", 
-      title: "Calculus Quiz #3", 
-      course: "Mathematics 101", 
-      dueDate: "2025-03-15",
-      status: "pending",
-      submissionCount: 18,
-      totalStudents: 24,
-      students: mockStudents,
-      rubric: [
-        {
-          id: "r1",
-          name: "Problem Solving",
-          description: "Ability to solve complex mathematical problems",
-          maxPoints: 40
-        },
-        {
-          id: "r2",
-          name: "Methodology",
-          description: "Clear presentation of solution steps",
-          maxPoints: 30
-        },
-        {
-          id: "r3",
-          name: "Accuracy",
-          description: "Correctness of calculations and final answers",
-          maxPoints: 30
-        }
-      ]
-    },
-    { 
-      id: "a2", 
-      title: "Lab Report #2", 
-      course: "Physics 201", 
-      dueDate: "2025-03-20",
-      status: "graded",
-      submissionCount: 22,
-      totalStudents: 22,
-      students: mockStudents
-    },
-    { 
-      id: "a3", 
-      title: "Literary Analysis Essay", 
-      course: "English Literature", 
-      dueDate: "2025-03-18",
-      status: "overdue",
-      submissionCount: 15,
-      totalStudents: 26,
-      students: mockStudents
-    }
-  ]);
-
-  // Mock feedback templates
-  const [feedbackTemplates, setFeedbackTemplates] = useState<FeedbackTemplate[]>([
-    {
-      id: "ft1",
-      title: "Excellent Work",
-      content: "Outstanding work! Your analysis demonstrates a deep understanding of the concepts and excellent attention to detail.",
-      category: "positive"
-    },
-    {
-      id: "ft2",
-      title: "Good Effort - Needs Improvement",
-      content: "Good effort on this assignment. To improve, focus on [specific area] and consider [suggestion].",
-      category: "constructive"
-    },
-    {
-      id: "ft3",
-      title: "Incomplete Submission",
-      content: "Your submission is incomplete. Please ensure you address all requirements and resubmit.",
-      category: "improvement"
-    }
-  ]);
-
-  const handleCreateAssignment = () => {
-    setShowCreateModal(true);
-  };
-
-  const handleGradeAssignment = (assignment: Assignment) => {
-    setSelectedAssignment(assignment);
-    setShowGradeModal(true);
-  };
-
-  const handleSaveGrades = (grades: { studentId: string; grade: number; feedback: string }[]) => {
-    if (!selectedAssignment) return;
-
-    // Update assignments with new grades
-    setAssignments(prevAssignments => 
-      prevAssignments.map(assignment => {
-        if (assignment.id === selectedAssignment.id) {
-          return {
-            ...assignment,
-            status: "graded",
-            students: assignment.students?.map(student => {
-              const gradeData = grades.find(g => g.studentId === student.id);
-              if (gradeData) {
-                return {
-                  ...student,
-                  currentGrade: gradeData.grade
-                };
-              }
-              return student;
-            })
-          };
-        }
-        return assignment;
-      })
-    );
-
-    setShowGradeModal(false);
-  };
-
-  const handleAddFeedbackTemplate = (template: Omit<FeedbackTemplate, "id">) => {
-    const newTemplate: FeedbackTemplate = {
-      ...template,
-      id: Math.random().toString(36).substr(2, 9)
+  // Fetch assignments
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        const data = await assignmentService.getAssignments({
+          status: selectedStatus === "all" ? undefined : selectedStatus,
+          teacherId: user.id
+        });
+        setAssignments(data);
+        setError(null);
+      } catch (err: unknown) {
+        const error = err as ApiRequestError;
+        setError("Failed to load assignments: " + (error.message || "Unknown error"));
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setFeedbackTemplates([...feedbackTemplates, newTemplate]);
+
+    fetchAssignments();
+  }, [selectedStatus, user.id]);
+
+  // Filter assignments based on search query
+  const filteredAssignments = assignments.filter(assignment => {
+    const matchesSearch = 
+      assignment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (assignment.course?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+    
+    return matchesSearch;
+  });
+
+  // Handle assignment creation
+  const handleCreateAssignment = async (data: Omit<Assignment, 'id' | 'createdAt' | 'updatedAt' | 'stats'>) => {
+    setIsSubmitting(true);
+    try {
+      await assignmentService.createAssignment(data);
+      
+      // Refresh assignments
+      const updatedAssignments = await assignmentService.getAssignments({
+        teacherId: user.id
+      });
+      setAssignments(updatedAssignments);
+
+      // Close modal
+      setIsCreateModalOpen(false);
+    } catch (err: any) {
+      setError("Failed to create assignment: " + (err.message || "Unknown error"));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteFeedbackTemplate = (id: string) => {
-    setFeedbackTemplates(templates => templates.filter(t => t.id !== id));
-  };
+  // Handle assignment grading
+  const handleGradeSubmission = async (grade: number, feedback: string) => {
+    if (!selectedSubmission) return;
 
-  const handleSaveRubric = (assignmentId: string, criteria: Assignment["rubric"]) => {
-    setAssignments(prevAssignments =>
-      prevAssignments.map(assignment =>
-        assignment.id === assignmentId
-          ? { ...assignment, rubric: criteria }
-          : assignment
-      )
-    );
-  };
+    setIsSubmitting(true);
+    try {
+      await assignmentService.gradeSubmission(selectedSubmission.id, {
+        grade,
+        feedback
+      });
 
-  const filteredAssignments = assignments
-    .filter(assignment => {
-      const matchesStatus = filterStatus === "all" || assignment.status === filterStatus;
-      const matchesSearch = 
-        assignment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        assignment.course.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesStatus && matchesSearch;
-    })
-    .sort((a, b) => {
-      if (sortBy === "dueDate") {
-        return sortOrder === "asc"
-          ? new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-          : new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
-      }
-      if (sortBy === "submissions") {
-        return sortOrder === "asc"
-          ? a.submissionCount - b.submissionCount
-          : b.submissionCount - a.submissionCount;
-      }
-      return sortOrder === "asc"
-        ? a.title.localeCompare(b.title)
-        : b.title.localeCompare(a.title);
-    });
+      // Refresh assignments
+      const updatedAssignments = await assignmentService.getAssignments({
+        teacherId: user.id
+      });
+      setAssignments(updatedAssignments);
+
+      // Close modal
+      setIsGradeModalOpen(false);
+      setSelectedSubmission(null);
+    } catch (err: any) {
+      setError("Failed to grade submission: " + (err.message || "Unknown error"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <TeacherLayout user={user}>
       <div className="p-6 space-y-6">
-        {/* Header with navigation tabs */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Assignment Management</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Create, manage, and grade assignments for your classes
+              Create and manage your assignments
             </p>
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={handleCreateAssignment}
-              className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4" />
-              Create
-            </button>
-            <button className="flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50">
-              <Bell className="h-4 w-4" />
-              Notifications
-            </button>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <Plus className="h-5 w-5 inline-block mr-1" />
+            Create Assignment
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search assignments..."
+                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          <select
+            className="rounded-lg border border-gray-300 py-2 px-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value as Assignment["status"] | "all")}
+          >
+            <option value="all">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+
+        {/* Assignment Stats */}
+        <div className="grid gap-6 md:grid-cols-4">
+          <div className="rounded-lg border bg-white p-6">
+            <h3 className="text-sm font-medium text-gray-500">Total Assignments</h3>
+            <p className="mt-2 text-3xl font-semibold text-gray-900">{assignments.length}</p>
+          </div>
+          <div className="rounded-lg border bg-white p-6">
+            <h3 className="text-sm font-medium text-gray-500">Published</h3>
+            <p className="mt-2 text-3xl font-semibold text-yellow-600">
+              {assignments.filter(a => a.status === "published").length}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-white p-6">
+            <h3 className="text-sm font-medium text-gray-500">Closed</h3>
+            <p className="mt-2 text-3xl font-semibold text-blue-600">
+              {assignments.filter(a => a.status === "closed").length}
+            </p>
+          </div>
+          <div className="rounded-lg border bg-white p-6">
+            <h3 className="text-sm font-medium text-gray-500">Draft</h3>
+            <p className="mt-2 text-3xl font-semibold text-green-600">
+              {assignments.filter(a => a.status === "draft").length}
+            </p>
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search assignments..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border border-gray-300 pl-9 pr-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full rounded-md border border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="graded">Graded</option>
-              <option value="overdue">Overdue</option>
-            </select>
-          </div>
-          <div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              className="w-full rounded-md border border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="dueDate">Sort by Due Date</option>
-              <option value="title">Sort by Title</option>
-              <option value="submissions">Sort by Submissions</option>
-            </select>
-          </div>
-          <div>
-            <button
-              onClick={() => setSortOrder(order => order === "asc" ? "desc" : "asc")}
-              className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 py-2 text-sm font-medium hover:bg-gray-50"
-            >
-              {sortOrder === "asc" ? "Ascending" : "Descending"}
-              <ChevronDown className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Assignment List */}
-        <div className="space-y-4">
-          {filteredAssignments.map(assignment => (
-            <div
-              key={assignment.id}
-              className="rounded-lg border bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">{assignment.title}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{assignment.course}</p>
-                  <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Upload className="h-4 w-4" />
-                      {assignment.submissionCount}/{assignment.totalStudents} Submissions
-                    </span>
-                  </div>
+        {/* Error Message */}
+        {error && (
+          <div className="rounded-md bg-red-50 p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      assignment.status === "graded"
-                        ? "bg-green-100 text-green-800"
-                        : assignment.status === "overdue"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-end gap-2">
-                <button
-                  onClick={() => handleGradeAssignment(assignment)}
-                  className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-                >
-                  <PenTool className="h-4 w-4" />
-                  Grade
-                </button>
-                <button className="flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                  <MessageSquare className="h-4 w-4" />
-                  Feedback
-                </button>
-                <button className="flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                  <Download className="h-4 w-4" />
-                  Download All
-                </button>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+            <p className="mt-2 text-sm text-gray-500">Loading assignments...</p>
+          </div>
+        ) : (
+          /* Assignments List */
+          <div className="space-y-4">
+            {filteredAssignments.map((assignment) => (
+              <AssignmentCard
+                key={assignment.id}
+                assignment={assignment}
+                role="teacher"
+                onGrade={async () => {
+                  setSelectedAssignment(assignment);
+                  // Fetch submissions for this assignment
+                  try {
+                    const submissions = await assignmentService.getSubmissionsForAssignment(assignment.id);
+                    if (submissions.length > 0) {
+                      setSelectedSubmission(submissions[0]); // Show first submission
+                      setIsGradeModalOpen(true);
+                    } else {
+                      setError("No submissions found for this assignment");
+                    }
+                  } catch (err: any) {
+                    setError("Failed to load submissions: " + (err.message || "Unknown error"));
+                  }
+                }}
+                onView={() => {
+                  // Handle viewing assignment details
+                }}
+              />
+            ))}
+
+            {filteredAssignments.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-sm text-gray-500">No assignments found</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Create Assignment Modal */}
+        <Dialog
+          open={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          className="relative z-50"
+        >
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="mx-auto max-w-2xl w-full rounded-lg bg-white p-6">
+              <Dialog.Title className="text-lg font-medium text-gray-900 mb-4">
+                Create New Assignment
+              </Dialog.Title>
+
+              <AssignmentForm
+                onSubmit={handleCreateAssignment}
+                onCancel={() => setIsCreateModalOpen(false)}
+                isSubmitting={isSubmitting}
+              />
+            </Dialog.Panel>
+          </div>
+        </Dialog>
+
+        {/* Grade Assignment Modal */}
+        <Dialog
+          open={isGradeModalOpen}
+          onClose={() => setIsGradeModalOpen(false)}
+          className="relative z-50"
+        >
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Dialog.Panel className="mx-auto max-w-2xl w-full rounded-lg bg-white p-6">
+              <Dialog.Title className="text-lg font-medium text-gray-900 mb-4">
+                Grade Assignment: {selectedAssignment?.title}
+              </Dialog.Title>
+
+              {selectedSubmission && (
+                <AssignmentGrading
+                  submission={selectedSubmission}
+                  onSubmit={handleGradeSubmission}
+                  onCancel={() => setIsGradeModalOpen(false)}
+                  isSubmitting={isSubmitting}
+                />
+              )}
+            </Dialog.Panel>
+          </div>
+        </Dialog>
       </div>
-
-      {/* Grade Entry Modal */}
-      {showGradeModal && selectedAssignment && (
-        <GradeEntryModal
-          isOpen={showGradeModal}
-          onClose={() => setShowGradeModal(false)}
-          assignmentTitle={selectedAssignment.title}
-          courseId={selectedAssignment.course}
-          students={selectedAssignment.students || []}
-          onSaveGrades={handleSaveGrades}
-        />
-      )}
-
-      {/* Feedback System Modal */}
-      {showFeedbackModal && selectedAssignment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-4xl rounded-lg bg-white p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Feedback System</h2>
-              <button
-                onClick={() => setShowFeedbackModal(false)}
-                className="rounded-full p-1 hover:bg-gray-100"
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
-            </div>
-            <FeedbackSystem
-              onSaveFeedback={(feedback) => {
-                console.log("Saving feedback:", feedback);
-                setShowFeedbackModal(false);
-              }}
-              onSaveRubric={(criteria) => handleSaveRubric(selectedAssignment.id, criteria)}
-              templates={feedbackTemplates}
-              onAddTemplate={handleAddFeedbackTemplate}
-              onDeleteTemplate={handleDeleteFeedbackTemplate}
-            />
-          </div>
-        </div>
-      )}
     </TeacherLayout>
   );
 }

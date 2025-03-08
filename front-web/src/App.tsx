@@ -79,8 +79,26 @@ import { ForumPage } from './pages/dashboard/shared/forum';
 import { CreatePostPage } from './pages/dashboard/shared/forum/create';
 import { PostPage } from './pages/dashboard/shared/forum/post';
 
-import { User } from './types/auth';
-import { ProtectedRoute } from './components/auth/protected-route';
+import { UserResponse, UserRole } from '@/types/auth';
+
+// Auth Guard Component
+const PrivateRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles: UserRole[] }) => {
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const token = localStorage.getItem('auth_token');
+
+  if (!token || !user) {
+    console.log('No token or user found, redirecting to login');
+    return <Navigate to="/auth/sign-in" replace />;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    console.log('User role not allowed:', user.role, 'Allowed roles:', allowedRoles);
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 // Keyboard shortcut handler component
 const KeyboardShortcuts = () => {
@@ -123,56 +141,66 @@ const KeyboardShortcuts = () => {
 };
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserResponse | null>(() => {
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
   useEffect(() => {
-    // TODO: Replace this with actual authentication logic
-    // This is just a temporary mock user for demonstration
-    const mockUser: User = {
-      id: '1',
-      email: 'admin@example.com',
-      firstName: 'Admin',
-      lastName: 'User',
-      role: 'administrator',
-      createdAt: new Date().toISOString(),
-    };
-    setUser(mockUser);
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
 
-  const mockAdmin: User = {
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storedUser = localStorage.getItem('user');
+      setUser(storedUser ? JSON.parse(storedUser) : null);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const mockAdmin: UserResponse = {
     id: '1',
     email: 'admin@example.com',
     firstName: 'Admin',
     lastName: 'User',
     role: 'administrator',
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  const mockStudent: User = {
+  const mockStudent: UserResponse = {
     id: '2',
     email: 'student@example.com',
     firstName: 'Student',
     lastName: 'User',
     role: 'student',
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  const mockTeacher: User = {
+  const mockTeacher: UserResponse = {
     id: '3',
     email: 'teacher@example.com',
     firstName: 'Teacher',
     lastName: 'User',
     role: 'teacher',
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  const mockParent: User = {
+  const mockParent: UserResponse = {
     id: '4',
     email: 'parent@example.com',
     firstName: 'Parent',
     lastName: 'User',
     role: 'parent',
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   return (
@@ -281,116 +309,178 @@ function App() {
         <Route
           path="/dashboard/admin/*"
           element={
-            <ProtectedRoute userRole="administrator">
+            <PrivateRoute allowedRoles={['administrator']}>
               <Routes>
-                <Route path="/" element={<AdminHomePage user={user as User} />} />
-                <Route path="/users" element={<UsersPage user={user as User} />} />
-                <Route path="/classes" element={<ClassesPage user={user as User} />} />
-                <Route path="/courses" element={<CoursesPage user={user as User} />} />
-                <Route path="/course/:id" element={<CourseContentPage user={user as User} />} />
-                <Route path="/analytics" element={<AnalyticsPage user={user as User} />} />
-                <Route path="/events" element={<EventsPage user={user as User} />} />
-                <Route path="/notifications" element={<NotificationsPage user={user as User} />} />
-                <Route path="/settings" element={<AdminSettingsPage user={user as User} />} />
-                <Route path="/departments" element={<DepartmentsPage user={user as User} />} />
-                <Route path="/reports" element={<ReportsPage user={user as User} />} />
-                <Route path="/finance" element={<FinancePage user={user as User} />} />
-                <Route path="/system-settings" element={<SystemSettingsPage user={user as User} />} />
-                <Route path="/contact" element={<ContactPage user={user as User} />} />
-                <Route path="/profile" element={<ProfilePage user={user as User} />} />
+                <Route path="/" element={<AdminHomePage user={user as UserResponse} />} />
+                <Route path="/users" element={<UsersPage user={user as UserResponse} />} />
+                <Route path="/classes" element={<ClassesPage user={user as UserResponse} />} />
+                <Route path="/courses" element={<CoursesPage user={user as UserResponse} />} />
+                <Route path="/course/:id" element={<CourseContentPage user={user as UserResponse} />} />
+                <Route path="/analytics" element={<AnalyticsPage user={user as UserResponse} />} />
+                <Route path="/events" element={<EventsPage user={user as UserResponse} />} />
+                <Route path="/notifications" element={<NotificationsPage user={user as UserResponse} />} />
+                <Route path="/settings" element={<AdminSettingsPage user={user as UserResponse} />} />
+                <Route path="/departments" element={<DepartmentsPage user={user as UserResponse} />} />
+                <Route path="/reports" element={<ReportsPage user={user as UserResponse} />} />
+                <Route path="/finance" element={<FinancePage user={user as UserResponse} />} />
+                <Route path="/system-settings" element={<SystemSettingsPage user={user as UserResponse} />} />
+                <Route path="/contact" element={<ContactPage user={user as UserResponse} />} />
+                <Route path="/profile" element={<ProfilePage user={user as UserResponse} />} />
               </Routes>
-            </ProtectedRoute>
+            </PrivateRoute>
           }
         />
 
         {/* Student Routes */}
-        <Route
-          path="/dashboard/student"
-          element={user && user.role === 'student' ? <StudentDashboard user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/courses"
-          element={user && user.role === 'student' ? <StudentCourses user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/materials"
-          element={user && user.role === 'student' ? <StudentMaterials user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/library"
-          element={user && user.role === 'student' ? <StudentLibrary user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/certificates"
-          element={user && user.role === 'student' ? <StudentCertificates user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/attendance"
-          element={user && user.role === 'student' ? <StudentAttendance user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/payments"
-          element={user && user.role === 'student' ? <StudentPayments user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/documents"
-          element={user && user.role === 'student' ? <StudentDocuments user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/assignments"
-          element={user && user.role === 'student' ? <StudentAssignments user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/support"
-          element={user && user.role === 'student' ? <StudentSupport user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/feedback"
-          element={user && user.role === 'student' ? <StudentFeedback user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/schedule"
-          element={user && user.role === 'student' ? <StudentSchedule user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/grades"
-          element={user && user.role === 'student' ? <StudentGrades user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/profile"
-          element={user && user.role === 'student' ? <ProfilePage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
-        <Route
-          path="/dashboard/student/settings"
-          element={user && user.role === 'student' ? <SettingsPage user={user} /> : <Navigate to="/auth/sign-in" />}
-        />
+        <Route path="/student/dashboard">
+          <Route 
+            index 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentDashboard user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="courses" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentCourses user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="materials" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentMaterials user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="library" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentLibrary user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="certificates" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentCertificates user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="attendance" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentAttendance user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="payments" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentPayments user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="documents" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentDocuments user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="assignments" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentAssignments user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="support" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentSupport user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="feedback" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentFeedback user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="schedule" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentSchedule user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="grades" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <StudentGrades user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="profile" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <ProfilePage user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="settings" 
+            element={
+              <PrivateRoute allowedRoles={['student']}>
+                <SettingsPage user={user as UserResponse} />
+              </PrivateRoute>
+            } 
+          />
+        </Route>
 
         {/* Teacher Routes */}
         <Route
           path="/dashboard/teacher/*"
           element={
-            <ProtectedRoute userRole="teacher">
+            <PrivateRoute allowedRoles={['teacher']}>
               <Routes>
-                <Route path="/" element={<TeacherDashboard user={user as User} />} />
-                <Route path="/classes" element={<TeacherClasses user={user as User} />} />
-                <Route path="/materials" element={<TeacherMaterials user={user as User} />} />
-                <Route path="/students" element={<TeacherStudents user={user as User} />} />
-                <Route path="/attendance" element={<TeacherAttendance user={user as User} />} />
-                <Route path="/grading" element={<TeacherGrading user={user as User} />} />
-                <Route path="/assignments" element={<TeacherAssignments user={user as User} />} />
-                <Route path="/messages" element={<TeacherMessages user={user as User} />} />
-                <Route path="/documents" element={<TeacherDocuments user={user as User} />} />
-                <Route path="/calendar" element={<TeacherCalendar user={user as User} />} />
-                <Route path="/analytics" element={<TeacherAnalytics user={user as User} />} />
-                <Route path="/grades" element={<TeacherGrades user={user as User} />} />
-                <Route path="/curriculum" element={<TeacherCurriculum user={user as User} />} />
-                <Route path="/schedule" element={<TeacherSchedule user={user as User} />} />
-                <Route path="/feedback" element={<TeacherFeedback user={user as User} />} />
-                <Route path="/reports" element={<TeacherReports user={user as User} />} />
-                <Route path="/profile" element={<ProfilePage user={user as User} />} />
-                <Route path="/settings" element={<SettingsPage user={user as User} />} />
+                <Route path="/" element={<TeacherDashboard user={user as UserResponse} />} />
+                <Route path="/classes" element={<TeacherClasses user={user as UserResponse} />} />
+                <Route path="/materials" element={<TeacherMaterials user={user as UserResponse} />} />
+                <Route path="/students" element={<TeacherStudents user={user as UserResponse} />} />
+                <Route path="/attendance" element={<TeacherAttendance user={user as UserResponse} />} />
+                <Route path="/grading" element={<TeacherGrading user={user as UserResponse} />} />
+                <Route path="/assignments" element={<TeacherAssignments user={user as UserResponse} />} />
+                <Route path="/messages" element={<TeacherMessages user={user as UserResponse} />} />
+                <Route path="/documents" element={<TeacherDocuments user={user as UserResponse} />} />
+                <Route path="/calendar" element={<TeacherCalendar user={user as UserResponse} />} />
+                <Route path="/analytics" element={<TeacherAnalytics user={user as UserResponse} />} />
+                <Route path="/grades" element={<TeacherGrades user={user as UserResponse} />} />
+                <Route path="/curriculum" element={<TeacherCurriculum user={user as UserResponse} />} />
+                <Route path="/schedule" element={<TeacherSchedule user={user as UserResponse} />} />
+                <Route path="/feedback" element={<TeacherFeedback user={user as UserResponse} />} />
+                <Route path="/reports" element={<TeacherReports user={user as UserResponse} />} />
+                <Route path="/profile" element={<ProfilePage user={user as UserResponse} />} />
+                <Route path="/settings" element={<SettingsPage user={user as UserResponse} />} />
               </Routes>
-            </ProtectedRoute>
+            </PrivateRoute>
           }
         />
 
@@ -398,23 +488,23 @@ function App() {
         <Route
           path="/dashboard/parent/*"
           element={
-            <ProtectedRoute userRole="parent">
+            <PrivateRoute allowedRoles={['parent']}>
               <Routes>
-                <Route path="/" element={<ParentDashboard user={user as User} />} />
-                <Route path="/children" element={<ParentChildren user={user as User} />} />
-                <Route path="/progress" element={<ParentProgress user={user as User} />} />
-                <Route path="/monitoring" element={<ParentMonitoring user={user as User} />} />
-                <Route path="/messages" element={<ParentMessages user={user as User} />} />
-                <Route path="/payments" element={<ParentPayments user={user as User} />} />
-                <Route path="/documents" element={<ParentDocuments user={user as User} />} />
-                <Route path="/attendance" element={<ParentAttendance user={user as User} />} />
-                <Route path="/grades" element={<ParentGrades user={user as User} />} />
-                <Route path="/schedule" element={<ParentSchedule user={user as User} />} />
-                <Route path="/feedback" element={<ParentFeedback user={user as User} />} />
-                <Route path="/profile" element={<ProfilePage user={user as User} />} />
-                <Route path="/settings" element={<SettingsPage user={user as User} />} />
+                <Route path="/" element={<ParentDashboard user={user as UserResponse} />} />
+                <Route path="/children" element={<ParentChildren user={user as UserResponse} />} />
+                <Route path="/progress" element={<ParentProgress user={user as UserResponse} />} />
+                <Route path="/monitoring" element={<ParentMonitoring user={user as UserResponse} />} />
+                <Route path="/messages" element={<ParentMessages user={user as UserResponse} />} />
+                <Route path="/payments" element={<ParentPayments user={user as UserResponse} />} />
+                <Route path="/documents" element={<ParentDocuments user={user as UserResponse} />} />
+                <Route path="/attendance" element={<ParentAttendance user={user as UserResponse} />} />
+                <Route path="/grades" element={<ParentGrades user={user as UserResponse} />} />
+                <Route path="/schedule" element={<ParentSchedule user={user as UserResponse} />} />
+                <Route path="/feedback" element={<ParentFeedback user={user as UserResponse} />} />
+                <Route path="/profile" element={<ProfilePage user={user as UserResponse} />} />
+                <Route path="/settings" element={<SettingsPage user={user as UserResponse} />} />
               </Routes>
-            </ProtectedRoute>
+            </PrivateRoute>
           }
         />
 

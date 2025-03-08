@@ -102,3 +102,25 @@ export class ApiClient {
 export const apiClient = new ApiClient({
   baseURL: API_BASE_URL,
 })
+
+export default apiClient;
+
+// Add token management from localStorage
+export const initializeAuth = () => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    apiClient.setAuthToken(token);
+  }
+};
+
+// Save token to localStorage
+export const saveAuthToken = (token: string) => {
+  localStorage.setItem('authToken', token);
+  apiClient.setAuthToken(token);
+};
+
+// Remove token from localStorage
+export const removeAuthToken = () => {
+  localStorage.removeItem('authToken');
+  apiClient.removeAuthToken();
+};
