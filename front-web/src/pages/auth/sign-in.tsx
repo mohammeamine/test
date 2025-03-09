@@ -46,7 +46,7 @@ export const SignInPage = () => {
           navigate('/dashboard/teacher');
           break;
         case 'student':
-          navigate('/student/dashboard');
+          navigate('/dashboard/student');
           break;
         case 'parent':
           navigate('/dashboard/parent');

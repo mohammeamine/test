@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { User } from "../../../types/auth";
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout";
-import { Calendar as CalendarIcon, Clock, MapPin, Search } from "lucide-react";
-import { format } from "date-fns";
+import { UserResponse } from "../../../types/auth";
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
+import { Clock, MapPin } from "lucide-react";
+
 
 interface ParentScheduleProps {
-  user: User;
+  user: UserResponse;
 }
 
 interface ClassSchedule {
@@ -24,7 +24,7 @@ interface ClassSchedule {
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 7 PM
 
-export const ParentSchedule = ({ user }: ParentScheduleProps) => {
+export default function ParentSchedule({ user }: ParentScheduleProps) {
   const [selectedChild, setSelectedChild] = useState<string>("all");
 
   // Mock schedule data
@@ -109,7 +109,7 @@ export const ParentSchedule = ({ user }: ParentScheduleProps) => {
   };
 
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -228,6 +228,6 @@ export const ParentSchedule = ({ user }: ParentScheduleProps) => {
           ))}
         </div>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   );
 };

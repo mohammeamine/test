@@ -8,4 +8,5 @@ export interface ScheduleEvent {
     dayOfWeek: number;
     courseId?: string;
     description?: string;
+    color?: string;
   }

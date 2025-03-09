@@ -8,7 +8,7 @@ interface ParentMessagesProps {
 
 export default function ParentMessages({ user }: ParentMessagesProps) {
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -111,6 +111,6 @@ export default function ParentMessages({ user }: ParentMessagesProps) {
           </div>
         </div>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   )
 } 

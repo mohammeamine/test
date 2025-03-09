@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User } from "../../../types/auth";
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout";
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
 import { Calendar as CalendarIcon, Search, Download, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSameMonth, isSameDay } from "date-fns";
 
@@ -32,7 +32,7 @@ interface ChildAttendanceStats {
   attendanceRate: number;
 }
 
-export const ParentAttendance = ({ user }: ParentAttendanceProps) => {
+export default function ParentAttendance({ user }: ParentAttendanceProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedStatus, setSelectedStatus] = useState<AttendanceRecord["status"] | "all">("all");
@@ -178,7 +178,7 @@ export const ParentAttendance = ({ user }: ParentAttendanceProps) => {
   };
 
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -320,6 +320,6 @@ export const ParentAttendance = ({ user }: ParentAttendanceProps) => {
           ))}
         </div>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   );
 };

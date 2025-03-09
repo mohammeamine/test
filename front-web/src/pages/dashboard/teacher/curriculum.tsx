@@ -141,7 +141,7 @@ export default function TeacherCurriculum({ user }: TeacherCurriculumProps) {
   })
 
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -371,6 +371,6 @@ export default function TeacherCurriculum({ user }: TeacherCurriculumProps) {
           </div>
         )}
       </div>
-    </TeacherLayout>
+    </DashboardLayout>
   )
 }

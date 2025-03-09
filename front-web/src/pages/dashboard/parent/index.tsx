@@ -1,5 +1,5 @@
 import { User } from "../../../types/auth"
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { useNavigate } from "react-router-dom"
 import {
   GraduationCap,
@@ -19,7 +19,7 @@ export default function ParentDashboard({ user }: ParentDashboardProps) {
   const navigate = useNavigate();
 
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
@@ -188,6 +188,6 @@ export default function ParentDashboard({ user }: ParentDashboardProps) {
           </div>
         </div>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   )
 }

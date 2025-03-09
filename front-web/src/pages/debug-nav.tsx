@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { User, UserRole } from "@/types/auth"
+import { UserResponse, UserRole } from "@/types/auth"
 import { saveAuthToken } from "@/lib/api-client"
 
 export default function DebugNav() {
@@ -25,10 +25,11 @@ export default function DebugNav() {
   }
 
   // Create mock user
-  const createMockUser = (role: UserRole): User => {
+  const createMockUser = (role: UserRole): UserResponse => {
     return {
       id: role === 'administrator' ? '1' : role === 'teacher' ? '2' : role === 'student' ? '3' : '4',
       email: `${role}@school.com`,
+      updatedAt: new Date().toISOString(),
       firstName: role.charAt(0).toUpperCase() + role.slice(1),
       lastName: 'User',
       role: role,
@@ -105,34 +106,34 @@ export default function DebugNav() {
         <div>
           <h2 className="text-xl font-semibold mb-4 text-blue-600">Student Pages</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Link to="/debug/student" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student" className="p-3 rounded border hover:bg-gray-50">
               Student Dashboard
             </Link>
-            <Link to="/debug/student/courses" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/courses" className="p-3 rounded border hover:bg-gray-50">
               Student Courses
             </Link>
-            <Link to="/debug/student/materials" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/materials" className="p-3 rounded border hover:bg-gray-50">
               Course Materials
             </Link>
-            <Link to="/debug/student/library" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/library" className="p-3 rounded border hover:bg-gray-50">
               Digital Library
             </Link>
-            <Link to="/debug/student/certificates" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/certificates" className="p-3 rounded border hover:bg-gray-50">
               Certificates
             </Link>
-            <Link to="/debug/student/attendance" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/attendance" className="p-3 rounded border hover:bg-gray-50">
               Attendance
             </Link>
-            <Link to="/debug/student/payments" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/payments" className="p-3 rounded border hover:bg-gray-50">
               Payments
             </Link>
-            <Link to="/debug/student/documents" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/documents" className="p-3 rounded border hover:bg-gray-50">
               Documents
             </Link>
-            <Link to="/debug/student/assignments" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/assignments" className="p-3 rounded border hover:bg-gray-50">
               Assignments
             </Link>
-            <Link to="/debug/student/support" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/support" className="p-3 rounded border hover:bg-gray-50">
               Support
             </Link>
             <Link to="/debug/student/profile" className="p-3 rounded border hover:bg-gray-50">
@@ -141,13 +142,13 @@ export default function DebugNav() {
             <Link to="/debug/student/settings" className="p-3 rounded border hover:bg-gray-50">
               Settings
             </Link>
-            <Link to="/debug/student/grades" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/grades" className="p-3 rounded border hover:bg-gray-50">
               Grades
             </Link>
-            <Link to="/debug/student/schedule" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/schedule" className="p-3 rounded border hover:bg-gray-50">
               Schedule
             </Link>
-            <Link to="/debug/student/feedback" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/student/feedback" className="p-3 rounded border hover:bg-gray-50">
               Feedback
             </Link>
             <Link to="/debug/student/contact" className="p-3 rounded border hover:bg-gray-50">
@@ -160,16 +161,16 @@ export default function DebugNav() {
         <div>
           <h2 className="text-xl font-semibold mb-4 text-green-600">Teacher Pages</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Link to="/debug/teacher" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/teacher" className="p-3 rounded border hover:bg-gray-50">
               Teacher Dashboard
             </Link>
-            <Link to="/debug/teacher/classes" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/teacher/classes" className="p-3 rounded border hover:bg-gray-50">
               Classes
             </Link>
-            <Link to="/debug/teacher/materials" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/teacher/materials" className="p-3 rounded border hover:bg-gray-50">
               Materials
             </Link>
-            <Link to="/debug/teacher/students" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/teacher/students" className="p-3 rounded border hover:bg-gray-50">
               Students
             </Link>
             <Link to="/debug/teacher/attendance" className="p-3 rounded border hover:bg-gray-50">
@@ -178,7 +179,7 @@ export default function DebugNav() {
             <Link to="/debug/teacher/grading" className="p-3 rounded border hover:bg-gray-50">
               Grading
             </Link>
-            <Link to="/debug/teacher/assignments" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/teacher/assignments" className="p-3 rounded border hover:bg-gray-50">
               Assignments
             </Link>
             <Link to="/debug/teacher/messages" className="p-3 rounded border hover:bg-gray-50">
@@ -193,13 +194,13 @@ export default function DebugNav() {
             <Link to="/debug/teacher/settings" className="p-3 rounded border hover:bg-gray-50">
               Settings
             </Link>
-            <Link to="/debug/teacher/schedule" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/teacher/schedule" className="p-3 rounded border hover:bg-gray-50">
               Schedule
             </Link>
-            <Link to="/debug/teacher/feedback" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/teacher/feedback" className="p-3 rounded border hover:bg-gray-50">
               Give Feedback
             </Link>
-            <Link to="/debug/teacher/reports" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/teacher/reports" className="p-3 rounded border hover:bg-gray-50">
               Reports
             </Link>
             <Link to="/debug/teacher/contact" className="p-3 rounded border hover:bg-gray-50">
@@ -212,10 +213,10 @@ export default function DebugNav() {
         <div>
           <h2 className="text-xl font-semibold mb-4 text-purple-600">Parent Pages</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Link to="/debug/parent" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/parent" className="p-3 rounded border hover:bg-gray-50">
               Parent Dashboard
             </Link>
-            <Link to="/debug/parent/children" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/parent/children" className="p-3 rounded border hover:bg-gray-50">
               Children
             </Link>
             <Link to="/debug/parent/progress" className="p-3 rounded border hover:bg-gray-50">
@@ -227,10 +228,10 @@ export default function DebugNav() {
             <Link to="/debug/parent/messages" className="p-3 rounded border hover:bg-gray-50">
               Messages
             </Link>
-            <Link to="/debug/parent/payments" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/parent/payments" className="p-3 rounded border hover:bg-gray-50">
               Payments
             </Link>
-            <Link to="/debug/parent/documents" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/parent/documents" className="p-3 rounded border hover:bg-gray-50">
               Documents
             </Link>
             <Link to="/debug/parent/profile" className="p-3 rounded border hover:bg-gray-50">
@@ -239,16 +240,16 @@ export default function DebugNav() {
             <Link to="/debug/parent/settings" className="p-3 rounded border hover:bg-gray-50">
               Settings
             </Link>
-            <Link to="/debug/parent/attendance" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/parent/attendance" className="p-3 rounded border hover:bg-gray-50">
               Attendance History
             </Link>
-            <Link to="/debug/parent/grades" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/parent/grades" className="p-3 rounded border hover:bg-gray-50">
               Grades Report
             </Link>
-            <Link to="/debug/parent/schedule" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/parent/schedule" className="p-3 rounded border hover:bg-gray-50">
               Children Schedule
             </Link>
-            <Link to="/debug/parent/feedback" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/parent/feedback" className="p-3 rounded border hover:bg-gray-50">
               Teacher Feedback
             </Link>
             <Link to="/debug/parent/contact" className="p-3 rounded border hover:bg-gray-50">
@@ -261,43 +262,43 @@ export default function DebugNav() {
         <div>
           <h2 className="text-xl font-semibold mb-4 text-red-600">Administrator Pages</h2>
           <div className="grid grid-cols-2 gap-4">
-            <Link to="/debug/administrator" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin" className="p-3 rounded border hover:bg-gray-50">
               Admin Dashboard
             </Link>
-            <Link to="/debug/administrator/users" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/users" className="p-3 rounded border hover:bg-gray-50">
               User Management
             </Link>
-            <Link to="/debug/administrator/classes" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/classes" className="p-3 rounded border hover:bg-gray-50">
               Classes
             </Link>
-            <Link to="/debug/administrator/courses" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/courses" className="p-3 rounded border hover:bg-gray-50">
               Courses
             </Link>
-            <Link to="/debug/administrator/analytics" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/analytics" className="p-3 rounded border hover:bg-gray-50">
               Analytics
             </Link>
-            <Link to="/debug/administrator/events" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/events" className="p-3 rounded border hover:bg-gray-50">
               Events
             </Link>
-            <Link to="/debug/administrator/notifications" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/notifications" className="p-3 rounded border hover:bg-gray-50">
               Notifications
             </Link>
-            <Link to="/debug/administrator/settings" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/settings" className="p-3 rounded border hover:bg-gray-50">
               Settings
             </Link>
-            <Link to="/debug/administrator/profile" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/profile" className="p-3 rounded border hover:bg-gray-50">
               Profile
             </Link>
-            <Link to="/debug/administrator/departments" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/departments" className="p-3 rounded border hover:bg-gray-50">
               Departments
             </Link>
-            <Link to="/debug/administrator/reports" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/reports" className="p-3 rounded border hover:bg-gray-50">
               Reports
             </Link>
-            <Link to="/debug/administrator/finance" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/finance" className="p-3 rounded border hover:bg-gray-50">
               Financial Management
             </Link>
-            <Link to="/debug/administrator/system" className="p-3 rounded border hover:bg-gray-50">
+            <Link to="/dashboard/admin/system-settings" className="p-3 rounded border hover:bg-gray-50">
               System Settings
             </Link>
             <Link to="/debug/administrator/contact" className="p-3 rounded border hover:bg-gray-50">

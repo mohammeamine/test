@@ -114,7 +114,7 @@ export default function TeacherStudents({ user }: TeacherStudentsProps) {
   }
 
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         {/* Header and Filters */}
         <div className="flex items-center justify-between">
@@ -317,6 +317,6 @@ export default function TeacherStudents({ user }: TeacherStudentsProps) {
           </div>
         </div>
       )}
-    </TeacherLayout>
+    </DashboardLayout>
   )
 }

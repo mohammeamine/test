@@ -1,12 +1,12 @@
-import { ParentLayout } from '../../../components/dashboard/layout/parent-layout';
+import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout';
 import { StudentMonitoring } from '../../../components/dashboard/parent/student-monitoring';
-import { User } from '../../../types/auth';
+import { UserResponse } from '../../../types/auth';
 import { useState } from "react";
 import { Calendar as CalendarIcon, Search, Download, Clock, CheckCircle, XCircle, BookOpen, GraduationCap, FileText } from "lucide-react";
 import { format } from "date-fns";
 
 interface ParentMonitoringPageProps {
-  user: User;
+  user: UserResponse;
 }
 
 interface Student {
@@ -159,7 +159,7 @@ const getStatusIcon = (status: AttendanceRecord["status"]) => {
   }
 };
 
-export default function ParentMonitoringPage({ user }: ParentMonitoringPageProps) {
+export function ParentMonitoringPage({ user }: ParentMonitoringPageProps) {
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -170,7 +170,7 @@ export default function ParentMonitoringPage({ user }: ParentMonitoringPageProps
   };
 
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -314,6 +314,6 @@ export default function ParentMonitoringPage({ user }: ParentMonitoringPageProps
           onDownloadReport={handleDownloadReport}
         />
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   );
 }

@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { User } from '../../../types/auth';
-import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout';
+import { StudentLayout } from '../../../components/dashboard/layout/student-layout';
 import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
 import { Textarea } from '../../../components/ui/textarea';
 import { 
   Card, 
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle,
-  CardFooter
+  CardTitle
 } from '../../../components/ui/card';
 import {
   Select,
@@ -56,7 +54,7 @@ interface FeedbackSubmission {
   teacherResponse?: string;
 }
 
-export const StudentFeedback = ({ user }: StudentFeedbackProps) => {
+export default function StudentFeedback({ user }: StudentFeedbackProps) {
   // State for form
   const [selectedCourse, setSelectedCourse] = useState('');
   const [rating, setRating] = useState<number>(0);
@@ -147,7 +145,7 @@ export const StudentFeedback = ({ user }: StudentFeedbackProps) => {
   };
 
   return (
-    <DashboardLayout user={user}>
+    <StudentLayout user={user}>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -407,6 +405,6 @@ export const StudentFeedback = ({ user }: StudentFeedbackProps) => {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </StudentLayout>
   );
 };

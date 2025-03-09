@@ -8,7 +8,7 @@ interface TeacherDocumentsProps {
 
 export default function TeacherDocuments({ user }: TeacherDocumentsProps) {
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -104,6 +104,6 @@ export default function TeacherDocuments({ user }: TeacherDocumentsProps) {
           </div>
         </div>
       </div>
-    </TeacherLayout>
+    </DashboardLayout>
   )
 } 

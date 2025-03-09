@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { TeacherLayout } from '../../../components/dashboard/layout/teacher-layout'
+import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout'
 import { User } from '../../../types/auth'
 import { CalendarEvent, DragItem, OfficeHour } from '../../../types/calendar'
 import { Plus, AlertCircle } from 'lucide-react'
@@ -203,7 +203,7 @@ export default function TeacherCalendar({ user }: TeacherCalendarProps) {
   }
 
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Calendar & Schedule</h1>
@@ -256,6 +256,6 @@ export default function TeacherCalendar({ user }: TeacherCalendarProps) {
           onDelete={handleDeleteEvent}
         />
       </div>
-    </TeacherLayout>
+    </DashboardLayout>
   )
 }

@@ -81,7 +81,7 @@ export const TeacherSchedule = ({ user }: TeacherScheduleProps) => {
   };
   
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Teaching Schedule</h1>
@@ -290,6 +290,6 @@ export const TeacherSchedule = ({ user }: TeacherScheduleProps) => {
           </TabsContent>
         </Tabs>
       </div>
-    </TeacherLayout>
+    </DashboardLayout>
   );
 };

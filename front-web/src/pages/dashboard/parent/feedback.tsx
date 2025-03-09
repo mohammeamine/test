@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { User } from "../../../types/auth";
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout";
-import { Search, ThumbsUp, ThumbsDown, MessageCircle, Filter, Calendar, ChevronLeft, ChevronRight, BarChart2 } from "lucide-react";
+import { UserResponse } from "../../../types/auth";
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
+import { Search, ThumbsUp, ThumbsDown, MessageCircle, ChevronLeft, ChevronRight, BarChart2 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -9,10 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import React from "react";
+
 
 interface ParentFeedbackProps {
-  user: User;
+  user: UserResponse;
 }
 
 interface TeacherFeedback {
@@ -40,7 +40,7 @@ interface FeedbackStats {
   general: number;
 }
 
-export const ParentFeedback = ({ user }: ParentFeedbackProps) => {
+export default function ParentFeedback({ user }: ParentFeedbackProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChild, setSelectedChild] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<TeacherFeedback["type"] | "all">("all");
@@ -139,7 +139,7 @@ export const ParentFeedback = ({ user }: ParentFeedbackProps) => {
   };
 
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -439,6 +439,6 @@ export const ParentFeedback = ({ user }: ParentFeedbackProps) => {
           </TabsContent>
         </Tabs>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   );
 };

@@ -215,7 +215,7 @@ export default function TeacherAttendance({ user }: TeacherAttendanceProps) {
   }
 
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         {/* Header and Actions */}
         <div className="flex items-center justify-between">
@@ -353,6 +353,6 @@ export default function TeacherAttendance({ user }: TeacherAttendanceProps) {
           </div>
         )}
       </div>
-    </TeacherLayout>
+    </DashboardLayout>
   )
 }

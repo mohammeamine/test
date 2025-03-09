@@ -406,7 +406,7 @@ export default function TeacherMaterials({ user }: TeacherMaterialsProps) {
   };
 
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -607,6 +607,6 @@ export default function TeacherMaterials({ user }: TeacherMaterialsProps) {
         onConfirm={handleDeleteConfirm}
         materialTitle={materials.find(m => m.id === selectedMaterial)?.title || ""}
       />
-    </TeacherLayout>
+    </DashboardLayout>
   )
 }

@@ -162,7 +162,7 @@ export default function TeacherGrades({ user }: TeacherGradesProps) {
   };
 
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -339,6 +339,6 @@ export default function TeacherGrades({ user }: TeacherGradesProps) {
           </div>
         )}
       </div>
-    </TeacherLayout>
+    </DashboardLayout>
   );
 }

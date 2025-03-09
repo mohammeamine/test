@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "../../../types/auth";
-import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout";
+import { DashboardLayout } from "@/components/dashboard/layout/dashboard-layout";
 import { AssignmentCard } from "../../../components/dashboard/shared/assignment-card";
 import { AssignmentForm } from "../../../components/dashboard/shared/assignment-form";
 import { AssignmentGrading } from "../../../components/dashboard/teacher/assignment-grading";
@@ -105,7 +105,7 @@ export default function TeacherAssignments({ user }: TeacherAssignmentsProps) {
   };
 
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -281,6 +281,6 @@ export default function TeacherAssignments({ user }: TeacherAssignmentsProps) {
           </div>
         </Dialog>
       </div>
-    </TeacherLayout>
+    </DashboardLayout>
   );
 }

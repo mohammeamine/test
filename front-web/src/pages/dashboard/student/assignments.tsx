@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User } from "../../../types/auth";
+import { UserResponse } from "../../../types/auth";
 import { StudentLayout } from "../../../components/dashboard/layout/student-layout";
 import { AssignmentCard } from "../../../components/dashboard/shared/assignment-card";
 import { AssignmentSubmission } from "../../../components/dashboard/student/assignment-submission";
@@ -9,7 +9,7 @@ import { assignmentService } from "../../../services/assignment.service";
 import { Dialog } from "@headlessui/react";
 
 interface StudentAssignmentsProps {
-  user: User;
+  user: UserResponse;
 }
 
 export default function StudentAssignments({ user }: StudentAssignmentsProps) {

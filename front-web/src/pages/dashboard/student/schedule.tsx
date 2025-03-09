@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { User } from '@/types/auth';
-import { StudentLayout } from '@/components/dashboard/layout/student-layout';
+import { User } from '../../../types/auth';
+import { StudentLayout } from '../../../components/dashboard/layout/student-layout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, MapPin, User as UserIcon, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -24,7 +24,7 @@ const END_HOUR = 18;
 
 type ViewMode = 'week' | 'day';
 
-export function StudentSchedule({ user }: StudentScheduleProps) {
+export default function StudentSchedule({ user }: StudentScheduleProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [weekOffset, setWeekOffset] = useState(0);
@@ -362,7 +362,7 @@ function UpcomingEvents({ events }: UpcomingEventsProps) {
               key={event.id}
               className="flex items-center p-2 rounded-md hover:bg-gray-50"
             >
-              <div className={`w-1.5 h-10 rounded-full bg-${event.color}-500 mr-3 flex-shrink-0`} />
+              <div className={`w-1.5 h-10 rounded-full ${event.color ? `bg-${event.color}-500` : 'bg-gray-500'} mr-3 flex-shrink-0`} />
               <div className="min-w-0 flex-1">
                 <h4 className="text-sm font-medium text-gray-900 truncate">{event.title}</h4>
                 <div className="flex items-center mt-1 text-xs text-gray-500">
@@ -389,7 +389,7 @@ interface ScheduleTableProps {
 
 function ScheduleTable({ 
   daysOfWeek, 
-  timeSlots, 
+  timeSlots,
   getEvents, 
   getEventDuration,
   weekDates
@@ -503,15 +503,13 @@ interface ScheduleEventCardProps {
 function ScheduleEventCard({ event, duration }: ScheduleEventCardProps) {
   return (
     <div
-      className={`p-2 rounded-lg bg-${event.color}-50 border border-${event.color}-200 text-sm
-                 hover:bg-${event.color}-100 transition-colors cursor-pointer
-                 focus:ring-2 focus:outline-none absolute inset-x-1 z-10`}
+      className={`p-2 rounded-lg ${event.color ? `bg-${event.color}-50 border border-${event.color}-200 hover:bg-${event.color}-100` : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'} text-sm transition-colors cursor-pointer focus:ring-2 focus:outline-none absolute inset-x-1 z-10`}
       style={{ height: `${duration * 24 - 2}px` }} // 24px per slot, minus border
       role="button"
       tabIndex={0}
       aria-label={`${event.title} with ${event.teacher}`}
     >
-      <h3 className={`font-medium text-${event.color}-900 truncate`}>{event.title}</h3>
+      <h3 className={`font-medium ${event.color ? `text-${event.color}-900` : 'text-gray-900'} truncate`}>{event.title}</h3>
       
       <dl className="mt-1 space-y-1 text-xs text-gray-600">
         <div className="flex items-center">
@@ -536,10 +534,9 @@ function ScheduleEventCard({ event, duration }: ScheduleEventCardProps) {
 interface DailyScheduleProps {
   selectedDate: Date;
   events: ScheduleEvent[];
-  timeSlots: string[];
 }
 
-function DailySchedule({ selectedDate, events, timeSlots }: DailyScheduleProps) {
+function DailySchedule({ selectedDate, events }: DailyScheduleProps) {
   // Sort events by start time
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -558,11 +555,11 @@ function DailySchedule({ selectedDate, events, timeSlots }: DailyScheduleProps) 
             {sortedEvents.map(event => (
               <div 
                 key={event.id}
-                className={`p-4 rounded-lg border-l-4 border-${event.color}-500 bg-${event.color}-50 shadow-sm`}
+                className={`p-4 rounded-lg border-l-4 ${event.color ? `border-${event.color}-500 bg-${event.color}-50` : 'border-gray-500 bg-gray-50'} shadow-sm`}
               >
                 <div className="flex justify-between items-start">
                   <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
-                  <Badge className={`bg-${event.color}-100 text-${event.color}-800 border-${event.color}-300`}>
+                  <Badge className={event.color ? `bg-${event.color}-100 text-${event.color}-800 border-${event.color}-300` : 'bg-gray-100 text-gray-800 border-gray-300'}>
                     {event.startTime} - {event.endTime}
                   </Badge>
                 </div>

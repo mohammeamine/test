@@ -8,7 +8,7 @@ interface ParentDocumentsProps {
 
 export default function ParentDocuments({ user }: ParentDocumentsProps) {
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -106,6 +106,6 @@ export default function ParentDocuments({ user }: ParentDocumentsProps) {
           </div>
         </div>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   )
 } 

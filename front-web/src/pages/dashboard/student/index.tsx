@@ -1,4 +1,4 @@
-import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
+import { StudentLayout } from "../../../components/dashboard/layout/student-layout"
 import { StudentDashboard as StudentDashboardComponent } from "../../../components/dashboard/student/student-dashboard"
 import { User } from "../../../types/auth"
 
@@ -6,7 +6,6 @@ interface StudentDashboardProps {
   user: User
 }
 
-// Mock data for demonstration
 const mockGrades = [
   { subject: 'Mathematics', grade: 85, date: '2025-02-15', teacher: 'Mr. Smith', feedback: 'Good work on calculus problems' },
   { subject: 'Science', grade: 92, date: '2025-02-10', teacher: 'Mrs. Davis', feedback: 'Excellent lab report' },
@@ -69,10 +68,10 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
   };
 
   return (
-    <DashboardLayout user={user}>
+    <StudentLayout user={user}>
       <div className="p-6">
         <StudentDashboardComponent
-          studentName={`${user.firstName} ${user.lastName}`}
+          studentName={user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
           grades={mockGrades}
           assignments={mockAssignments}
           schedule={mockSchedule}
@@ -81,6 +80,6 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           onPaymentComplete={handlePaymentComplete}
         />
       </div>
-    </DashboardLayout>
+    </StudentLayout>
   )
 }

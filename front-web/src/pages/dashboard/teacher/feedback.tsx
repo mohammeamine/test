@@ -229,7 +229,7 @@ export const TeacherFeedback = ({ user }: TeacherFeedbackProps) => {
   const averageRating = studentFeedbacks.reduce((sum, feedback) => sum + feedback.rating, 0) / studentFeedbacks.length;
 
   return (
-    <TeacherLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Student Feedback</h1>
@@ -843,6 +843,6 @@ export const TeacherFeedback = ({ user }: TeacherFeedbackProps) => {
           </TabsContent>
         </Tabs>
       </div>
-    </TeacherLayout>
+    </DashboardLayout>
   );
 };

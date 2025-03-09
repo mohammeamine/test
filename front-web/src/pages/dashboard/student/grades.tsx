@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { User } from '@/types/auth';
-import { StudentLayout } from '@/components/dashboard/layout/student-layout';
+import { StudentLayout } from '../../../components/dashboard/layout/student-layout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -32,7 +32,7 @@ interface CourseGrades {
   };
 }
 
-export function StudentGrades({ user }: StudentGradesProps) {
+export default function StudentGrades({ user }: StudentGradesProps) {
   // Mock data - replace with actual API call
   const [courses] = useState<CourseGrades[]>([
     {
@@ -233,5 +233,3 @@ export function StudentGrades({ user }: StudentGradesProps) {
     </StudentLayout>
   );
 }
-
-export default StudentGrades;

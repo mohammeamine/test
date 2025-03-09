@@ -226,197 +226,214 @@ export const ForumPage = ({ user }: ForumPageProps) => {
 
   return (
     <DashboardLayout user={user}>
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">School Forum</h1>
-            <p className="text-sm text-gray-500">
-              Discuss, share, and connect with the school community
-            </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">School Forum</h1>
+            <Button
+              onClick={() => navigate('create')}
+              className="flex items-center space-x-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Post</span>
+            </Button>
           </div>
-          <Button onClick={handleCreatePost}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Post
-          </Button>
+          <p className="mt-2 text-sm text-gray-600">
+            Join the discussion with your fellow students, teachers, and staff.
+          </p>
         </div>
-
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Left sidebar - Categories */}
-          <div className="w-full md:w-64 space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Categories</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div 
-                  className={`flex justify-between items-center p-2 rounded-md cursor-pointer hover:bg-gray-100 ${selectedCategory === 'all' ? 'bg-gray-100 font-medium' : ''}`}
-                  onClick={() => setSelectedCategory('all')}
-                >
-                  <span>All Categories</span>
-                  <Badge variant="outline">{posts.length}</Badge>
-                </div>
-                {categories.map(category => (
-                  <div 
-                    key={category.id}
-                    className={`flex justify-between items-center p-2 rounded-md cursor-pointer hover:bg-gray-100 ${selectedCategory === category.id ? 'bg-gray-100 font-medium' : ''}`}
-                    onClick={() => setSelectedCategory(category.id)}
-                  >
-                    <span>{category.name}</span>
-                    <Badge variant="outline">{category.postCount}</Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+        <div className="p-6 space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold">School Forum</h1>
+              <p className="text-sm text-gray-500">
+                Discuss, share, and connect with the school community
+              </p>
+            </div>
+            <Button onClick={handleCreatePost}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Post
+            </Button>
           </div>
 
-          {/* Main content */}
-          <div className="flex-1 space-y-4">
-            {/* Search and filters */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  type="search"
-                  placeholder="Search posts..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="trending">
-                    <div className="flex items-center">
-                      <TrendingUp className="mr-2 h-4 w-4" />
-                      <span>Trending</span>
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Left sidebar - Categories */}
+            <div className="w-full md:w-64 space-y-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle>Categories</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div 
+                    className={`flex justify-between items-center p-2 rounded-md cursor-pointer hover:bg-gray-100 ${selectedCategory === 'all' ? 'bg-gray-100 font-medium' : ''}`}
+                    onClick={() => setSelectedCategory('all')}
+                  >
+                    <span>All Categories</span>
+                    <Badge variant="outline">{posts.length}</Badge>
+                  </div>
+                  {categories.map(category => (
+                    <div 
+                      key={category.id}
+                      className={`flex justify-between items-center p-2 rounded-md cursor-pointer hover:bg-gray-100 ${selectedCategory === category.id ? 'bg-gray-100 font-medium' : ''}`}
+                      onClick={() => setSelectedCategory(category.id)}
+                    >
+                      <span>{category.name}</span>
+                      <Badge variant="outline">{category.postCount}</Badge>
                     </div>
-                  </SelectItem>
-                  <SelectItem value="newest">
-                    <div className="flex items-center">
-                      <Clock className="mr-2 h-4 w-4" />
-                      <span>Newest</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="oldest">
-                    <div className="flex items-center">
-                      <Calendar className="mr-2 h-4 w-4" />
-                      <span>Oldest</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="most-commented">
-                    <div className="flex items-center">
-                      <MessageSquare className="mr-2 h-4 w-4" />
-                      <span>Most Commented</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="all">All Posts</TabsTrigger>
-                <TabsTrigger value="pinned">Pinned</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            {/* Main content */}
+            <div className="flex-1 space-y-4">
+              {/* Search and filters */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                  <Input
+                    type="search"
+                    placeholder="Search posts..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="trending">
+                      <div className="flex items-center">
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        <span>Trending</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="newest">
+                      <div className="flex items-center">
+                        <Clock className="mr-2 h-4 w-4" />
+                        <span>Newest</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="oldest">
+                      <div className="flex items-center">
+                        <Calendar className="mr-2 h-4 w-4" />
+                        <span>Oldest</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="most-commented">
+                      <div className="flex items-center">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        <span>Most Commented</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Posts list */}
-            <div className="space-y-4">
-              {finalPosts.length > 0 ? (
-                finalPosts.map(post => (
-                  <Card key={post.id} className={post.isPinned ? 'border-blue-200 bg-blue-50' : ''}>
-                    <CardContent className="p-4">
-                      <div className="flex gap-4">
-                        {/* Vote buttons */}
-                        <div className="flex flex-col items-center space-y-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <ArrowUp className="h-4 w-4" />
-                          </Button>
-                          <span className="text-sm font-medium">{post.upvotes - post.downvotes}</span>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <ArrowDown className="h-4 w-4" />
-                          </Button>
-                        </div>
+              {/* Tabs */}
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList>
+                  <TabsTrigger value="all">All Posts</TabsTrigger>
+                  <TabsTrigger value="pinned">Pinned</TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-                        {/* Post content */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            {post.isPinned && (
-                              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
-                                <Pin className="h-3 w-3 mr-1" />
-                                Pinned
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className="bg-gray-100">
-                              {categories.find(c => c.id === post.category)?.name || post.category}
-                            </Badge>
+              {/* Posts list */}
+              <div className="space-y-4">
+                {finalPosts.length > 0 ? (
+                  finalPosts.map(post => (
+                    <Card key={post.id} className={post.isPinned ? 'border-blue-200 bg-blue-50' : ''}>
+                      <CardContent className="p-4">
+                        <div className="flex gap-4">
+                          {/* Vote buttons */}
+                          <div className="flex flex-col items-center space-y-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <ArrowUp className="h-4 w-4" />
+                            </Button>
+                            <span className="text-sm font-medium">{post.upvotes - post.downvotes}</span>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <ArrowDown className="h-4 w-4" />
+                            </Button>
                           </div>
-                          
-                          <h3 
-                            className="text-lg font-semibold mb-2 cursor-pointer hover:text-blue-600"
-                            onClick={() => handleViewPost(post.id)}
-                          >
-                            {post.title}
-                          </h3>
-                          
-                          <p className="text-gray-600 mb-3 line-clamp-2">
-                            {post.content}
-                          </p>
-                          
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {post.tags.map(tag => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                <Tag className="h-3 w-3 mr-1" />
-                                {tag}
+
+                          {/* Post content */}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {post.isPinned && (
+                                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                                  <Pin className="h-3 w-3 mr-1" />
+                                  Pinned
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="bg-gray-100">
+                                {categories.find(c => c.id === post.category)?.name || post.category}
                               </Badge>
-                            ))}
-                          </div>
-                          
-                          <div className="flex items-center justify-between text-sm text-gray-500">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={post.authorAvatar} alt={post.authorName} />
-                                <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <span>{post.authorName}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {post.authorRole}
-                              </Badge>
-                              <span>•</span>
-                              <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
                             </div>
                             
-                            <div className="flex items-center gap-2">
-                              <Button variant="ghost" size="sm" className="h-8" onClick={() => handleViewPost(post.id)}>
-                                <MessageSquare className="h-4 w-4 mr-1" />
-                                {post.commentCount} comments
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-8">
-                                <Bookmark className="h-4 w-4" />
-                              </Button>
+                            <h3 
+                              className="text-lg font-semibold mb-2 cursor-pointer hover:text-blue-600"
+                              onClick={() => handleViewPost(post.id)}
+                            >
+                              {post.title}
+                            </h3>
+                            
+                            <p className="text-gray-600 mb-3 line-clamp-2">
+                              {post.content}
+                            </p>
+                            
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {post.tags.map(tag => (
+                                <Badge key={tag} variant="secondary" className="text-xs">
+                                  <Tag className="h-3 w-3 mr-1" />
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-sm text-gray-500">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={post.authorAvatar} alt={post.authorName} />
+                                  <AvatarFallback>{post.authorName.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span>{post.authorName}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {post.authorRole}
+                                </Badge>
+                                <span>•</span>
+                                <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm" className="h-8" onClick={() => handleViewPost(post.id)}>
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  {post.commentCount} comments
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8">
+                                  <Bookmark className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <p className="text-gray-500">No posts found. Try adjusting your filters or create a new post.</p>
+                      <Button className="mt-4" onClick={handleCreatePost}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Post
+                      </Button>
                     </CardContent>
                   </Card>
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <p className="text-gray-500">No posts found. Try adjusting your filters or create a new post.</p>
-                    <Button className="mt-4" onClick={handleCreatePost}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Post
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

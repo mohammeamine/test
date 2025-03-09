@@ -209,9 +209,9 @@ const studentNavigation: NavigationItem[] = [
     href: "/dashboard/student/assignments",
   },
   {
-    title: "Support",
-    icon: HelpCircle,
-    href: "/dashboard/student/support",
+    title: "Messages",
+    icon: Mail,
+    href: "/dashboard/student/messages",
   },
   {
     title: "Profile",
@@ -226,12 +226,12 @@ const studentNavigation: NavigationItem[] = [
   {
     title: "Contact & Support",
     icon: HelpCircle,
-    href: "/dashboard/shared/contact",
+    href: "/dashboard/student/contact",
   },
   {
     title: "Forum",
     icon: MessageSquare,
-    href: "/dashboard/shared/forum",
+    href: "/dashboard/student/forum",
   },
 ]
 
@@ -247,9 +247,29 @@ const parentNavigation: NavigationItem[] = [
     href: "/dashboard/parent/children",
   },
   {
+    title: "Grades",
+    icon: BookText,
+    href: "/dashboard/parent/grades",
+  },
+  {
+    title: "Attendance",
+    icon: FileCheck,
+    href: "/dashboard/parent/attendance",
+  },
+  {
     title: "Progress",
     icon: BarChart,
     href: "/dashboard/parent/progress",
+  },
+  {
+    title: "Schedule",
+    icon: Calendar,
+    href: "/dashboard/parent/schedule",
+  },
+  {
+    title: "Monitoring",
+    icon: BarChart,
+    href: "/dashboard/parent/monitoring",
   },
   {
     title: "Messages",
@@ -267,14 +287,19 @@ const parentNavigation: NavigationItem[] = [
     href: "/dashboard/parent/documents",
   },
   {
-    title: "Profile",
-    icon: Users,
-    href: "/dashboard/parent/profile",
+    title: "Feedback",
+    icon: MessageSquare,
+    href: "/dashboard/parent/feedback",
   },
   {
-    title: "Settings",
-    icon: Settings,
-    href: "/dashboard/parent/settings",
+    title: "Notifications",
+    icon: Bell,
+    href: "/dashboard/shared/notifications",
+  },
+  {
+    title: "Profile",
+    icon: Users,
+    href: "/dashboard/profile",
   },
   {
     title: "Contact & Support",
@@ -296,7 +321,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
   const location = useLocation()
   
   const getNavigationByRole = () => {
-    switch (user.role) {
+    switch (user?.role) {
       case 'administrator':
         return adminNavigation
       case 'teacher':
@@ -316,7 +341,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{user.role.charAt(0).toUpperCase() + user.role.slice(1)} Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>{(user?.role || 'User').charAt(0).toUpperCase() + (user?.role || 'user').slice(1)} Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigation.map((item) => (

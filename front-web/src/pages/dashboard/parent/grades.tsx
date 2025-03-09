@@ -15,7 +15,7 @@ const GRADE_COLORS = {
   below60: "bg-red-100 text-red-800",
 };
 
-export const ParentGrades = ({ user }: ParentGradesProps) => {
+export default function ParentGrades({ user }: ParentGradesProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChild, setSelectedChild] = useState("all");
   const [selectedCourse, setSelectedCourse] = useState("all");

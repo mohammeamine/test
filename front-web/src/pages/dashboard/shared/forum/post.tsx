@@ -191,10 +191,10 @@ export const PostPage = ({ user }: PostPageProps) => {
         id: `comment-${Date.now()}`,
         postId: postId || '',
         content: newComment,
-        authorId: user.id,
-        authorName: `${user.firstName} ${user.lastName}`,
-        authorRole: user.role,
-        authorAvatar: user.profilePicture, // Use profilePicture instead of avatar
+        authorId: user?.id || 'unknown',
+        authorName: user ? `${user.firstName} ${user.lastName}` : 'Anonymous',
+        authorRole: user?.role || 'unknown',
+        authorAvatar: user?.profilePicture, // Use profilePicture instead of avatar
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         upvotes: 0,
@@ -229,10 +229,10 @@ export const PostPage = ({ user }: PostPageProps) => {
         postId: postId || '',
         parentId: parentId,
         content: replyContent,
-        authorId: user.id,
-        authorName: `${user.firstName} ${user.lastName}`,
-        authorRole: user.role,
-        authorAvatar: user.profilePicture, // Use profilePicture instead of avatar
+        authorId: user?.id || 'unknown',
+        authorName: user ? `${user.firstName} ${user.lastName}` : 'Anonymous',
+        authorRole: user?.role || 'unknown',
+        authorAvatar: user?.profilePicture, // Use profilePicture instead of avatar
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         upvotes: 0,
