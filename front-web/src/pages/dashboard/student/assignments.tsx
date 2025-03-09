@@ -1,87 +1,151 @@
 import { useState, useEffect } from "react";
-import { UserResponse } from "../../../types/auth";
+import { User } from "../../../types/auth";
 import { StudentLayout } from "../../../components/dashboard/layout/student-layout";
-import { AssignmentCard } from "../../../components/dashboard/shared/assignment-card";
-import { AssignmentSubmission } from "../../../components/dashboard/student/assignment-submission";
-import { Search } from "lucide-react";
-import { Assignment, AssignmentWithDetails } from "../../../types/assignment";
-import { assignmentService } from "../../../services/assignment.service";
-import { Dialog } from "@headlessui/react";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Badge } from "../../../components/ui/badge";
+import { Textarea } from "../../../components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../../components/ui/dialog";
+import { Calendar, Clock, FileText, Filter, Search, Upload } from "lucide-react";
+import { studentService } from "../../../services/student-service";
+import { toast } from "react-hot-toast";
 
 interface StudentAssignmentsProps {
-  user: UserResponse;
+  user: User;
+}
+
+interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  courseName: string;
+  courseCode: string;
+  status: 'pending' | 'submitted' | 'graded' | 'late';
+  points?: number;
+  score?: number;
+  feedback?: string;
 }
 
 export default function StudentAssignments({ user }: StudentAssignmentsProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<Assignment["status"] | "all">("all");
-  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<AssignmentWithDetails | null>(null);
-  const [assignments, setAssignments] = useState<AssignmentWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<Assignment["status"] | "all">("all");
+  const [courseFilter, setCourseFilter] = useState<string>("all");
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [submissionContent, setSubmissionContent] = useState("");
+  const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Fetch assignments
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const data = await assignmentService.getAssignments({
-          status: selectedStatus === "all" ? undefined : selectedStatus
-        });
-        setAssignments(data);
-        setError(null);
-      } catch (err: any) {
-        setError("Failed to load assignments: " + (err.message || "Unknown error"));
+        setLoading(true);
+        const data = await studentService.getUpcomingAssignments();
+        
+        // Transform API data to match our Assignment interface
+        const transformedAssignments: Assignment[] = data.map(assignment => ({
+          id: assignment.id,
+          title: assignment.title,
+          description: assignment.description,
+          dueDate: new Date(assignment.dueDate).toISOString().split('T')[0],
+          courseName: assignment.courseName,
+          courseCode: assignment.courseCode,
+          status: 'pending', // This would need to be determined based on submission status
+          points: assignment.points
+        }));
+        
+        setAssignments(transformedAssignments);
+      } catch (error) {
+        console.error("Failed to fetch assignments:", error);
+        toast.error("Failed to load assignments. Please try again later.");
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     fetchAssignments();
-  }, [selectedStatus]);
+  }, []);
 
-  // Filter assignments based on search query
+  const handleSubmitAssignment = async () => {
+    if (!selectedAssignment) return;
+    
+    try {
+      setSubmitting(true);
+      await studentService.submitAssignment(selectedAssignment.id, { content: submissionContent });
+      
+      // Update the assignment status in the local state
+      setAssignments(prev => 
+        prev.map(a => 
+          a.id === selectedAssignment.id 
+            ? { ...a, status: 'submitted' as const } 
+            : a
+        )
+      );
+      
+      setSubmissionDialogOpen(false);
+      setSubmissionContent("");
+      toast.success("Assignment submitted successfully");
+    } catch (error) {
+      console.error("Failed to submit assignment:", error);
+      toast.error("Failed to submit assignment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const filteredAssignments = assignments.filter(assignment => {
     const matchesSearch = 
       assignment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (assignment.course?.name.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+      assignment.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      assignment.courseCode.toLowerCase().includes(searchQuery.toLowerCase())
     
-    return matchesSearch;
+    const matchesStatus = statusFilter === "all" || assignment.status === statusFilter
+    const matchesCourse = courseFilter === "all" || assignment.courseCode === courseFilter
+    
+    return matchesSearch && matchesStatus && matchesCourse
   });
 
-  // Handle assignment submission
-  const handleSubmitAssignment = async (files: File[], comment: string) => {
-    if (!selectedAssignment) return;
+  const uniqueCourses = Array.from(new Set(assignments.map(a => a.courseCode)));
 
-    setIsSubmitting(true);
-    try {
-      // In a real implementation, we would upload the files to a storage service
-      // and then submit the URL(s) to the API
-      
-      // For now, we'll simulate this by just calling the API with a mock URL
-      const submissionUrl = `https://example.com/files/${Date.now()}-${files[0]?.name || 'submission'}`;
-      
-      await assignmentService.submitAssignment(selectedAssignment.id, {
-        submissionUrl,
-        comment
-      });
-      
-      // Refresh assignments
-      const updatedAssignments = await assignmentService.getAssignments({
-        status: selectedStatus === "all" ? undefined : selectedStatus
-      });
-      setAssignments(updatedAssignments);
-
-      // Close modal
-      setIsSubmissionModalOpen(false);
-      setSelectedAssignment(null);
-    } catch (err: any) {
-      setError("Failed to submit assignment: " + (err.message || "Unknown error"));
-    } finally {
-      setIsSubmitting(false);
+  const getStatusColor = (status: Assignment["status"]) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "submitted":
+        return "bg-blue-100 text-blue-800";
+      case "graded":
+        return "bg-green-100 text-green-800";
+      case "late":
+        return "bg-red-100 text-red-800";
     }
   };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  const isOverdue = (dueDate: string) => {
+    return new Date(dueDate) < new Date();
+  };
+
+  if (loading) {
+    return (
+      <StudentLayout user={user}>
+        <div className="p-6 flex justify-center items-center min-h-[80vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </StudentLayout>
+    );
+  }
 
   return (
     <StudentLayout user={user}>
@@ -90,132 +154,234 @@ export default function StudentAssignments({ user }: StudentAssignmentsProps) {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
             <p className="mt-1 text-sm text-gray-500">
-              View and submit your assignments
+              {filteredAssignments.length} assignments • {filteredAssignments.filter(a => a.status === 'submitted' || a.status === 'graded').length} completed
             </p>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-4">
-          <div className="flex-1">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              placeholder="Search assignments..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search assignments..."
-                className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <Filter className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <select
+                className="h-10 rounded-md border border-input bg-background px-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as Assignment["status"] | "all")}
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="submitted">Submitted</option>
+                <option value="graded">Graded</option>
+                <option value="late">Late</option>
+              </select>
+            </div>
+            
+            <div className="relative">
+              <FileText className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <select
+                className="h-10 rounded-md border border-input bg-background px-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={courseFilter}
+                onChange={(e) => setCourseFilter(e.target.value)}
+              >
+                <option value="all">All Courses</option>
+                {uniqueCourses.map(code => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
             </div>
           </div>
-          <select
-            className="rounded-lg border border-gray-300 py-2 px-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value as Assignment["status"] | "all")}
-          >
-            <option value="all">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="closed">Closed</option>
-          </select>
         </div>
 
-        {/* Assignment Stats */}
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-lg border bg-white p-6">
-            <h3 className="text-sm font-medium text-gray-500">Total Assignments</h3>
-            <p className="mt-2 text-3xl font-semibold text-gray-900">{assignments.length}</p>
-          </div>
-          <div className="rounded-lg border bg-white p-6">
-            <h3 className="text-sm font-medium text-gray-500">Due Soon</h3>
-            <p className="mt-2 text-3xl font-semibold text-orange-600">
-              {assignments.filter(a => {
-                if (a.status !== "published") return false;
-                const dueDate = new Date(a.dueDate);
-                const now = new Date();
-                const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                return diffDays <= 7 && diffDays >= 0;
-              }).length}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-white p-6">
-            <h3 className="text-sm font-medium text-gray-500">Completed</h3>
-            <p className="mt-2 text-3xl font-semibold text-green-600">
-              {assignments.filter(a => a.status === "closed").length}
-            </p>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>{error}</p>
-                </div>
+        <Tabs defaultValue="upcoming" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+            <TabsTrigger value="submitted">Submitted</TabsTrigger>
+            <TabsTrigger value="graded">Graded</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="upcoming" className="space-y-4">
+            {filteredAssignments.filter(a => a.status === 'pending').length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredAssignments
+                  .filter(a => a.status === 'pending')
+                  .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+                  .map(assignment => (
+                    <Card key={assignment.id} className={isOverdue(assignment.dueDate) ? "border-red-300" : ""}>
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                          <Badge className={getStatusColor(isOverdue(assignment.dueDate) ? 'late' : 'pending')}>
+                            {isOverdue(assignment.dueDate) ? 'Overdue' : 'Pending'}
+                          </Badge>
+                        </div>
+                        <CardDescription>{assignment.courseCode} - {assignment.courseName}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="pb-2">
+                        <p className="text-sm text-gray-700 line-clamp-2 mb-2">{assignment.description}</p>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          <span>Due: {formatDate(assignment.dueDate)}</span>
+                        </div>
+                        {assignment.points && (
+                          <div className="flex items-center text-sm text-gray-500 mt-1">
+                            <FileText className="h-4 w-4 mr-1" />
+                            <span>Points: {assignment.points}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                      <CardFooter>
+                        <Button 
+                          className="w-full" 
+                          onClick={() => {
+                            setSelectedAssignment(assignment);
+                            setSubmissionDialogOpen(true);
+                          }}
+                        >
+                          Submit Assignment
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-            <p className="mt-2 text-sm text-gray-500">Loading assignments...</p>
-          </div>
-        ) : (
-          /* Assignments List */
-          <div className="space-y-4">
-            {filteredAssignments.map((assignment) => (
-              <AssignmentCard
-                key={assignment.id}
-                assignment={assignment}
-                role="student"
-                onSubmit={() => {
-                  setSelectedAssignment(assignment);
-                  setIsSubmissionModalOpen(true);
-                }}
-                onView={() => {
-                  // Handle viewing assignment details
-                }}
-              />
-            ))}
-
-            {filteredAssignments.length === 0 && (
+            ) : (
               <div className="text-center py-12">
-                <p className="text-sm text-gray-500">No assignments found</p>
+                <FileText className="h-12 w-12 mx-auto text-gray-400" />
+                <h3 className="mt-2 text-lg font-medium text-gray-900">No upcoming assignments</h3>
+                <p className="mt-1 text-sm text-gray-500">You're all caught up! Check back later for new assignments.</p>
               </div>
             )}
-          </div>
-        )}
-
-        {/* Submission Modal */}
-        <Dialog
-          open={isSubmissionModalOpen}
-          onClose={() => setIsSubmissionModalOpen(false)}
-          className="relative z-50"
-        >
-          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          </TabsContent>
           
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel className="mx-auto max-w-2xl w-full rounded-lg bg-white p-6">
-              <Dialog.Title className="text-lg font-medium text-gray-900 mb-4">
-                Submit Assignment: {selectedAssignment?.title}
-              </Dialog.Title>
-
-              <AssignmentSubmission
-                onSubmit={handleSubmitAssignment}
-                onCancel={() => setIsSubmissionModalOpen(false)}
-                isSubmitting={isSubmitting}
-              />
-            </Dialog.Panel>
-          </div>
-        </Dialog>
+          <TabsContent value="submitted" className="space-y-4">
+            {filteredAssignments.filter(a => a.status === 'submitted').length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredAssignments
+                  .filter(a => a.status === 'submitted')
+                  .sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+                  .map(assignment => (
+                    <Card key={assignment.id}>
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                          <Badge className={getStatusColor('submitted')}>Submitted</Badge>
+                        </div>
+                        <CardDescription>{assignment.courseCode} - {assignment.courseName}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-gray-700 line-clamp-2 mb-2">{assignment.description}</p>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          <span>Due: {formatDate(assignment.dueDate)}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>Awaiting grade</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Upload className="h-12 w-12 mx-auto text-gray-400" />
+                <h3 className="mt-2 text-lg font-medium text-gray-900">No submitted assignments</h3>
+                <p className="mt-1 text-sm text-gray-500">You haven't submitted any assignments yet.</p>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="graded" className="space-y-4">
+            {filteredAssignments.filter(a => a.status === 'graded').length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredAssignments
+                  .filter(a => a.status === 'graded')
+                  .sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+                  .map(assignment => (
+                    <Card key={assignment.id}>
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                          <Badge className={getStatusColor('graded')}>Graded</Badge>
+                        </div>
+                        <CardDescription>{assignment.courseCode} - {assignment.courseName}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-gray-700 line-clamp-2 mb-2">{assignment.description}</p>
+                        <div className="flex items-center text-sm font-medium text-gray-900 mt-2">
+                          <span>Score: {assignment.score}/{assignment.points}</span>
+                        </div>
+                        {assignment.feedback && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500">Feedback:</p>
+                            <p className="text-sm text-gray-700">{assignment.feedback}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 mx-auto text-gray-400" />
+                <h3 className="mt-2 text-lg font-medium text-gray-900">No graded assignments</h3>
+                <p className="mt-1 text-sm text-gray-500">You don't have any graded assignments yet.</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
+
+      <Dialog open={submissionDialogOpen} onOpenChange={setSubmissionDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Submit Assignment</DialogTitle>
+            <DialogDescription>
+              {selectedAssignment?.title} - {selectedAssignment?.courseName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Assignment Description:</p>
+              <p className="text-sm text-gray-700">{selectedAssignment?.description}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Due Date:</p>
+              <p className="text-sm text-gray-700">{selectedAssignment && formatDate(selectedAssignment.dueDate)}</p>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="submission" className="text-sm font-medium">
+                Your Submission:
+              </label>
+              <Textarea
+                id="submission"
+                placeholder="Enter your submission here..."
+                value={submissionContent}
+                onChange={(e) => setSubmissionContent(e.target.value)}
+                rows={6}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSubmissionDialogOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleSubmitAssignment} 
+              disabled={!submissionContent.trim() || submitting}
+            >
+              {submitting ? 'Submitting...' : 'Submit Assignment'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </StudentLayout>
   );
 }

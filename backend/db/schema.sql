@@ -262,11 +262,10 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS notifications (
   id VARCHAR(36) PRIMARY KEY,
   userId VARCHAR(36) NOT NULL,
-  title VARCHAR(255) NOT NULL,
+  type ENUM('assignment_due', 'grade_posted', 'course_announcement', 'event_reminder', 'attendance_alert') NOT NULL,
   message TEXT NOT NULL,
-  type ENUM('info', 'warning', 'error', 'success') NOT NULL DEFAULT 'info',
   isRead BOOLEAN NOT NULL DEFAULT false,
-  link VARCHAR(255),
+  relatedId VARCHAR(36),
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE

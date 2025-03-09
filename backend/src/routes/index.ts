@@ -5,6 +5,7 @@ import courseRoutes from './course.routes';
 import classRoutes from './class.routes';
 import assignmentRoutes from './assignment.routes';
 import departmentRoutes from './department.routes';
+import studentRoutes from './student.routes';
 
 const router = Router();
 
@@ -25,5 +26,8 @@ router.use('/assignments', assignmentRoutes);
 
 // Department routes
 router.use('/departments', departmentRoutes);
+
+// Student routes
+router.use('/students', studentRoutes);
 
 export default router; 

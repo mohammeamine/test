@@ -1,8 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { User } from "../../../types/auth"
 import { StudentLayout } from "../../../components/dashboard/layout/student-layout"
 import { CourseRegistrationModal } from "../../../components/dashboard/student/course-registration-modal"
 import { BookOpen, Clock, Users, Plus, Search, CheckCircle, AlertCircle, FileText, GraduationCap, TrendingUp, Book, Video } from "lucide-react"
+import { studentService, StudentCourseFilters } from "../../../services/student-service"
+import { toast } from "react-hot-toast"
 
 interface StudentCoursesProps {
   user: User
@@ -23,7 +25,7 @@ interface Course {
   prerequisites: string[]
   capacity: number
   enrolled: number
-  status: 'in_progress' | 'completed' | 'not_started'
+  status: 'active' | 'completed' | 'not_started'
   progress?: number
   grade?: number
   materials?: {
@@ -51,89 +53,92 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
   const [selectedStatus, setSelectedStatus] = useState<Course["status"] | "all">("all")
   const [showRegistrationModal, setShowRegistrationModal] = useState(false)
   const [view, setView] = useState<"grid" | "calendar">("grid")
+  const [loading, setLoading] = useState(true)
+  const [courses, setCourses] = useState<Course[]>([])
+  const [availableCourses, setAvailableCourses] = useState<Course[]>([])
 
-  const [availableCourses] = useState<Course[]>([
-    {
-      id: "c4",
-      code: "CHEM201",
-      name: "Organic Chemistry",
-      description: "Study of organic compounds and their reactions.",
-      instructor: "Dr. Robert Wilson",
-      credits: 4,
-      schedule: [
-        { day: "Tuesday", time: "11:00 AM", room: "Lab 201" },
-        { day: "Thursday", time: "11:00 AM", room: "Lab 201" }
-      ],
-      prerequisites: ["CHEM101"],
-      capacity: 25,
-      enrolled: 18,
-      status: "in_progress"
-    },
-    {
-      id: "c5",
-      code: "BIO101",
-      name: "Introduction to Biology",
-      description: "Basic principles of biology and life sciences.",
-      instructor: "Dr. Lisa Martinez",
-      credits: 3,
-      schedule: [
-        { day: "Monday", time: "9:00 AM", room: "Room 305" },
-        { day: "Wednesday", time: "9:00 AM", room: "Room 305" }
-      ],
-      prerequisites: [],
-      capacity: 35,
-      enrolled: 28,
-      status: "in_progress"
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true)
+        const filters: StudentCourseFilters = {
+          status: selectedStatus === 'all' ? undefined : selectedStatus,
+          search: searchQuery || undefined
+        }
+        
+        const data = await studentService.getStudentCourses(filters)
+        
+        // Transform API data to match our Course interface
+        const transformedCourses: Course[] = data.map(course => ({
+          id: course.id,
+          code: course.code,
+          name: course.name,
+          description: course.description,
+          instructor: `${course.teacherFirstName} ${course.teacherLastName}`,
+          credits: course.credits,
+          schedule: [], // This would need to be populated from a separate API call if needed
+          prerequisites: [], // This would need to be populated from a separate API call if needed
+          capacity: course.maxStudents,
+          enrolled: course.enrolledCount || 0,
+          status: course.status as Course["status"],
+          progress: 65, // Placeholder - would need to be calculated from actual progress data
+          grade: 85 // Placeholder - would need to be calculated from actual grade data
+        }))
+        
+        setCourses(transformedCourses)
+      } catch (error) {
+        console.error("Failed to fetch courses:", error)
+        toast.error("Failed to load courses. Please try again later.")
+      } finally {
+        setLoading(false)
+      }
     }
-  ])
 
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: "c1",
-      code: "MATH101",
-      name: "Introduction to Calculus",
-      description: "Fundamental concepts of calculus including limits, derivatives, and integrals.",
-      instructor: "Dr. Sarah Johnson",
-      credits: 3,
-      schedule: [
-        { day: "Monday", time: "10:00 AM", room: "Room 201" },
-        { day: "Wednesday", time: "10:00 AM", room: "Room 201" },
-        { day: "Friday", time: "10:00 AM", room: "Room 201" }
-      ],
-      prerequisites: [],
-      capacity: 30,
-      enrolled: 25,
-      status: "in_progress",
-      progress: 65,
-      grade: 85,
-      materials: [
-        { type: "document", title: "Week 1: Introduction to Limits", completed: true },
-        { type: "video", title: "Derivatives Explained", completed: true },
-        { type: "assignment", title: "Practice Problems Set 1", dueDate: "2025-03-15", completed: false }
-      ],
-      nextAssignment: {
-        title: "Midterm Exam",
-        dueDate: "2025-03-20",
-        type: "quiz"
-      },
-      averageGrade: 87,
-      recentActivity: [
+    fetchCourses()
+  }, [searchQuery, selectedStatus])
+
+  // This would be replaced with an actual API call to get available courses
+  useEffect(() => {
+    const fetchAvailableCourses = async () => {
+      // Placeholder - would be replaced with an actual API call
+      setAvailableCourses([
         {
-          type: "grade",
-          title: "Quiz 2 Grade Posted",
-          date: "2025-03-05",
-          description: "You scored 90/100"
+          id: "c4",
+          code: "CHEM201",
+          name: "Organic Chemistry",
+          description: "Study of organic compounds and their reactions.",
+          instructor: "Dr. Robert Wilson",
+          credits: 4,
+          schedule: [
+            { day: "Tuesday", time: "11:00 AM", room: "Lab 201" },
+            { day: "Thursday", time: "11:00 AM", room: "Lab 201" }
+          ],
+          prerequisites: ["CHEM101"],
+          capacity: 25,
+          enrolled: 18,
+          status: "active"
         },
         {
-          type: "material",
-          title: "New Lecture Notes Available",
-          date: "2025-03-04",
-          description: "Week 8: Integration Techniques"
+          id: "c5",
+          code: "BIO101",
+          name: "Introduction to Biology",
+          description: "Basic principles of biology and life sciences.",
+          instructor: "Dr. Lisa Martinez",
+          credits: 3,
+          schedule: [
+            { day: "Monday", time: "9:00 AM", room: "Room 305" },
+            { day: "Wednesday", time: "9:00 AM", room: "Room 305" }
+          ],
+          prerequisites: [],
+          capacity: 35,
+          enrolled: 28,
+          status: "active"
         }
-      ]
-    },
-    // ... other courses with similar enhanced data
-  ])
+      ])
+    }
+
+    fetchAvailableCourses()
+  }, [])
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = 
@@ -153,11 +158,11 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
   const averageGPA = courses
     .filter(course => course.grade !== undefined)
     .reduce((sum, course) => sum + (course.grade || 0), 0) / 
-    courses.filter(course => course.grade !== undefined).length
+    courses.filter(course => course.grade !== undefined).length || 0
 
   const getStatusColor = (status: Course["status"]) => {
     switch (status) {
-      case "in_progress":
+      case "active":
         return "text-blue-600 bg-blue-50"
       case "completed":
         return "text-green-600 bg-green-50"
@@ -168,7 +173,7 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
 
   const getStatusIcon = (status: Course["status"]) => {
     switch (status) {
-      case "in_progress":
+      case "active":
         return <Clock className="h-5 w-5" />
       case "completed":
         return <CheckCircle className="h-5 w-5" />
@@ -200,22 +205,41 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
     return "bg-blue-600"
   }
 
-  const handleCourseRegistration = (courseIds: string[]) => {
-    const newCourses = courseIds
-      .map(id => {
-        const course = availableCourses.find(c => c.id === id)
-        if (!course) return null
-        
-        const newCourse: Course = {
-          ...course,
-          status: "not_started",
-          progress: 0
-        }
-        return newCourse
-      })
-      .filter((course): course is NonNullable<typeof course> => course !== null)
+  const handleCourseRegistration = async (courseIds: string[]) => {
+    try {
+      // This would be replaced with actual API calls to enroll in courses
+      toast.success("Successfully enrolled in selected courses")
+      
+      // For now, just add the selected courses from availableCourses to courses
+      const newCourses = courseIds
+        .map(id => {
+          const course = availableCourses.find(c => c.id === id)
+          if (!course) return null
+          
+          const newCourse: Course = {
+            ...course,
+            status: "not_started",
+            progress: 0
+          }
+          return newCourse
+        })
+        .filter((course): course is NonNullable<typeof course> => course !== null)
 
-    setCourses(prev => [...prev, ...newCourses])
+      setCourses(prev => [...prev, ...newCourses])
+    } catch (error) {
+      console.error("Failed to enroll in courses:", error)
+      toast.error("Failed to enroll in courses. Please try again later.")
+    }
+  }
+
+  if (loading) {
+    return (
+      <StudentLayout user={user}>
+        <div className="p-6 flex justify-center items-center min-h-[80vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </StudentLayout>
+    )
   }
 
   return (
@@ -279,7 +303,7 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
               <BookOpen className="h-5 w-5 text-green-600" />
             </div>
             <p className="mt-2 text-2xl font-semibold text-gray-900">
-              {courses.filter(c => c.status === "in_progress").length}
+              {courses.filter(c => c.status === "active").length}
             </p>
           </div>
           <div className="rounded-lg border bg-white p-4">
@@ -321,7 +345,7 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
               className="rounded-lg border border-gray-300 py-2 px-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="all">All Statuses</option>
-              <option value="in_progress">In Progress</option>
+              <option value="active">Active</option>
               <option value="completed">Completed</option>
               <option value="not_started">Not Started</option>
             </select>
