@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User } from "../../../types/auth";
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout";
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
 import { CreditCard, Download, Search, DollarSign, Calendar, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 
@@ -122,7 +122,7 @@ export default function ParentPayments({ user }: ParentPaymentsProps) {
   };
 
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -309,6 +309,6 @@ export default function ParentPayments({ user }: ParentPaymentsProps) {
           </div>
         )}
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   );
 }

@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout'
-import { User } from '../../../types/auth'
+import { UserResponse } from '../../../types/auth'
 import { Class } from '../../../types/class'
 import { ClassFormModal, ClassFormData } from '../../../components/dashboard/classes/class-form-modal'
 import toast, { Toaster } from 'react-hot-toast'
 
 interface ClassesPageProps {
-  user: User
+  user: UserResponse
 }
 
 export const ClassesPage = ({ user }: ClassesPageProps) => {
@@ -30,7 +30,9 @@ export const ClassesPage = ({ user }: ClassesPageProps) => {
         firstName: 'John',
         lastName: 'Smith',
         email: 'john.smith@example.com',
-        role: 'teacher'
+        role: 'teacher',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       studentsCount: 25,
       schedule: 'Monday 09:00-10:30, Wednesday 09:00-10:30',
@@ -48,7 +50,9 @@ export const ClassesPage = ({ user }: ClassesPageProps) => {
         firstName: 'Sarah',
         lastName: 'Johnson',
         email: 'sarah.johnson@example.com',
-        role: 'teacher'
+        role: 'teacher',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       },
       studentsCount: 22,
       schedule: 'Tuesday 11:00-12:30, Thursday 11:00-12:30',

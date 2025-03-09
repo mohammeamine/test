@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { TeacherLayout } from '../../../components/dashboard/layout/teacher-layout';
 import { GradeForm } from '../../../components/dashboard/teacher/grade-form';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../components/ui/tabs';
@@ -8,6 +7,22 @@ import { Button } from '../../../components/ui/button';
 import { User } from '../../../types/auth';
 import { FileDown, Search } from 'lucide-react';
 import { Input } from '../../../components/ui/input';
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
+import {
+  FileText,
+  Filter,
+  CalendarDays,
+  Users,
+  BookOpen,
+  Check,
+  X,
+  Download,
+  Upload,
+  BarChart3,
+  Clock,
+  AlertCircle,
+  Ban
+} from "lucide-react"
 
 interface TeacherGradingPageProps {
   user: User;

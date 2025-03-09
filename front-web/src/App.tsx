@@ -9,6 +9,8 @@ import { VerifyEmailPage } from '@/pages/auth/verify-email';
 import DebugNav from "@/pages/debug-nav";
 import { Toaster } from 'sonner';
 import './index.css';
+import { authService } from './services/auth.service';
+import { isValidUser, getDashboardUrl, isTokenExpired } from './lib/auth-utils';
 
 // Admin Pages
 import { AdminHomePage } from '@/pages/dashboard/admin/home';
@@ -87,24 +89,41 @@ const PrivateRoute = ({ children, allowedRoles }: { children: React.ReactNode; a
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const token = localStorage.getItem('auth_token');
-
-  if (!token || !user) {
-    console.log('No token or user found, redirecting to login');
+  
+  // Verify token is not expired
+  const isExpired = token ? isTokenExpired(token) : true;
+  if (isExpired) {
+    console.log('Authentication token expired, redirecting to login');
+    authService.logout(); // Clear expired auth data
+    return <Navigate to="/auth/sign-in" replace />;
+  }
+  
+  // Add more robust validation of user object
+  const userValid = isValidUser(user);
+  const hasValidRole = user?.role && allowedRoles.includes(user.role as UserRole);
+  
+  if (!token || !userValid) {
+    console.log('Authentication issue:', {
+      hasToken: !!token,
+      userValid,
+      hasValidRole
+    });
+    
+    // Clear invalid auth data
+    if (!userValid && (user || token)) {
+      authService.logout();
+    }
+    
     return <Navigate to="/auth/sign-in" replace />;
   }
 
-  if (!allowedRoles.includes(user.role)) {
-    console.log('User role not allowed:', user.role, 'Allowed roles:', allowedRoles);
-    // Redirect to the appropriate dashboard based on user role
-    const dashboardPaths: Record<UserRole, string> = {
-      administrator: '/dashboard/admin',
-      teacher: '/dashboard/teacher',
-      student: '/dashboard/student',
-      parent: '/dashboard/parent'
-    };
-    return <Navigate to={dashboardPaths[user.role]} replace />;
+  // If user has valid role but is trying to access another role's route
+  if (user && user.role && !allowedRoles.includes(user.role as UserRole)) {
+    const dashboardUrl = getDashboardUrl(user.role);
+    return <Navigate to={dashboardUrl} replace />;
   }
 
+  // Correctly authenticated with valid role
   return <>{children}</>;
 };
 
@@ -198,6 +217,11 @@ function App() {
         <Route path="/dashboard/admin/reports" element={<PrivateRoute allowedRoles={['administrator']}><ReportsPage user={user as UserResponse} /></PrivateRoute>} />
         <Route path="/dashboard/admin/finance" element={<PrivateRoute allowedRoles={['administrator']}><FinancePage user={user as UserResponse} /></PrivateRoute>} />
         <Route path="/dashboard/admin/system-settings" element={<PrivateRoute allowedRoles={['administrator']}><SystemSettingsPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/admin/profile" element={<PrivateRoute allowedRoles={['administrator']}><ProfilePage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/admin/contact" element={<PrivateRoute allowedRoles={['administrator']}><ContactPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/admin/forum" element={<PrivateRoute allowedRoles={['administrator']}><ForumPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/admin/forum/create" element={<PrivateRoute allowedRoles={['administrator']}><CreatePostPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/admin/forum/:postId" element={<PrivateRoute allowedRoles={['administrator']}><PostPage user={user as UserResponse} /></PrivateRoute>} />
 
         {/* Student Routes */}
         <Route path="/dashboard/student" element={<PrivateRoute allowedRoles={['student']}><StudentDashboard user={user as UserResponse} /></PrivateRoute>} />
@@ -214,6 +238,12 @@ function App() {
         <Route path="/dashboard/student/schedule" element={<PrivateRoute allowedRoles={['student']}><StudentSchedule user={user as UserResponse} /></PrivateRoute>} />
         <Route path="/dashboard/student/grades" element={<PrivateRoute allowedRoles={['student']}><StudentGrades user={user as UserResponse} /></PrivateRoute>} />
         <Route path="/dashboard/student/notifications" element={<PrivateRoute allowedRoles={['student']}><SharedNotificationsPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/student/profile" element={<PrivateRoute allowedRoles={['student']}><ProfilePage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/student/settings" element={<PrivateRoute allowedRoles={['student']}><SettingsPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/student/contact" element={<PrivateRoute allowedRoles={['student']}><ContactPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/student/forum" element={<PrivateRoute allowedRoles={['student']}><ForumPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/student/forum/create" element={<PrivateRoute allowedRoles={['student']}><CreatePostPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/student/forum/:postId" element={<PrivateRoute allowedRoles={['student']}><PostPage user={user as UserResponse} /></PrivateRoute>} />
 
         {/* Teacher Routes */}
         <Route path="/dashboard/teacher" element={<PrivateRoute allowedRoles={['teacher']}><TeacherDashboard user={user as UserResponse} /></PrivateRoute>} />
@@ -233,6 +263,12 @@ function App() {
         <Route path="/dashboard/teacher/feedback" element={<PrivateRoute allowedRoles={['teacher']}><TeacherFeedback user={user as UserResponse} /></PrivateRoute>} />
         <Route path="/dashboard/teacher/reports" element={<PrivateRoute allowedRoles={['teacher']}><TeacherReports user={user as UserResponse} /></PrivateRoute>} />
         <Route path="/dashboard/teacher/notifications" element={<PrivateRoute allowedRoles={['teacher']}><SharedNotificationsPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/teacher/profile" element={<PrivateRoute allowedRoles={['teacher']}><ProfilePage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/teacher/settings" element={<PrivateRoute allowedRoles={['teacher']}><SettingsPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/teacher/contact" element={<PrivateRoute allowedRoles={['teacher']}><ContactPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/teacher/forum" element={<PrivateRoute allowedRoles={['teacher']}><ForumPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/teacher/forum/create" element={<PrivateRoute allowedRoles={['teacher']}><CreatePostPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/teacher/forum/:postId" element={<PrivateRoute allowedRoles={['teacher']}><PostPage user={user as UserResponse} /></PrivateRoute>} />
 
         {/* Parent Routes */}
         <Route path="/dashboard/parent" element={<PrivateRoute allowedRoles={['parent']}><ParentDashboard user={user as UserResponse} /></PrivateRoute>} />
@@ -247,14 +283,12 @@ function App() {
         <Route path="/dashboard/parent/schedule" element={<PrivateRoute allowedRoles={['parent']}><ParentSchedule user={user as UserResponse} /></PrivateRoute>} />
         <Route path="/dashboard/parent/feedback" element={<PrivateRoute allowedRoles={['parent']}><ParentFeedback user={user as UserResponse} /></PrivateRoute>} />
         <Route path="/dashboard/parent/notifications" element={<PrivateRoute allowedRoles={['parent']}><SharedNotificationsPage user={user as UserResponse} /></PrivateRoute>} />
-
-        {/* Shared Routes */}
-        <Route path="/dashboard/:role/profile" element={<PrivateRoute allowedRoles={['administrator', 'teacher', 'student', 'parent']}><ProfilePage user={user as UserResponse} /></PrivateRoute>} />
-        <Route path="/dashboard/:role/settings" element={<PrivateRoute allowedRoles={['administrator', 'teacher', 'student', 'parent']}><SettingsPage user={user as UserResponse} /></PrivateRoute>} />
-        <Route path="/dashboard/:role/contact" element={<PrivateRoute allowedRoles={['administrator', 'teacher', 'student', 'parent']}><ContactPage user={user as UserResponse} /></PrivateRoute>} />
-        <Route path="/dashboard/:role/forum" element={<PrivateRoute allowedRoles={['administrator', 'teacher', 'student', 'parent']}><ForumPage user={user as UserResponse} /></PrivateRoute>} />
-        <Route path="/dashboard/:role/forum/create" element={<PrivateRoute allowedRoles={['administrator', 'teacher', 'student', 'parent']}><CreatePostPage user={user as UserResponse} /></PrivateRoute>} />
-        <Route path="/dashboard/:role/forum/:postId" element={<PrivateRoute allowedRoles={['administrator', 'teacher', 'student', 'parent']}><PostPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/parent/profile" element={<PrivateRoute allowedRoles={['parent']}><ProfilePage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/parent/settings" element={<PrivateRoute allowedRoles={['parent']}><SettingsPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/parent/contact" element={<PrivateRoute allowedRoles={['parent']}><ContactPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/parent/forum" element={<PrivateRoute allowedRoles={['parent']}><ForumPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/parent/forum/create" element={<PrivateRoute allowedRoles={['parent']}><CreatePostPage user={user as UserResponse} /></PrivateRoute>} />
+        <Route path="/dashboard/parent/forum/:postId" element={<PrivateRoute allowedRoles={['parent']}><PostPage user={user as UserResponse} /></PrivateRoute>} />
 
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" />} />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User } from "../../../types/auth";
-import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout";
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
 import { Search, Download, Save, BookOpen, GraduationCap, AlertCircle } from "lucide-react";
 
 interface TeacherGradesProps {

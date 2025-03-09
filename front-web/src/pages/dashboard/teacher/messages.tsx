@@ -1,5 +1,5 @@
 import { User } from "../../../types/auth"
-import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { MessageSquare, Search, Plus, Calendar, User as UserIcon } from "lucide-react"
 
 interface TeacherMessagesProps {

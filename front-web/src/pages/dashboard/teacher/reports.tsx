@@ -1,5 +1,6 @@
 import { User } from '../../../types/auth';
 import { useState } from 'react';
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
 import { Button } from '../../../components/ui/button';
 import { 
   Card, 
@@ -32,7 +33,6 @@ import {
   GraduationCap,
   ClipboardList
 } from 'lucide-react';
-import { TeacherLayout } from '../../../components/dashboard/layout/teacher-layout';
 
 interface TeacherReportsProps {
   user: User;

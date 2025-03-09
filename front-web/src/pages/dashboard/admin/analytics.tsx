@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout';
-import { User } from '../../../types/auth';
+import { UserResponse } from '../../../types/auth';
 import { 
   BarChart, 
   Bar, 
@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 
 interface AnalyticsPageProps {
-  user: User;
+  user: UserResponse;
 }
 
 export const AnalyticsPage = ({ user }: AnalyticsPageProps) => {

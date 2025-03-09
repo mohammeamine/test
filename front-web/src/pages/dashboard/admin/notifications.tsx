@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout';
-import { User } from '../../../types/auth';
+import { UserResponse } from '../../../types/auth';
 import { Bell, Check, X } from 'lucide-react';
 
 interface NotificationsPageProps {
-  user: User;
+  user: UserResponse;
 }
 
 export const NotificationsPage = ({ user }: NotificationsPageProps) => {

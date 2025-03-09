@@ -1,5 +1,5 @@
 import { User } from "../../../types/auth"
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { Search, GraduationCap, BookOpen, Calendar, Clock, UserPlus2 } from "lucide-react"
 
 interface ParentChildrenProps {
@@ -8,7 +8,7 @@ interface ParentChildrenProps {
 
 export default function ParentChildren({ user }: ParentChildrenProps) {
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -152,6 +152,6 @@ export default function ParentChildren({ user }: ParentChildrenProps) {
           </div>
         </div>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   )
 } 

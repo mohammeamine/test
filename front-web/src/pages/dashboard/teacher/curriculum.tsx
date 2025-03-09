@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout"
 import { User } from "../../../types/auth"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import {
   BookOpen,
   Calendar,
@@ -15,6 +15,15 @@ import {
   Share2,
   Target,
   Users,
+  PlusCircle,
+  MoreHorizontal,
+  CheckSquare,
+  Edit,
+  Trash2,
+  ArrowRight,
+  Info,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react"
 
 interface TeacherCurriculumProps {

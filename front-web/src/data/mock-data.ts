@@ -7,7 +7,9 @@ export const mockUsers: User[] = [
     firstName: 'Admin',
     lastName: 'User',
     role: 'administrator',
-    phoneNumber: '+1 (555) 123-4567'
+    phoneNumber: '+1 (555) 123-4567',
+    createdAt: '2023-01-15T08:30:00Z',
+    updatedAt: '2023-01-15T08:30:00Z'
   },
   {
     id: '2',
@@ -15,7 +17,9 @@ export const mockUsers: User[] = [
     firstName: 'John',
     lastName: 'Smith',
     role: 'teacher',
-    phoneNumber: '+1 (555) 234-5678'
+    phoneNumber: '+1 (555) 234-5678',
+    createdAt: '2023-02-20T10:15:00Z',
+    updatedAt: '2023-02-20T10:15:00Z'
   },
   {
     id: '3',
@@ -23,7 +27,9 @@ export const mockUsers: User[] = [
     firstName: 'Sarah',
     lastName: 'Johnson',
     role: 'student',
-    studentId: 'S12345'
+    studentId: 'S12345',
+    createdAt: '2023-03-10T14:45:00Z',
+    updatedAt: '2023-03-10T14:45:00Z'
   },
   {
     id: '4',
@@ -31,6 +37,8 @@ export const mockUsers: User[] = [
     firstName: 'Michael',
     lastName: 'Brown',
     role: 'parent',
-    phoneNumber: '+1 (555) 345-6789'
+    phoneNumber: '+1 (555) 345-6789',
+    createdAt: '2023-04-05T09:20:00Z',
+    updatedAt: '2023-04-05T09:20:00Z'
   }
 ]

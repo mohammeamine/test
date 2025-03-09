@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { User } from "../../../types/auth";
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout";
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
 import { Download, Search, Book, TrendingUp, TrendingDown } from "lucide-react";
 import { format } from "date-fns";
 import { Grade, ChildGradeStats } from "@/types/grades";
@@ -115,7 +115,7 @@ export default function ParentGrades({ user }: ParentGradesProps) {
   };
 
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -192,7 +192,7 @@ export default function ParentGrades({ user }: ParentGradesProps) {
           )}
         </div>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   );
 };
 

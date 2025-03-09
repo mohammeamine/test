@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout';
-import { User } from '../../../types/auth';
+import { UserResponse } from '../../../types/auth';
 import { 
   Search, 
   Plus, 
@@ -18,7 +18,7 @@ import {
 import { format } from 'date-fns';
 
 interface CourseContentPageProps {
-  user: User;
+  user: UserResponse;
 }
 
 // Content type definition

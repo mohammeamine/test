@@ -1,5 +1,6 @@
 import { User } from '../../../types/auth';
 import { useState } from 'react';
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { 
@@ -62,7 +63,6 @@ import {
   TableRow,
 } from '../../../components/ui/table';
 import { Textarea } from '../../../components/ui/textarea';
-import { TeacherLayout } from '../../../components/dashboard/layout/teacher-layout';
 
 interface TeacherFeedbackProps {
   user: User;

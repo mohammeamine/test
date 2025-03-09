@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { User } from "../../../types/auth";
-import { DashboardLayout } from "@/components/dashboard/layout/dashboard-layout";
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
 import { AssignmentCard } from "../../../components/dashboard/shared/assignment-card";
 import { AssignmentForm } from "../../../components/dashboard/shared/assignment-form";
 import { AssignmentGrading } from "../../../components/dashboard/teacher/assignment-grading";
 import { Search, Plus } from "lucide-react";
-import { Assignment, AssignmentWithDetails, SubmissionWithDetails } from "@/types/assignment";
+import { Assignment, AssignmentWithDetails, SubmissionWithDetails } from "../../../types/assignment";
 import { assignmentService } from "../../../services/assignment.service";
 import { Dialog } from "@headlessui/react";
 import { ApiRequestError } from '../../../types/api';

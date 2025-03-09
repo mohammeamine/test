@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { User } from "../../../types/auth"
-import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { AttendanceForm } from "../../../components/dashboard/teacher/attendance-form"
 import { Send, Sliders, Bell, XCircle, Download } from "lucide-react"
 import { format } from "date-fns"

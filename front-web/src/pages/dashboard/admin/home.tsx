@@ -4,10 +4,10 @@ import { TeacherStudentRatioChart } from '../../../components/dashboard/charts/t
 import { AttendanceSummaryChart } from '../../../components/dashboard/charts/attendance-summary-chart'
 import { QuickStatsSection } from '../../../components/dashboard/sections/quick-stats-section'
 import { RecentActivitiesSection } from '../../../components/dashboard/sections/recent-activities-section'
-import { User } from '../../../types/auth'
+import { UserResponse } from '../../../types/auth'
 
 interface AdminHomePageProps {
-  user: User
+  user: UserResponse
 }
 
 export const AdminHomePage = ({ user }: AdminHomePageProps) => {

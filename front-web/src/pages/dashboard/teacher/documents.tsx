@@ -1,5 +1,5 @@
 import { User } from "../../../types/auth"
-import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { FileText, Search, Plus, Download, File, FilePlus2 } from "lucide-react"
 
 interface TeacherDocumentsProps {

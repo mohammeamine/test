@@ -27,14 +27,29 @@ export const SignInPage = () => {
       const response = await authService.login(data);
       console.log('Login response:', response);
       
+      // Validate response from server
       if (!response || !response.token || !response.user) {
         throw new Error('Invalid response from server');
       }
+      
+      // Validate user object has required fields
+      if (!response.user.id || !response.user.email || !response.user.role) {
+        throw new Error('Invalid user data received');
+      }
+
+      // Clear any existing auth data first to avoid conflicts
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('auth_token');
+      sessionStorage.removeItem('user');
 
       // Store auth data based on rememberMe preference
-      const storage = data.rememberMe ? localStorage : sessionStorage;
-      storage.setItem('auth_token', response.token);
-      storage.setItem('user', JSON.stringify(response.user));
+      // Always store in localStorage for consistent app-wide access
+      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      // If rememberMe is false, we don't need to do anything special
+      // since localStorage will be cleared when the browser is closed
       
       console.log('User role:', response.user.role);
       // Redirect based on user role
@@ -53,7 +68,10 @@ export const SignInPage = () => {
           break;
         default:
           console.error('Unknown role:', response.user.role);
-          navigate('/dashboard');
+          setError(`Invalid role: ${response.user.role}`);
+          // Clear auth data for invalid role
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
       }
     } catch (err: any) {
       console.error('Login error:', err);

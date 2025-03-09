@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { User } from "../../../types/auth"
-import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { 
   BookOpen, FileText, Video, Download, Search, Plus, Upload, 
   Folder, MoreVertical, Edit, Trash2, Eye, BarChart, Filter,

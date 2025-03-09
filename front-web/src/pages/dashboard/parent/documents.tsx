@@ -1,5 +1,5 @@
 import { User } from "../../../types/auth"
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { FileText, Download, Search, File, FilePlus2 } from "lucide-react"
 
 interface ParentDocumentsProps {

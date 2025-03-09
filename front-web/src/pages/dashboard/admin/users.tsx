@@ -1,23 +1,23 @@
 import { useState } from 'react'
-import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { Plus, Pencil, Trash, Search } from 'lucide-react'
 import { mockUsers } from '../../../data'
-import type { User } from '../../../types/auth'
+import { UserResponse, UserRole } from '../../../types/auth'
 import { UserFormModal, UserFormData } from '../../../components/dashboard/users/user-form-modal'
 import { DashboardLayout } from '../../../components/dashboard/layout/dashboard-layout'
 import toast, { Toaster } from 'react-hot-toast'
 
 interface UsersPageProps {
-  user: User
+  user: UserResponse
 }
 
 export const UsersPage = ({ user }: UsersPageProps) => {
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [users, setUsers] = useState<UserResponse[]>(mockUsers)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const filteredUsers = users.filter(user => {
@@ -46,10 +46,11 @@ export const UsersPage = ({ user }: UsersPageProps) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Create a new user with a unique ID
-      const newUser: User = {
+      const newUser: UserResponse = {
         id: `user-${Date.now()}`,
         ...data,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       
       setUsers(prev => [...prev, newUser]);
@@ -115,12 +116,12 @@ export const UsersPage = ({ user }: UsersPageProps) => {
     }
   };
 
-  const openEditModal = (user: User) => {
+  const openEditModal = (user: UserResponse) => {
     setSelectedUser(user);
     setIsEditUserModalOpen(true);
   };
 
-  const openDeleteModal = (user: User) => {
+  const openDeleteModal = (user: UserResponse) => {
     setSelectedUser(user);
     setIsDeleteModalOpen(true);
   };
@@ -135,7 +136,7 @@ export const UsersPage = ({ user }: UsersPageProps) => {
             onClick={() => setIsAddUserModalOpen(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
           >
-            <PlusIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+            <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Add User
           </button>
         </div>
@@ -144,7 +145,7 @@ export const UsersPage = ({ user }: UsersPageProps) => {
           <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
             <div className="relative rounded-md w-full md:w-64">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </div>
               <input
                 type="text"
@@ -233,14 +234,14 @@ export const UsersPage = ({ user }: UsersPageProps) => {
                           onClick={() => openEditModal(user)}
                           className="text-primary hover:text-primary/90 mr-4"
                         >
-                          <PencilIcon className="h-5 w-5" aria-hidden="true" />
+                          <Pencil className="h-5 w-5" aria-hidden="true" />
                           <span className="sr-only">Edit</span>
                         </button>
                         <button
                           onClick={() => openDeleteModal(user)}
                           className="text-red-600 hover:text-red-900"
                         >
-                          <TrashIcon className="h-5 w-5" aria-hidden="true" />
+                          <Trash className="h-5 w-5" aria-hidden="true" />
                           <span className="sr-only">Delete</span>
                         </button>
                       </td>
@@ -294,7 +295,7 @@ export const UsersPage = ({ user }: UsersPageProps) => {
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
                     <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                      <TrashIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+                      <Trash className="h-6 w-6 text-red-600" aria-hidden="true" />
                     </div>
                     <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                       <h3 className="text-lg leading-6 font-medium text-gray-900">Delete User</h3>

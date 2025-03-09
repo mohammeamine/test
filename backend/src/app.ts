@@ -1,4 +1,5 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
+import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -6,10 +7,15 @@ import { config } from './config';
 import { testConnection } from './config/db';
 import routes from './routes';
 import { initializeDatabase } from './utils/db-init';
+import { setupSocketIO } from './socket';
 import assignmentRoutes from './routes/assignment.routes';
 
 // Initialize Express app
 const app: Express = express();
+const server = http.createServer(app);
+
+// Set up Socket.IO
+setupSocketIO(server);
 
 // Middleware
 app.use(express.json());
@@ -46,7 +52,7 @@ app.use((_req: Request, res: Response) => {
 
 // Start server
 const PORT = config.server.port;
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   
   // Test database connection
@@ -56,6 +62,7 @@ app.listen(PORT, async () => {
   await initializeDatabase();
   
   console.log(`Server is ready at http://localhost:${PORT}`);
+  console.log(`Socket.IO server is running on port ${PORT}`);
 });
 
 export default app; 

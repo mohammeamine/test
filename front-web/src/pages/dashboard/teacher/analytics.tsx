@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { TeacherLayout } from "../../../components/dashboard/layout/teacher-layout"
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout"
 import { User } from "../../../types/auth"
 import {
   BarChart3,

@@ -1,5 +1,5 @@
-import { ReactNode, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { ReactNode, useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { UserResponse, UserRole } from '../../../types/auth'
 import { AppSidebar } from './app-sidebar'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '../../../components/ui/sidebar'
@@ -7,41 +7,72 @@ import { Separator } from '../../../components/ui/separator'
 import { LogOut, Settings, User as UserIcon, Bell } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Badge } from '../../../components/ui/badge'
+import { authService } from '../../../services/auth.service'
+import { getRoleDisplayName } from '../../../lib/auth-utils'
 
 interface DashboardLayoutProps {
   children: ReactNode
-  user: UserResponse
+  user: UserResponse | null
 }
 
 export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
+
+  // Redirect to login if user is null
+  useEffect(() => {
+    if (!user) {
+      console.log('No user found in DashboardLayout, redirecting to login')
+      navigate('/auth/sign-in')
+    }
+  }, [user, navigate])
+
+  // Effect to validate authentication on component mount
+  useEffect(() => {
+    const validateAuth = async () => {
+      if (!authService.isAuthenticated()) {
+        console.log('Authentication invalid, redirecting to login')
+        navigate('/auth/sign-in')
+      }
+    }
+    
+    validateAuth()
+  }, [navigate])
+
+  // If user is null, render a loading state or return null
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Loading...</h2>
+          <p className="text-gray-500 mt-2">Please wait while we retrieve your information</p>
+        </div>
+      </div>
+    )
+  }
 
   const handleLogout = () => {
-    // In a real application, this would call an API to log the user out
+    setIsLoading(true)
+    // Clear auth data using the auth service
+    authService.logout();
     toast.success('Logged out successfully')
     // Redirect to login page after a short delay
     setTimeout(() => {
-      window.location.href = '/auth/sign-in'
+      setIsLoading(false)
+      navigate('/auth/sign-in')
     }, 1000)
   }
 
   const getRoleTitle = (role: UserRole) => {
-    switch (role) {
-      case 'student':
-        return 'Student Portal'
-      case 'teacher':
-        return 'Teacher Portal'
-      case 'administrator':
-        return 'Admin Dashboard'
-      case 'parent':
-        return 'Parent Portal'
-      default:
-        return 'Dashboard'
-    }
+    return getRoleDisplayName(role) + (role === 'administrator' ? ' Dashboard' : ' Portal')
   }
 
   const getUserInfo = () => {
+    // Make sure user and user.role exist
+    if (!user || !user.role) return 'User'
+
     switch (user.role) {
       case 'student':
         return `Student ID: ${user.studentId || 'ST-' + user.id}`
@@ -52,7 +83,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
       case 'parent':
         return `Parent ID: ${user.parentId || 'PR-' + user.id}`
       default:
-        return user.email
+        return user.email || 'User'
     }
   }
 
@@ -63,7 +94,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
         <header className="sticky top-0 flex h-14 items-center gap-4 border-b bg-background px-4 z-10">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-6" />
-          <div className="font-semibold">{getRoleTitle(user.role)}</div>
+          <div className="font-semibold">{user && user.role ? getRoleTitle(user.role) : 'Dashboard'}</div>
           <div className="flex-1" />
           <div className="flex items-center gap-4 relative">
             {/* Notifications */}
@@ -78,7 +109,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
             {/* User info and profile menu */}
             <div className="flex items-center relative">
               <div className="text-sm text-gray-500 mr-2 hidden sm:block">
-                <div className="font-medium text-gray-900">{user.firstName} {user.lastName}</div>
+                <div className="font-medium text-gray-900">{user.firstName || ''} {user.lastName || ''}</div>
                 <div>{getUserInfo()}</div>
               </div>
               <button 
@@ -93,8 +124,8 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
                   />
                 ) : (
                   <div className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center">
-                    {user.firstName?.[0]}
-                    {user.lastName?.[0]}
+                    {user.firstName?.[0] || ''}
+                    {user.lastName?.[0] || ''}
                   </div>
                 )}
               </button>
@@ -103,7 +134,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
               {isProfileMenuOpen && (
                 <div className="absolute right-0 top-10 w-56 bg-white shadow-lg rounded-md border border-gray-200 py-1 z-20">
                   <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium">{user ? `${user.firstName} ${user.lastName}` : 'User'}</p>
+                    <p className="text-sm font-medium">{user ? `${user.firstName || ''} ${user.lastName || ''}` : 'User'}</p>
                     <p className="text-xs text-gray-500">{getUserInfo()}</p>
                   </div>
                   <Link 
@@ -154,7 +185,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
                   </div>
                   <div className="px-4 py-2 border-t border-gray-100">
                     <Link 
-                      to={`/dashboard/${user.role}/notifications`}
+                      to={`/dashboard/${user.role || 'student'}/notifications`}
                       className="text-sm text-primary hover:text-primary/90"
                       onClick={() => setIsNotificationsOpen(false)}
                     >

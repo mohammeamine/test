@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User } from "../../../types/auth";
-import { ParentLayout } from "../../../components/dashboard/layout/parent-layout";
+import { DashboardLayout } from "../../../components/dashboard/layout/dashboard-layout";
 import { BarChart, TrendingUp, GraduationCap, BookOpen, Clock, Award, ChevronDown } from "lucide-react";
 import { Bar, Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, RadialLinearScale, PointElement, LineElement, Filler } from 'chart.js';
@@ -157,7 +157,7 @@ export default function ParentProgress({ user }: ParentProgressProps) {
   const { performanceData, skillsData } = childrenData[selectedChild];
 
   return (
-    <ParentLayout user={user}>
+    <DashboardLayout user={user}>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -302,6 +302,6 @@ export default function ParentProgress({ user }: ParentProgressProps) {
           </div>
         </div>
       </div>
-    </ParentLayout>
+    </DashboardLayout>
   );
 }

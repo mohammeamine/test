@@ -10,14 +10,14 @@ import { Badge } from '@/components/ui/badge';
 import { CreateEventDialog } from './CreateEventDialog';
 import { EventCard } from './EventCard';
 import { EventFilters } from './EventFilters';
-import { User } from '@/types/auth';
-import { DashboardLayout } from '@/components/dashboard/layout/dashboard-layout';
+import { UserResponse } from '../../../../types/auth';
+import { DashboardLayout } from '../../../../components/dashboard/layout/dashboard-layout';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const localizer = momentLocalizer(moment);
 
 interface EventsPageProps {
-  user: User;
+  user: UserResponse;
 }
 
 export default function EventsPage({ user }: EventsPageProps) {
