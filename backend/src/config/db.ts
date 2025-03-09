@@ -23,4 +23,37 @@ export const testConnection = async (): Promise<void> => {
     console.error('Error connecting to database:', error);
     process.exit(1);
   }
+};
+
+/**
+ * Execute a SQL query
+ */
+export const query = async <T = any>(sql: string, params: any[] = []): Promise<T[]> => {
+  try {
+    const [rows] = await pool.execute(sql, params);
+    return rows as T[];
+  } catch (error) {
+    console.error('Database query error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Execute a transaction with multiple queries
+ */
+export type Transaction = <T>(callback: (connection: mysql.PoolConnection) => Promise<T>) => Promise<T>;
+
+export const transaction: Transaction = async <T>(callback: (connection: mysql.PoolConnection) => Promise<T>): Promise<T> => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const result = await callback(connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }; 

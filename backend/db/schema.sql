@@ -17,8 +17,26 @@ CREATE TABLE IF NOT EXISTS users (
   studentId VARCHAR(50),
   bio TEXT,
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  departmentId VARCHAR(36)
 );
+
+-- Departments table
+CREATE TABLE IF NOT EXISTS departments (
+  id VARCHAR(36) PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  code VARCHAR(10) NOT NULL UNIQUE,
+  headId VARCHAR(36),
+  description TEXT NOT NULL,
+  established DATE NOT NULL,
+  status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (headId) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Add foreign key constraint to users table for departmentId
+ALTER TABLE users ADD CONSTRAINT fk_user_department FOREIGN KEY (departmentId) REFERENCES departments(id) ON DELETE SET NULL;
 
 -- Courses table
 CREATE TABLE IF NOT EXISTS courses (
@@ -34,7 +52,9 @@ CREATE TABLE IF NOT EXISTS courses (
   status ENUM('active', 'upcoming', 'completed') NOT NULL DEFAULT 'upcoming',
   createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (teacherId) REFERENCES users(id) ON DELETE CASCADE
+  departmentId VARCHAR(36),
+  FOREIGN KEY (teacherId) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (departmentId) REFERENCES departments(id) ON DELETE SET NULL
 );
 
 -- Course Enrollments table (many-to-many relationship between students and courses)
@@ -220,17 +240,6 @@ CREATE TABLE IF NOT EXISTS parent_child (
   UNIQUE KEY (parentId, studentId),
   FOREIGN KEY (parentId) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Departments table
-CREATE TABLE IF NOT EXISTS departments (
-  id VARCHAR(36) PRIMARY KEY,
-  name VARCHAR(100) NOT NULL UNIQUE,
-  description TEXT,
-  headId VARCHAR(36),
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (headId) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Events table
