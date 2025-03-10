@@ -270,43 +270,43 @@ export default function StudentMaterials({ user }: StudentMaterialsProps) {
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Search materials..."
+              <input
+                type="text"
+                placeholder="Search materials..."
               className="pl-10 pr-4 py-2 w-full border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           <div className="flex gap-2">
             <div className="relative">
-              <select
+            <select
                 className="appearance-none pl-10 pr-8 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={selectedCourse}
-                onChange={(e) => setSelectedCourse(e.target.value)}
-              >
-                <option value="all">All Courses</option>
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+            >
+              <option value="all">All Courses</option>
                 {courses.map((course) => (
                   <option key={course.id} value={course.id}>
                     {course.code} - {course.name}
                   </option>
-                ))}
-              </select>
+              ))}
+            </select>
               <Book className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             </div>
             <div className="relative">
-              <select
+            <select
                 className="appearance-none pl-10 pr-8 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-              >
-                <option value="all">All Types</option>
-                <option value="document">Documents</option>
-                <option value="video">Videos</option>
-                <option value="quiz">Quizzes</option>
-                <option value="assignment">Assignments</option>
-              </select>
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+            >
+              <option value="all">All Types</option>
+              <option value="document">Documents</option>
+              <option value="video">Videos</option>
+              <option value="quiz">Quizzes</option>
+              <option value="assignment">Assignments</option>
+            </select>
               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             </div>
@@ -334,7 +334,7 @@ export default function StudentMaterials({ user }: StudentMaterialsProps) {
               onClick={() => setSelectedCourse(course.id === selectedCourse ? "all" : course.id)}
             >
               <div className="flex justify-between items-start mb-2">
-                <div>
+        <div>
                   <h3 className="font-bold">{course.code}</h3>
                   <p className="text-sm text-gray-600">{course.name}</p>
                 </div>
@@ -382,7 +382,7 @@ export default function StudentMaterials({ user }: StudentMaterialsProps) {
                       <div className={`p-2 rounded-lg ${getTypeColor(material.type as MaterialType)}`}>
                         {getTypeIcon(material.type as MaterialType)}
                       </div>
-                      <div>
+                          <div>
                         <h3 className="font-medium">{material.title}</h3>
                         <p className="text-sm text-gray-500 mt-1">{material.description}</p>
                         <div className="flex items-center mt-2 space-x-4">
@@ -408,7 +408,7 @@ export default function StudentMaterials({ user }: StudentMaterialsProps) {
                           <div className="w-full mt-2 bg-gray-200 rounded-full h-1.5">
                             <div
                               className="bg-blue-600 h-1.5 rounded-full"
-                              style={{ width: `${material.progress}%` }}
+                                style={{ width: `${material.progress}%` }}
                             ></div>
                           </div>
                         )}
@@ -440,7 +440,7 @@ export default function StudentMaterials({ user }: StudentMaterialsProps) {
                           title="View"
                         >
                           <Eye className="h-5 w-5" />
-                        </button>
+                          </button>
                       )}
                       {material.status !== "completed" && (
                         <button
@@ -449,11 +449,11 @@ export default function StudentMaterials({ user }: StudentMaterialsProps) {
                           title="Mark as Completed"
                         >
                           <CheckCircle className="h-5 w-5" />
-                        </button>
-                      )}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
               ))}
             </div>
           )}

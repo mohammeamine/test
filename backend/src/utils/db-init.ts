@@ -12,6 +12,7 @@ import { createSubmissionsTableSQL } from '../models/submission.model';
 import { paymentModel } from '../models/payment.model';
 import { materialModel } from '../models/material.model';
 import { feedbackModel } from '../models/feedback.model';
+import { certificateModel } from '../models/certificate.model';
 
 /**
  * Initialize database tables
@@ -45,6 +46,7 @@ export const initializeDatabase = async (): Promise<void> => {
         await materialModel.createTable();
         await materialModel.createProgressTable();
         await feedbackModel.createTable();
+        await certificateModel.createTable();
       } catch (error) {
         console.error('Error executing schema, falling back to direct table creation:', error);
         // Create tables directly if schema execution fails
@@ -62,6 +64,7 @@ export const initializeDatabase = async (): Promise<void> => {
         await materialModel.createTable();
         await materialModel.createProgressTable();
         await feedbackModel.createTable();
+        await certificateModel.createTable();
       }
     } else {
       console.log('Schema file not found, creating tables directly...');
@@ -81,6 +84,7 @@ export const initializeDatabase = async (): Promise<void> => {
       await materialModel.createTable();
       await materialModel.createProgressTable();
       await feedbackModel.createTable();
+      await certificateModel.createTable();
     }
     
     console.log('Database tables initialized successfully');

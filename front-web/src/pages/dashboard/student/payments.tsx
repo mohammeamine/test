@@ -69,8 +69,8 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
       const invoiceList = await paymentService.getInvoices();
       setInvoices(invoiceList);
       
-      setShowPaymentForm(false);
-      setActiveTab('history');
+    setShowPaymentForm(false);
+    setActiveTab('history');
     } catch (error) {
       console.error('Payment processing error:', error);
       toast.error('Payment processing failed. Please try again.');
@@ -227,7 +227,7 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
                     }
                   })}>
                     Process Demo Payment
-                  </Button>
+                            </Button>
                 </div>
               </CardContent>
             </Card>
@@ -280,7 +280,7 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
                             ))}
                           </tbody>
                         </table>
-                      </div>
+                    </div>
                     ) : (
                       <p>No payment history found.</p>
                     )}
@@ -341,14 +341,14 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
                                     onClick={() => handleDownloadInvoice(invoice.id)}
                                   >
                                     <Receipt className="h-4 w-4 mr-1" />
-                                    Download
-                                  </Button>
+                              Download
+                            </Button>
                                 </td>
                               </tr>
-                            ))}
+                      ))}
                           </tbody>
                         </table>
-                      </div>
+                    </div>
                     ) : (
                       <p>No invoices found.</p>
                     )}
@@ -368,7 +368,7 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
                     {isLoading ? (
                       <p>Loading payment methods...</p>
                     ) : paymentMethods.length > 0 ? (
-                      <div className="space-y-4">
+                    <div className="space-y-4">
                         {paymentMethods.map((method) => (
                           <div 
                             key={method.id} 
@@ -433,7 +433,7 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
                               >
                                 Delete
                               </Button>
-                            </div>
+                          </div>
                           </div>
                         ))}
                       </div>
@@ -444,9 +444,9 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
                           // This would open a form to add a payment method
                           toast.error('Payment method form not implemented in this demo');
                         }}>
-                          Add Payment Method
-                        </Button>
-                      </div>
+                        Add Payment Method
+                      </Button>
+                    </div>
                     )}
                   </CardContent>
                 </Card>
@@ -457,7 +457,7 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
       </div>
     </StudentLayout>
   );
-}
+} 
 
 // Only use default export, not both
 export default StudentPayments;

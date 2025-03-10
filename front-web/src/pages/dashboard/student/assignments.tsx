@@ -7,16 +7,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Textarea } from "../../../components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../../components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../../components/ui/dialog";
 import { Calendar, Clock, FileText, Filter, Search, Upload } from "lucide-react";
-import { studentService } from "../../../services/student-service";
+import { assignmentService } from "../../../services/assignment.service";
 import { toast } from "react-hot-toast";
+import { AssignmentWithDetails } from "../../../types/assignment";
 
 interface StudentAssignmentsProps {
   user: User;
 }
 
-interface Assignment {
+// Create a specific interface for student assignments in this component
+interface StudentAssignment {
   id: string;
   title: string;
   description: string;
@@ -31,11 +33,11 @@ interface Assignment {
 
 export default function StudentAssignments({ user }: StudentAssignmentsProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Assignment["status"] | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<StudentAssignment["status"] | "all">("all");
   const [courseFilter, setCourseFilter] = useState<string>("all");
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignments, setAssignments] = useState<StudentAssignment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<StudentAssignment | null>(null);
   const [submissionContent, setSubmissionContent] = useState("");
   const [submissionDialogOpen, setSubmissionDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -44,19 +46,39 @@ export default function StudentAssignments({ user }: StudentAssignmentsProps) {
     const fetchAssignments = async () => {
       try {
         setLoading(true);
-        const data = await studentService.getUpcomingAssignments();
         
-        // Transform API data to match our Assignment interface
-        const transformedAssignments: Assignment[] = data.map(assignment => ({
-          id: assignment.id,
-          title: assignment.title,
-          description: assignment.description,
-          dueDate: new Date(assignment.dueDate).toISOString().split('T')[0],
-          courseName: assignment.courseName,
-          courseCode: assignment.courseCode,
-          status: 'pending', // This would need to be determined based on submission status
-          points: assignment.points
-        }));
+        // Fetch assignments using assignment service
+        const assignmentsData = await assignmentService.getUpcomingAssignments();
+        
+        // Fetch submissions to check status
+        const submissions = await assignmentService.getMySubmissions();
+        
+        // Transform API data to match our StudentAssignment interface
+        const transformedAssignments: StudentAssignment[] = assignmentsData.map((assignment: AssignmentWithDetails) => {
+          // Check if this assignment has been submitted
+          const submission = submissions.find(s => s.assignmentId === assignment.id);
+          
+          // Determine status based on submission
+          let status: StudentAssignment["status"] = 'pending';
+          if (submission) {
+            status = submission.status as 'submitted' | 'graded' | 'late';
+          } else if (new Date(assignment.dueDate) < new Date()) {
+            status = 'late';
+          }
+          
+          return {
+            id: assignment.id,
+            title: assignment.title,
+            description: assignment.description,
+            dueDate: assignment.dueDate,
+            courseName: assignment.course?.name || "",
+            courseCode: assignment.course?.code || "",
+            status,
+            points: assignment.points,
+            score: submission?.grade,
+            feedback: submission?.feedback
+          };
+        });
         
         setAssignments(transformedAssignments);
       } catch (error) {
@@ -75,7 +97,9 @@ export default function StudentAssignments({ user }: StudentAssignmentsProps) {
     
     try {
       setSubmitting(true);
-      await studentService.submitAssignment(selectedAssignment.id, { content: submissionContent });
+      await assignmentService.submitAssignment(selectedAssignment.id, { 
+        comment: submissionContent 
+      });
       
       // Update the assignment status in the local state
       setAssignments(prev => 
@@ -111,7 +135,7 @@ export default function StudentAssignments({ user }: StudentAssignmentsProps) {
 
   const uniqueCourses = Array.from(new Set(assignments.map(a => a.courseCode)));
 
-  const getStatusColor = (status: Assignment["status"]) => {
+  const getStatusColor = (status: StudentAssignment["status"]) => {
     switch (status) {
       case "pending":
         return "bg-yellow-100 text-yellow-800";
@@ -176,7 +200,7 @@ export default function StudentAssignments({ user }: StudentAssignmentsProps) {
               <select
                 className="h-10 rounded-md border border-input bg-background px-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as Assignment["status"] | "all")}
+                onChange={(e) => setStatusFilter(e.target.value as StudentAssignment["status"] | "all")}
               >
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>

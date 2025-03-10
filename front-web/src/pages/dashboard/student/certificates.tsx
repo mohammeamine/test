@@ -1,25 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "../../../types/auth";
 import { StudentLayout } from "../../../components/dashboard/layout/student-layout";
 import { Award, Search, Download, Share2, CheckCircle, AlertCircle, Calendar, Clock } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
+import { certificateService, Certificate } from "../../../services/certificate.service";
+import { toast } from "react-hot-toast";
 
 interface StudentCertificatesProps {
   user: User;
-}
-
-interface Certificate {
-  id: string;
-  title: string;
-  issueDate: string;
-  expiryDate?: string;
-  issuer: string;
-  type: string;
-  status: "valid" | "expired" | "pending";
-  verificationId: string;
-  downloadUrl: string;
-  description: string;
-  skills: string[];
 }
 
 export default function StudentCertificates({ user }: StudentCertificatesProps) {
@@ -27,48 +15,26 @@ export default function StudentCertificates({ user }: StudentCertificatesProps) 
   const [selectedType, setSelectedType] = useState<string>("all");
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
 
-  // Mock certificates data
-  const [certificates] = useState<Certificate[]>([
-    {
-      id: "cert1",
-      title: "Advanced Web Development",
-      issueDate: "2025-01-15",
-      expiryDate: "2027-01-15",
-      issuer: "Tech Academy",
-      type: "Technical",
-      status: "valid",
-      verificationId: "TECH-2025-001",
-      downloadUrl: "/certificates/web-dev.pdf",
-      description: "Certification in modern web development technologies including React, Node.js, and TypeScript",
-      skills: ["React", "Node.js", "TypeScript", "Web Security"]
-    },
-    {
-      id: "cert2",
-      title: "Project Management Fundamentals",
-      issueDate: "2024-11-20",
-      issuer: "PM Institute",
-      type: "Professional",
-      status: "valid",
-      verificationId: "PMI-2024-123",
-      downloadUrl: "/certificates/pm-cert.pdf",
-      description: "Foundation certification in project management methodologies and best practices",
-      skills: ["Project Planning", "Risk Management", "Team Leadership"]
-    },
-    {
-      id: "cert3",
-      title: "Data Science Essentials",
-      issueDate: "2024-08-10",
-      expiryDate: "2024-08-10",
-      issuer: "Data Academy",
-      type: "Technical",
-      status: "expired",
-      verificationId: "DATA-2024-456",
-      downloadUrl: "/certificates/data-science.pdf",
-      description: "Comprehensive certification in data science fundamentals and machine learning",
-      skills: ["Python", "Machine Learning", "Data Analysis"]
-    }
-  ]);
+  // Fetch certificates when component mounts
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        setLoading(true);
+        const data = await certificateService.getStudentCertificates();
+        setCertificates(data);
+      } catch (error) {
+        console.error("Failed to fetch certificates:", error);
+        toast.error("Failed to load certificates. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCertificates();
+  }, []);
 
   // Filter certificates based on search and type
   const filteredCertificates = certificates.filter(certificate => {
@@ -92,10 +58,31 @@ export default function StudentCertificates({ user }: StudentCertificatesProps) 
   };
 
   // Handle certificate verification
-  const handleVerify = (verificationId: string) => {
-    // In a real application, this would make an API call to verify the certificate
-    console.log("Verifying certificate:", verificationId);
-    alert(`Certificate ${verificationId} is valid and authentic.`);
+  const handleVerify = async (verificationId: string) => {
+    try {
+      const result = await certificateService.verifyCertificate(verificationId);
+      
+      if (result.isValid) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      console.error("Failed to verify certificate:", error);
+      toast.error("Failed to verify certificate. Please try again later.");
+    }
+  };
+
+  // Handle certificate download
+  const handleDownload = (id: string) => {
+    try {
+      // Create a link and trigger a download
+      const url = certificateService.getDownloadUrl(id);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error("Failed to download certificate:", error);
+      toast.error("Failed to download certificate. Please try again later.");
+    }
   };
 
   // Get status color
@@ -107,6 +94,8 @@ export default function StudentCertificates({ user }: StudentCertificatesProps) 
         return "text-red-600 bg-red-100";
       case "pending":
         return "text-yellow-600 bg-yellow-100";
+      case "revoked":
+        return "text-gray-600 bg-gray-100";
       default:
         return "text-gray-600 bg-gray-100";
     }
@@ -121,6 +110,8 @@ export default function StudentCertificates({ user }: StudentCertificatesProps) 
         return <AlertCircle className="h-5 w-5" />;
       case "pending":
         return <Clock className="h-5 w-5" />;
+      case "revoked":
+        return <AlertCircle className="h-5 w-5" />;
       default:
         return <Award className="h-5 w-5" />;
     }
@@ -132,6 +123,16 @@ export default function StudentCertificates({ user }: StudentCertificatesProps) 
     const daysUntilExpiry = differenceInDays(new Date(expiryDate), new Date());
     return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
   };
+
+  if (loading) {
+    return (
+      <StudentLayout user={user}>
+        <div className="p-6 flex justify-center items-center min-h-[80vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </StudentLayout>
+    );
+  }
 
   return (
     <StudentLayout user={user}>
@@ -199,70 +200,81 @@ export default function StudentCertificates({ user }: StudentCertificatesProps) 
 
         {/* Certificates List */}
         <div className="space-y-4">
-          {filteredCertificates.map((certificate) => (
-            <div key={certificate.id} className="rounded-lg border bg-white p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className={`rounded-lg p-3 ${getStatusColor(certificate.status)}`}>
-                    {getStatusIcon(certificate.status)}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{certificate.title}</h3>
-                    <p className="text-sm text-gray-500">{certificate.issuer}</p>
-                    <p className="mt-1 text-sm text-gray-600">{certificate.description}</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {certificate.skills.map((skill, index) => (
-                        <span
-                          key={index}
-                          className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600"
-                        >
-                          {skill}
-                        </span>
-                      ))}
+          {filteredCertificates.length > 0 ? (
+            filteredCertificates.map((certificate) => (
+              <div key={certificate.id} className="rounded-lg border bg-white p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className={`rounded-lg p-3 ${getStatusColor(certificate.status)}`}>
+                      {getStatusIcon(certificate.status)}
                     </div>
-                    <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        Issued: {format(new Date(certificate.issueDate), "MMM d, yyyy")}
-                      </span>
-                      {certificate.expiryDate && (
+                    <div>
+                      <h3 className="font-medium text-gray-900">{certificate.title}</h3>
+                      <p className="text-sm text-gray-500">{certificate.issuer}</p>
+                      <p className="mt-1 text-sm text-gray-600">{certificate.description}</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {certificate.skills && certificate.skills.map((skill, index) => (
+                          <span
+                            key={index}
+                            className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-600"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          Expires: {format(new Date(certificate.expiryDate), "MMM d, yyyy")}
-                          {isExpiringSoon(certificate.expiryDate) && (
-                            <span className="ml-2 text-xs font-medium text-yellow-600">
-                              Expiring Soon
-                            </span>
-                          )}
+                          <Calendar className="h-4 w-4" />
+                          Issued: {format(new Date(certificate.issueDate), "MMM d, yyyy")}
                         </span>
-                      )}
+                        {certificate.expiryDate && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            Expires: {format(new Date(certificate.expiryDate), "MMM d, yyyy")}
+                            {isExpiringSoon(certificate.expiryDate) && (
+                              <span className="ml-2 text-xs font-medium text-yellow-600">
+                                Expiring Soon
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleVerify(certificate.verificationId)}
-                    className="rounded-md bg-green-50 px-3 py-1 text-sm font-medium text-green-600 hover:bg-green-100"
-                  >
-                    Verify
-                  </button>
-                  <button
-                    onClick={() => handleShare(certificate)}
-                    className="rounded-md bg-blue-50 px-3 py-1 text-sm font-medium text-blue-600 hover:bg-blue-100"
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </button>
-                  <a
-                    href={certificate.downloadUrl}
-                    download
-                    className="rounded-md bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                  >
-                    <Download className="h-4 w-4" />
-                  </a>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleVerify(certificate.verificationId)}
+                      className="rounded-md bg-green-50 px-3 py-1 text-sm font-medium text-green-600 hover:bg-green-100"
+                    >
+                      Verify
+                    </button>
+                    <button
+                      onClick={() => handleShare(certificate)}
+                      className="rounded-md bg-blue-50 px-3 py-1 text-sm font-medium text-blue-600 hover:bg-blue-100"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDownload(certificate.id)}
+                      className="rounded-md bg-gray-50 px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-12 bg-white rounded-lg border">
+              <Award className="h-12 w-12 mx-auto text-gray-400" />
+              <h3 className="mt-2 text-lg font-medium text-gray-900">No certificates found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchQuery || selectedType !== "all"
+                  ? "Try adjusting your filters to find your certificates."
+                  : "You don't have any certificates yet. Complete courses to earn certificates!"}
+              </p>
             </div>
-          ))}
+          )}
         </div>
 
         {/* Share Modal */}
@@ -278,6 +290,7 @@ export default function StudentCertificates({ user }: StudentCertificatesProps) 
                   onClick={() => {
                     // In a real app, this would integrate with email sharing
                     console.log("Share via email:", selectedCertificate.id);
+                    toast.success("Share link copied to clipboard");
                     setShowShareModal(false);
                   }}
                   className="rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100"
@@ -288,6 +301,7 @@ export default function StudentCertificates({ user }: StudentCertificatesProps) 
                   onClick={() => {
                     // In a real app, this would integrate with LinkedIn sharing
                     console.log("Share on LinkedIn:", selectedCertificate.id);
+                    toast.success("Shared to LinkedIn");
                     setShowShareModal(false);
                   }}
                   className="rounded-md bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100"

@@ -31,9 +31,9 @@ class StudentController {
    * Get dashboard data for a student
    */
   getDashboardData = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
-    
-    if (!studentId) {
+      const studentId = req.params.studentId || (req.user?.id as string);
+      
+      if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -58,9 +58,9 @@ class StudentController {
    * Get courses for a student
    */
   getStudentCourses = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
-    
-    if (!studentId) {
+      const studentId = req.params.studentId || (req.user?.id as string);
+      
+      if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -80,10 +80,10 @@ class StudentController {
    * Get upcoming assignments for a student
    */
   getUpcomingAssignments = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-    
-    if (!studentId) {
+      const studentId = req.params.studentId || (req.user?.id as string);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      
+      if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -95,10 +95,10 @@ class StudentController {
    * Get recent grades for a student
    */
   getRecentGrades = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
-    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-    
-    if (!studentId) {
+      const studentId = req.params.studentId || (req.user?.id as string);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      
+      if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -110,9 +110,9 @@ class StudentController {
    * Get attendance stats for a student
    */
   getAttendanceStats = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
-    
-    if (!studentId) {
+      const studentId = req.params.studentId || (req.user?.id as string);
+      
+      if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -160,8 +160,8 @@ class StudentController {
     const assignmentId = req.params.assignmentId;
     const studentId = req.user?.id;
     const { content } = req.body;
-    
-    if (!studentId) {
+      
+      if (!studentId) {
       // Clean up uploaded file if exists
       if (req.file && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
@@ -313,9 +313,9 @@ class StudentController {
    * Get detailed attendance records for a student
    */
   getDetailedAttendance = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
-    
-    if (!studentId) {
+      const studentId = req.params.studentId || (req.user?.id as string);
+      
+      if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -356,9 +356,9 @@ class StudentController {
    * Get student schedule
    */
   getStudentSchedule = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
-    
-    if (!studentId) {
+      const studentId = req.params.studentId || (req.user?.id as string);
+      
+      if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     

@@ -9,6 +9,7 @@ import studentRoutes from './student.routes';
 import paymentRoutes from './payment.routes';
 import materialRoutes from './material.routes';
 import feedbackRoutes from './feedback.routes';
+import certificateRoutes from './certificate.routes';
 
 const router = Router();
 
@@ -41,5 +42,8 @@ router.use('/materials', materialRoutes);
 
 // Feedback routes
 router.use('/feedback', feedbackRoutes);
+
+// Certificate routes
+router.use('/certificates', certificateRoutes);
 
 export default router; 
