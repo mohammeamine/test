@@ -1,5 +1,6 @@
+import { promisify } from 'util';
 import { pool } from '../config/db';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { OkPacket, RowDataPacket } from 'mysql2';
 import { v4 as uuidv4 } from 'uuid';
 
 // Assignment types
@@ -8,17 +9,34 @@ export interface Assignment {
   courseId: string;
   title: string;
   description: string;
-  dueDate: string;
-  points: number;
+  dueDate: Date;
+  totalPoints: number;
+  createdAt: Date;
+  updatedAt: Date;
   status: 'draft' | 'published' | 'closed';
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface CreateAssignmentDTO {
+  courseId: string;
+  title: string;
+  description: string;
+  dueDate: Date;
+  totalPoints: number;
+  status?: 'draft' | 'published' | 'closed';
+}
+
+export interface UpdateAssignmentDTO {
+  title?: string;
+  description?: string;
+  dueDate?: Date;
+  totalPoints?: number;
+  status?: 'draft' | 'published' | 'closed';
 }
 
 // Define the RowDataPacket extension for type safety
 interface AssignmentRow extends Assignment, RowDataPacket {}
 
-class AssignmentModel {
+export class AssignmentModel {
   /**
    * Create assignment table if it doesn't exist
    */
@@ -30,8 +48,8 @@ class AssignmentModel {
         title VARCHAR(255) NOT NULL,
         description TEXT,
         dueDate DATETIME NOT NULL,
-        points INT NOT NULL DEFAULT 100,
-        status ENUM('draft', 'published', 'closed') NOT NULL DEFAULT 'draft',
+        totalPoints DECIMAL(5,2) NOT NULL DEFAULT 100.00,
+        status ENUM('draft', 'published', 'closed') DEFAULT 'draft',
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE
@@ -113,23 +131,23 @@ class AssignmentModel {
   /**
    * Create a new assignment
    */
-  async create(assignmentData: Omit<Assignment, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  async create(assignmentData: Omit<Assignment, 'id' | 'createdAt' | 'updatedAt'> & { status?: 'draft' | 'published' | 'closed' }): Promise<string> {
     const id = uuidv4();
     
     const query = `
       INSERT INTO assignments (
-        id, courseId, title, description, dueDate, points, status
+        id, courseId, title, description, dueDate, totalPoints, status
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     
-    await pool.query<ResultSetHeader>(query, [
+    await pool.query<OkPacket>(query, [
       id,
       assignmentData.courseId,
       assignmentData.title,
       assignmentData.description,
       assignmentData.dueDate,
-      assignmentData.points,
-      assignmentData.status
+      assignmentData.totalPoints,
+      assignmentData.status || 'draft'
     ]);
     
     return id;
@@ -138,7 +156,7 @@ class AssignmentModel {
   /**
    * Update an assignment
    */
-  async update(id: string, assignmentData: Partial<Omit<Assignment, 'id' | 'createdAt' | 'updatedAt'>>): Promise<boolean> {
+  async update(id: string, assignmentData: Partial<Omit<Assignment, 'id' | 'createdAt' | 'updatedAt' | 'status'>>): Promise<boolean> {
     // Build query dynamically based on provided fields
     const fields: string[] = [];
     const values: any[] = [];
@@ -155,7 +173,7 @@ class AssignmentModel {
     const query = `UPDATE assignments SET ${fields.join(', ')} WHERE id = ?`;
     values.push(id);
     
-    const [result] = await pool.query<ResultSetHeader>(query, values);
+    const [result] = await pool.query<OkPacket>(query, values);
     return result.affectedRows > 0;
   }
 
@@ -164,7 +182,7 @@ class AssignmentModel {
    */
   async delete(id: string): Promise<boolean> {
     const query = 'DELETE FROM assignments WHERE id = ?';
-    const [result] = await pool.query<ResultSetHeader>(query, [id]);
+    const [result] = await pool.query<OkPacket>(query, [id]);
     
     return result.affectedRows > 0;
   }
@@ -225,6 +243,151 @@ class AssignmentModel {
     );
     
     return rows[0].count;
+  }
+
+  // Create a new assignment
+  static async createAssignment(assignment: CreateAssignmentDTO): Promise<Assignment> {
+    try {
+      const query = `
+        INSERT INTO assignments 
+        (courseId, title, description, dueDate, totalPoints, status, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+      `;
+
+      const status = assignment.status || 'draft';
+      const values = [
+        assignment.courseId,
+        assignment.title,
+        assignment.description,
+        assignment.dueDate,
+        assignment.totalPoints,
+        status
+      ];
+
+      const queryAsync = promisify<string, any[], OkPacket>(pool.query);
+      const result = await queryAsync(query, values);
+
+      return {
+        id: result.insertId.toString(),
+        courseId: assignment.courseId,
+        title: assignment.title,
+        description: assignment.description,
+        dueDate: assignment.dueDate,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        totalPoints: assignment.totalPoints,
+        status: status
+      };
+    } catch (error) {
+      console.error('Error creating assignment:', error);
+      throw error;
+    }
+  }
+
+  // Get assignment by ID
+  static async findAssignmentById(id: string): Promise<Assignment | null> {
+    try {
+      const query = `
+        SELECT id, courseId, title, description, dueDate, totalPoints, createdAt, updatedAt, status
+        FROM assignments
+        WHERE id = ?
+      `;
+
+      const queryAsync = promisify<string, any[], RowDataPacket[]>(pool.query);
+      const [rows] = await queryAsync(query, [id]);
+
+      if (rows.length === 0) {
+        return null;
+      }
+
+      const assignment = rows[0];
+      return {
+        id: assignment.id.toString(),
+        courseId: assignment.courseId.toString(),
+        title: assignment.title,
+        description: assignment.description,
+        dueDate: new Date(assignment.dueDate),
+        createdAt: new Date(assignment.createdAt),
+        updatedAt: new Date(assignment.updatedAt),
+        totalPoints: assignment.totalPoints,
+        status: assignment.status
+      };
+    } catch (error) {
+      console.error('Error finding assignment by id:', error);
+      throw error;
+    }
+  }
+
+  // Get assignments by course ID
+  static async findAssignmentsByCourseId(courseId: string): Promise<Assignment[]> {
+    try {
+      const query = `
+        SELECT id, courseId, title, description, dueDate, totalPoints, createdAt, updatedAt, status
+        FROM assignments
+        WHERE courseId = ?
+        ORDER BY dueDate ASC
+      `;
+
+      const queryAsync = promisify<string, any[], RowDataPacket[]>(pool.query);
+      const [rows] = await queryAsync(query, [courseId]);
+
+      return rows.map((row: RowDataPacket) => ({
+        id: row.id.toString(),
+        courseId: row.courseId.toString(),
+        title: row.title,
+        description: row.description,
+        dueDate: new Date(row.dueDate),
+        createdAt: new Date(row.createdAt),
+        updatedAt: new Date(row.updatedAt),
+        totalPoints: row.totalPoints,
+        status: row.status
+      }));
+    } catch (error) {
+      console.error('Error finding assignments by course id:', error);
+      throw error;
+    }
+  }
+
+  // Update an assignment
+  static async updateAssignment(id: string, updates: UpdateAssignmentDTO): Promise<boolean> {
+    try {
+      const setFields = Object.keys(updates)
+        .map(key => `${key} = ?`)
+        .join(', ');
+
+      const query = `
+        UPDATE assignments
+        SET ${setFields}, updatedAt = NOW()
+        WHERE id = ?
+      `;
+
+      const values = [...Object.values(updates), id];
+
+      const queryAsync = promisify<string, any[], OkPacket>(pool.query);
+      const result = await queryAsync(query, values);
+
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error updating assignment:', error);
+      throw error;
+    }
+  }
+
+  // Delete an assignment
+  static async deleteAssignment(id: string): Promise<boolean> {
+    try {
+      const query = `
+        DELETE FROM assignments WHERE id = ?
+      `;
+
+      const queryAsync = promisify<string, any[], OkPacket>(pool.query);
+      const result = await queryAsync(query, [id]);
+
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      throw error;
+    }
   }
 }
 

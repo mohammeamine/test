@@ -11,6 +11,7 @@ import { Toaster } from 'sonner';
 import './index.css';
 import { authService } from './services/auth.service';
 import { isValidUser, getDashboardUrl, isTokenExpired } from './lib/auth-utils';
+import { initializeAuth } from './lib/api-client';
 
 // Admin Pages
 import { AdminHomePage } from '@/pages/dashboard/admin/home';
@@ -188,6 +189,12 @@ function App() {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    // Initialize authentication on app startup
+    initializeAuth();
+    console.log('Authentication initialized');
   }, []);
 
   return (

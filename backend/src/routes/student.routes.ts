@@ -1,43 +1,50 @@
-import { Router } from 'express';
+import express, { RequestHandler } from 'express';
 import { studentController } from '../controllers/student.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { roleMiddleware } from '../middleware/role.middleware';
+import { authenticate, authorize } from '../middlewares/auth.middleware';
+import { upload } from '../controllers/document.controller';
 
-const router = Router();
+const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(authMiddleware);
+router.use(authenticate);
 
-// Dashboard data
-router.get('/dashboard', roleMiddleware(['student']), studentController.getDashboardData);
-router.get('/dashboard/:studentId', roleMiddleware(['admin', 'teacher']), studentController.getDashboardData);
+// Student role required for these routes
+router.use(authorize(['student', 'admin']));
 
-// Courses
-router.get('/courses', roleMiddleware(['student']), studentController.getStudentCourses);
-router.get('/:studentId/courses', roleMiddleware(['admin', 'teacher']), studentController.getStudentCourses);
+// Student dashboard
+router.get('/dashboard', studentController.getDashboardData as RequestHandler);
 
-// Assignments
-router.get('/assignments/upcoming', roleMiddleware(['student']), studentController.getUpcomingAssignments);
-router.get('/:studentId/assignments/upcoming', roleMiddleware(['admin', 'teacher']), studentController.getUpcomingAssignments);
+// Get upcoming assignments
+router.get('/assignments/upcoming', studentController.getUpcomingAssignments as RequestHandler);
 
-// Submissions
-router.get('/submissions', roleMiddleware(['student']), studentController.getStudentSubmissions);
-router.get('/:studentId/submissions', roleMiddleware(['admin', 'teacher']), studentController.getStudentSubmissions);
-router.post('/assignments/:assignmentId/submit', roleMiddleware(['student']), studentController.submitAssignment);
+// Get student submissions
+router.get('/submissions', studentController.getStudentSubmissions as RequestHandler);
 
-// Grades
-router.get('/grades/recent', roleMiddleware(['student']), studentController.getRecentGrades);
-router.get('/:studentId/grades/recent', roleMiddleware(['admin', 'teacher', 'parent']), studentController.getRecentGrades);
+// Submit an assignment
+router.post('/assignments/:assignmentId/submit', upload.single('file'), studentController.submitAssignment as RequestHandler);
 
-// Attendance
-router.get('/attendance/stats', roleMiddleware(['student']), studentController.getAttendanceStats);
-router.get('/:studentId/attendance/stats', roleMiddleware(['admin', 'teacher', 'parent']), studentController.getAttendanceStats);
+// Download a submission
+router.get('/submissions/:submissionId/download', studentController.downloadSubmission as RequestHandler);
 
-// Schedule
-router.get('/schedule', roleMiddleware(['student']), studentController.getStudentSchedule);
-router.get('/:studentId/schedule', roleMiddleware(['admin', 'teacher', 'parent']), studentController.getStudentSchedule);
+// Get recent grades
+router.get('/grades/recent', studentController.getRecentGrades as RequestHandler);
 
-// Materials
-router.get('/courses/:courseId/materials', roleMiddleware(['student']), studentController.getCourseMaterials);
+// Get attendance statistics
+router.get('/attendance', studentController.getAttendanceStats as RequestHandler);
+
+// Get detailed attendance records
+router.get('/attendance/records', studentController.getDetailedAttendance as RequestHandler);
+
+// Get monthly attendance summary
+router.get('/attendance/monthly-summary', studentController.getMonthlyAttendanceSummary as RequestHandler);
+
+// Download attendance report
+router.get('/attendance/report', studentController.downloadAttendanceReport as RequestHandler);
+
+// Get student schedule
+router.get('/schedule', studentController.getStudentSchedule as RequestHandler);
+
+// Get courses
+router.get('/courses', studentController.getStudentCourses as RequestHandler);
 
 export default router; 

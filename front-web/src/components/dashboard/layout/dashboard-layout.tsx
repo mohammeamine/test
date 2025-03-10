@@ -15,23 +15,42 @@ interface DashboardLayoutProps {
   user: UserResponse | null
 }
 
-export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children, user: propUser }: DashboardLayoutProps) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [user, setUser] = useState<UserResponse | null>(propUser)
   const navigate = useNavigate()
 
-  // Redirect to login if user is null
+  // Effect to load user from localStorage if not provided as prop
   useEffect(() => {
-    if (!user) {
-      console.log('No user found in DashboardLayout, redirecting to login')
+    // If user is provided as prop, use it
+    if (propUser) {
+      setUser(propUser)
+      return
+    }
+    
+    // Otherwise try to get from localStorage
+    const storedUser = authService.getCurrentUser()
+    if (storedUser) {
+      console.log('User found in localStorage:', storedUser)
+      setUser(storedUser)
+    } else {
+      console.log('No user found in localStorage, redirecting to login')
       navigate('/auth/sign-in')
     }
-  }, [user, navigate])
+  }, [propUser, navigate])
 
   // Effect to validate authentication on component mount
   useEffect(() => {
     const validateAuth = async () => {
+      const token = authService.getToken()
+      if (!token) {
+        console.log('No auth token found, redirecting to login')
+        navigate('/auth/sign-in')
+        return
+      }
+      
       if (!authService.isAuthenticated()) {
         console.log('Authentication invalid, redirecting to login')
         navigate('/auth/sign-in')
@@ -41,7 +60,7 @@ export const DashboardLayout = ({ children, user }: DashboardLayoutProps) => {
     validateAuth()
   }, [navigate])
 
-  // If user is null, render a loading state or return null
+  // If user is null, render a loading state
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen">

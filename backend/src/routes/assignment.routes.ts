@@ -1,8 +1,18 @@
+/// <reference types="multer" />
 import { Router } from 'express';
+import multer from 'multer';
 import { assignmentController } from '../controllers/assignment.controller';
 import { authenticate, authorize } from '../middlewares/auth.middleware';
 
 const router = Router();
+
+// Configure multer storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB
+  }
+});
 
 // Apply authentication middleware to all assignment routes
 router.use(authenticate);
@@ -47,8 +57,8 @@ router.get('/recent', authorize(['administrator', 'teacher']), (req, res, next) 
   assignmentController.getRecentAssignments(req, res).catch(next);
 });
 
-// Submission routes
-router.post('/:assignmentId/submit', authorize(['student']), (req, res, next) => {
+// Submission routes - Updated with file upload handling
+router.post('/:assignmentId/submit', authorize(['student']), upload.single('file'), (req, res, next) => {
   assignmentController.submitAssignment(req, res).catch(next);
 });
 

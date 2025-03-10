@@ -1,205 +1,102 @@
-# PFE-Gestion-Scolaire (School Management System)
+# School Management System
 
-A comprehensive school management system with web and mobile interfaces, designed to streamline educational institution operations.
+A comprehensive school management system with features for students, teachers, and administrators.
 
-## Project Overview
+## Features
 
-This is a full-stack application for managing all aspects of an educational institution, including student information, courses, classes, assignments, grades, attendance, and more. The system features role-based access with dedicated interfaces for administrators, teachers, students, and parents.
+### Student Dashboard
+- View upcoming assignments, recent grades, and attendance statistics
+- Access course materials and submit assignments
+- View and download attendance reports
+- Check class schedule
 
-### Key Features
+### Teacher Dashboard
+- Manage courses and assignments
+- Grade student submissions
+- Track student attendance
+- View teaching schedule
 
-- **User Management**: Role-based access control for administrators, teachers, students, and parents
-- **Dashboard**: Custom dashboards for each user role with relevant information and statistics
-- **Course Management**: Create, edit, and manage courses, enrollments, and materials
-- **Class Scheduling**: Organize and manage class schedules, rooms, and attendance
-- **Assignment System**: Create, distribute, and grade assignments
-- **Grading System**: Record and manage student grades and academic performance
-- **Financial Management**: Track payments, fees, and financial reports
-- **Communication**: Internal messaging system for all users
-- **Reporting**: Generate comprehensive reports on various aspects of the institution
-- **Mobile Access**: Access key features via mobile application
-
-## Tech Stack
-
-### Frontend Web (front-web)
-- **React 19** with TypeScript
-- **Vite** for build tooling
-- **React Router** for navigation
-- **Tailwind CSS** for styling
-- **Radix UI** and **shadcn/ui** for UI components
-- **React Hook Form** for form handling
-- **Zod** for validation
-- **React Query** for data fetching
-- **Axios** for API communication
-- **Chart.js** and **Recharts** for data visualization
-
-### Backend (backend)
-- **Node.js** with Express
-- **TypeScript** for type safety
-- **MySQL** database with raw SQL queries
-- **JWT** for authentication
-- **Socket.io** for real-time features
-- **Bcrypt** for password hashing
-- **Express Validator** for request validation
-
-### Mobile App (front-mobile)
-- **React Native** with Expo
-- **TypeScript** for type safety
-- **NativeWind** (TailwindCSS for React Native)
-- **Expo Router** for navigation
-- **React Native Chart Kit** for data visualization
-
-## Project Structure
-
-```
-PFE-Gestion-Scolaire/
-├── front-web/              # Web frontend
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Page components organized by routes
-│   │   ├── types/          # TypeScript type definitions
-│   │   ├── services/       # API services
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── lib/            # Utility functions
-│   │   ├── data/           # Mock data
-│   │   └── validations/    # Form validation schemas
-│   └── public/             # Static assets
-│
-├── backend/                # Server backend
-│   ├── src/
-│   │   ├── controllers/    # Request handlers
-│   │   ├── models/         # Data models
-│   │   ├── routes/         # API routes
-│   │   ├── services/       # Business logic
-│   │   ├── middlewares/    # Express middlewares
-│   │   ├── utils/          # Utility functions
-│   │   ├── types/          # TypeScript type definitions
-│   │   ├── config/         # Configuration files
-│   │   ├── app.ts          # Main express application
-│   │   └── socket.ts       # Socket.io server setup
-│   └── db/                 # Database related files
-│       ├── schema.sql      # Database schema definition
-│       └── setup.js        # Database setup script
-│
-└── front-mobile/           # Mobile application
-    ├── app/                # Expo Router based screens
-    ├── components/         # Reusable UI components
-    ├── services/           # API services
-    ├── types/              # TypeScript type definitions
-    └── hooks/              # Custom React hooks
-```
+### Admin Dashboard
+- Manage users, courses, and departments
+- Generate reports
+- Configure system settings
 
 ## Getting Started
 
 ### Prerequisites
-
-- Node.js (v16+)
+- Node.js (v14 or higher)
+- MySQL (v8 or higher)
 - npm or yarn
-- MySQL database
-- XAMPP (recommended for local development)
 
-### Setup Instructions
+### Installation
 
-#### 1. Clone the repository
-
-```bash
-git clone https://github.com/your-username/PFE-Gestion-Scolaire.git
-cd PFE-Gestion-Scolaire
+1. Clone the repository:
+```
+git clone https://github.com/yourusername/school-management-system.git
+cd school-management-system
 ```
 
-#### 2. Backend Setup
-
-```bash
+2. Install dependencies for both frontend and backend:
+```
+# Install backend dependencies
 cd backend
-
-# Install dependencies
 npm install
+cd ..
 
-# Configure environment variables
-# Create a .env file based on the example
-# Make sure to set up your database configuration
-
-# Set up the database
-# Start MySQL server via XAMPP
-# Run the schema.sql script in your MySQL server
-
-# Start the development server
-npm run dev
-```
-
-#### 3. Web Frontend Setup
-
-```bash
+# Install frontend dependencies
 cd front-web
-
-# Install dependencies
 npm install
+cd ..
+```
 
-# Configure environment variables
-# Create a .env file if needed
+3. Configure the database:
+   - Create a MySQL database
+   - Copy `.env.example` to `.env` in the backend directory
+   - Update the database connection details in the `.env` file
 
-# Start the development server
+4. Run the application:
+
+#### Using PowerShell (Windows):
+```
+# Run the backend server
+.\run-backend.ps1
+
+# In a separate terminal, run the frontend
+cd front-web
 npm run dev
 ```
 
-#### 4. Mobile App Setup
+#### Using Bash (Linux/Mac):
+```
+# Run the backend server
+cd backend
+npm run dev
 
-```bash
-cd front-mobile
-
-# Install dependencies
-npm install
-
-# Start the Expo development server
-npm start
-
-# Run on iOS or Android
-npm run ios
-# or
-npm run android
+# In a separate terminal, run the frontend
+cd front-web
+npm run dev
 ```
 
-## Future Goals
+5. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
 
-### Short Term
+## API Documentation
 
-- **Complete API Implementation**: Finish implementing all backend API endpoints
-- **Authentication System Enhancement**: Add OAuth providers and improve security
-- **Real-time Notifications**: Implement push notifications for mobile users
-- **Offline Support**: Add offline capabilities for critical features
-- **Testing**: Add comprehensive test coverage
-- **Documentation**: Create detailed API documentation
+### Student Endpoints
 
-### Medium Term
-
-- **Advanced Analytics**: Implement detailed analytics and reporting features
-- **Content Management**: Add support for rich media content in courses
-- **Calendar Integration**: Add calendar synchronization features
-- **Parent Portal Enhancements**: Expand features available to parents
-- **Multilingual Support**: Add support for multiple languages
-
-### Long Term
-
-- **AI Features**: Implement AI-driven insights for student performance
-- **Learning Management System**: Expand into full LMS capabilities
-- **Integrated Video Conferencing**: Add built-in video conferencing for virtual classes
-- **Mobile App Expansion**: Add feature parity between web and mobile platforms
-- **Enterprise Features**: School network management for multiple campuses
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- `GET /api/students/dashboard` - Get student dashboard data
+- `GET /api/students/courses` - Get student courses
+- `GET /api/students/assignments/upcoming` - Get upcoming assignments
+- `GET /api/students/grades/recent` - Get recent grades
+- `GET /api/students/attendance` - Get attendance statistics
+- `GET /api/students/attendance/records` - Get detailed attendance records
+- `GET /api/students/attendance/monthly-summary` - Get monthly attendance summary
+- `GET /api/students/attendance/report` - Download attendance report
+- `GET /api/students/schedule` - Get student schedule
+- `GET /api/students/submissions` - Get student submissions
+- `POST /api/students/assignments/:assignmentId/submit` - Submit an assignment
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgements
-
-- Special thanks to all contributors and mentors who guided this project
-- UI components powered by shadcn/ui
-- Icons provided by Lucide and Heroicons 

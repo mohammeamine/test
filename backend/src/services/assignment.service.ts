@@ -31,6 +31,10 @@ export interface CreateSubmissionData {
   assignmentId: string;
   studentId: string;
   submissionUrl?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  status?: 'submitted' | 'graded' | 'late';
 }
 
 // Interface for grading a submission

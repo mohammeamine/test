@@ -8,6 +8,7 @@ export const config = {
   server: {
     port: process.env.PORT || 3001,
     nodeEnv: process.env.NODE_ENV || 'development',
+    baseUrl: process.env.BASE_URL || `http://localhost:${process.env.PORT || 3001}`,
   },
   db: {
     host: process.env.DB_HOST || 'localhost',
@@ -19,5 +20,22 @@ export const config = {
   jwt: {
     secret: process.env.JWT_SECRET || 'default_secret_key',
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
+  },
+  upload: {
+    maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '52428800'), // 50MB in bytes
+    allowedTypes: process.env.ALLOWED_FILE_TYPES?.split(',') || [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain',
+      'application/zip',
+    ],
   },
 }; 

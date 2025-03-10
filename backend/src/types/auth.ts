@@ -1,4 +1,6 @@
-export type UserRole = 'administrator' | 'teacher' | 'student' | 'parent';
+import { Request } from 'express';
+
+export type UserRole = 'administrator' | 'admin' | 'teacher' | 'student' | 'parent';
 
 export interface User {
   id: string;
@@ -53,7 +55,18 @@ export interface UpdatePasswordData {
 }
 
 export interface JwtPayload {
+  id: string;
   userId: string;
   email: string;
-  role: UserRole;
+  name: string;
+  role: 'student' | 'teacher' | 'admin';
+}
+
+// Extend Express Request type to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JwtPayload;
+    }
+  }
 } 

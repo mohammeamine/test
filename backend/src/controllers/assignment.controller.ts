@@ -1,5 +1,17 @@
 import { Request, Response } from 'express';
 import { assignmentService, AssignmentFilters, CreateAssignmentData, UpdateAssignmentData, CreateSubmissionData, GradeSubmissionData } from '../services/assignment.service';
+import { 
+  saveFile, 
+  isFileTypeAllowed, 
+  isFileSizeAllowed, 
+  streamFileToResponse, 
+  FileInfo,
+  uploadDir 
+} from '../utils/file-utils';
+import * as path from 'path';
+import * as fs from 'fs';
+import { submissionModel } from '../models/submission.model';
+import { JwtPayload } from '../types/auth';
 
 class AssignmentController {
   /**
@@ -269,9 +281,47 @@ class AssignmentController {
         });
       }
       
+      const assignmentId = req.params.assignmentId;
+      
+      // Check if there's a file attached
+      if (!req.file) {
+        return res.status(400).json({
+          error: true,
+          message: 'No file uploaded for submission',
+        });
+      }
+
+      // Validate file type
+      if (!isFileTypeAllowed(req.file.mimetype)) {
+        return res.status(400).json({
+          error: true,
+          message: 'File type not allowed',
+        });
+      }
+
+      // Validate file size
+      if (!isFileSizeAllowed(req.file.size)) {
+        return res.status(400).json({
+          error: true,
+          message: 'File size exceeds limit',
+        });
+      }
+
+      // Save file to disk using enhanced utilities
+      const fileInfo: FileInfo = saveFile(
+        req.file.buffer, 
+        req.file.originalname, 
+        'assignment'
+      );
+
+      // Create submission with file URL
       const submissionData: CreateSubmissionData = {
-        ...req.body,
-        studentId: req.user.userId, // Override studentId with authenticated user
+        assignmentId,
+        studentId: req.user.userId,
+        submissionUrl: fileInfo.url,
+        fileName: fileInfo.originalName,
+        fileType: fileInfo.type,
+        fileSize: fileInfo.size
       };
       
       const submission = await assignmentService.submitAssignment(submissionData);
@@ -375,6 +425,59 @@ class AssignmentController {
       res.status(400).json({
         error: true,
         message: error.message || 'Failed to retrieve your submissions',
+      });
+    }
+  }
+
+  /**
+   * Download a submission file
+   */
+  async downloadSubmissionFile(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: true,
+          message: 'Authentication required',
+        });
+      }
+      
+      const submissionId = req.params.submissionId;
+      
+      // Get the submission
+      const submission = await submissionModel.findById(submissionId);
+      
+      if (!submission) {
+        return res.status(404).json({
+          error: true,
+          message: 'Submission not found',
+        });
+      }
+      
+      // Check user permissions
+      if (req.user.role !== 'admin' && req.user.role !== 'teacher' && submission.studentId !== req.user.userId) {
+        return res.status(403).json({
+          error: true,
+          message: 'You do not have permission to access this file',
+        });
+      }
+      
+      // Get file path from submission URL
+      const filePath = path.join(uploadDir, 'assignments', path.basename(submission.submissionUrl || ''));
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({
+          error: true,
+          message: 'File not found',
+        });
+      }
+      
+      // Stream the file to response
+      streamFileToResponse(filePath, res, submission.fileName);
+    } catch (error: any) {
+      res.status(500).json({
+        error: true,
+        message: error.message || 'Failed to download submission file',
       });
     }
   }

@@ -6,6 +6,9 @@ import classRoutes from './class.routes';
 import assignmentRoutes from './assignment.routes';
 import departmentRoutes from './department.routes';
 import studentRoutes from './student.routes';
+import paymentRoutes from './payment.routes';
+import materialRoutes from './material.routes';
+import feedbackRoutes from './feedback.routes';
 
 const router = Router();
 
@@ -29,5 +32,14 @@ router.use('/departments', departmentRoutes);
 
 // Student routes
 router.use('/students', studentRoutes);
+
+// Payment routes
+router.use('/payments', paymentRoutes);
+
+// Material routes
+router.use('/materials', materialRoutes);
+
+// Feedback routes
+router.use('/feedback', feedbackRoutes);
 
 export default router; 

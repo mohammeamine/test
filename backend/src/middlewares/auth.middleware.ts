@@ -12,27 +12,39 @@ declare global {
   }
 }
 
+// Authentication middleware
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
-  // Get token from header
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1]; // "Bearer TOKEN"
-
-  if (!token) {
-    res.status(401).json({ error: true, message: 'Authentication required' });
-    return;
-  }
-
   try {
-    // Verify token
+    // Get the token from the Authorization header
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ error: true, message: 'Authentication required' });
+      return;
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    if (!token) {
+      res.status(401).json({ error: true, message: 'Authentication required' });
+      return;
+    }
+    
+    // Verify the token
     const decoded = jwt.verify(token, config.jwt.secret as Secret) as JwtPayload;
+    
+    // Attach the user information to the request object
     req.user = decoded;
+    
     next();
   } catch (error) {
+    console.error('Authentication error:', error);
     res.status(401).json({ error: true, message: 'Invalid or expired token' });
   }
 };
 
-export const authorize = (roles: UserRole[]) => {
+// Authorization middleware
+export const authorize = (roles: UserRole[] | string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ error: true, message: 'Authentication required' });

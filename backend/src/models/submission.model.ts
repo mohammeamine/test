@@ -1,45 +1,72 @@
+import { promisify } from 'util';
 import { pool } from '../config/db';
-import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { OkPacket, RowDataPacket } from 'mysql2';
 import { v4 as uuidv4 } from 'uuid';
+
+// Define submission status type for reuse
+export type SubmissionStatus = 'submitted' | 'graded' | 'late';
 
 // Submission types
 export interface Submission {
   id: string;
   assignmentId: string;
   studentId: string;
-  submittedAt: string;
+  submittedAt: Date;
   grade?: number;
   feedback?: string;
-  status: 'submitted' | 'graded' | 'late';
+  gradedBy?: string;
+  gradedAt?: Date;
+  status: SubmissionStatus;
   submissionUrl?: string;
-  createdAt: string;
-  updatedAt: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+}
+
+export interface CreateSubmissionDTO {
+  assignmentId: string;
+  studentId: string;
+  submissionUrl?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  status?: SubmissionStatus;
+}
+
+export interface UpdateSubmissionDTO {
+  grade?: number;
+  feedback?: string;
+  gradedBy?: string;
+  status?: SubmissionStatus;
 }
 
 // Define the RowDataPacket extension for type safety
 interface SubmissionRow extends Submission, RowDataPacket {}
 
-class SubmissionModel {
+export class SubmissionModel {
   /**
    * Create submission table if it doesn't exist
    */
   async createTable(): Promise<void> {
     const query = `
-      CREATE TABLE IF NOT EXISTS assignment_submissions (
+      CREATE TABLE IF NOT EXISTS submissions (
         id VARCHAR(36) PRIMARY KEY,
         assignmentId VARCHAR(36) NOT NULL,
         studentId VARCHAR(36) NOT NULL,
         submittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        grade INT,
+        grade FLOAT,
         feedback TEXT,
-        status ENUM('submitted', 'graded', 'late') NOT NULL DEFAULT 'submitted',
+        gradedBy VARCHAR(36),
+        gradedAt TIMESTAMP NULL,
+        status ENUM('submitted', 'graded', 'late') DEFAULT 'submitted',
         submissionUrl VARCHAR(255),
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY (assignmentId, studentId),
+        fileName VARCHAR(255),
+        fileType VARCHAR(100),
+        fileSize INT,
         FOREIGN KEY (assignmentId) REFERENCES assignments(id) ON DELETE CASCADE,
-        FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE
-      );
+        FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (gradedBy) REFERENCES users(id) ON DELETE SET NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `;
     await pool.query(query);
   }
@@ -52,7 +79,7 @@ class SubmissionModel {
     studentId?: string;
     status?: 'submitted' | 'graded' | 'late';
   }): Promise<Submission[]> {
-    let query = 'SELECT * FROM assignment_submissions';
+    let query = 'SELECT * FROM submissions';
     const params: any[] = [];
     
     // Build WHERE clause if filters are provided
@@ -90,7 +117,7 @@ class SubmissionModel {
    */
   async findById(id: string): Promise<Submission | null> {
     const [rows] = await pool.query<SubmissionRow[]>(
-      'SELECT * FROM assignment_submissions WHERE id = ?',
+      'SELECT * FROM submissions WHERE id = ?',
       [id]
     );
     return rows.length ? rows[0] : null;
@@ -101,7 +128,7 @@ class SubmissionModel {
    */
   async findByAssignmentAndStudent(assignmentId: string, studentId: string): Promise<Submission | null> {
     const [rows] = await pool.query<SubmissionRow[]>(
-      'SELECT * FROM assignment_submissions WHERE assignmentId = ? AND studentId = ?',
+      'SELECT * FROM submissions WHERE assignmentId = ? AND studentId = ?',
       [assignmentId, studentId]
     );
     return rows.length ? rows[0] : null;
@@ -110,53 +137,87 @@ class SubmissionModel {
   /**
    * Create a new submission
    */
-  async create(submissionData: Omit<Submission, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
-    const id = uuidv4();
-    
-    // First check if submission already exists
-    const existingSubmission = await this.findByAssignmentAndStudent(
-      submissionData.assignmentId,
-      submissionData.studentId
-    );
-    
-    if (existingSubmission) {
-      // Update existing submission
-      const fields = ['submittedAt = ?', 'status = ?'];
-      const values = [new Date(), submissionData.status];
+  async create(submissionData: CreateSubmissionDTO): Promise<Submission> {
+    try {
+      const id = uuidv4();
       
-      if (submissionData.submissionUrl) {
-        fields.push('submissionUrl = ?');
-        values.push(submissionData.submissionUrl);
+      // First check if submission already exists
+      const existingSubmission = await this.findByAssignmentAndStudent(
+        submissionData.assignmentId,
+        submissionData.studentId
+      );
+      
+      if (existingSubmission) {
+        // Update existing submission
+        const fields = ['submittedAt = NOW()'];
+        const values: any[] = [];
+        
+        // Only add status if it's provided and valid
+        if (submissionData.status && 
+            (submissionData.status === 'submitted' || 
+             submissionData.status === 'graded' || 
+             submissionData.status === 'late')) {
+          fields.push('status = ?');
+          values.push(submissionData.status);
+        }
+        
+        if (submissionData.submissionUrl) {
+          fields.push('submissionUrl = ?');
+          values.push(submissionData.submissionUrl);
+        }
+        
+        const query = `
+          UPDATE submissions 
+          SET ${fields.join(', ')} 
+          WHERE id = ?
+        `;
+        
+        const queryValues = [...values, existingSubmission.id];
+        await pool.query<OkPacket>(query, queryValues);
+        
+        return {
+          ...existingSubmission,
+          ...submissionData,
+          submittedAt: new Date(existingSubmission.submittedAt)
+        } as Submission;
       }
       
+      // Create new submission
       const query = `
-        UPDATE assignment_submissions 
-        SET ${fields.join(', ')} 
-        WHERE id = ?
+        INSERT INTO submissions (
+          id, assignmentId, studentId, status, submissionUrl, fileName, fileType, fileSize
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
-      const queryValues = [...values, existingSubmission.id];
-      await pool.query<ResultSetHeader>(query, queryValues);
+      // Ensure status is a valid value
+      const status: SubmissionStatus = 
+        submissionData.status === 'submitted' || 
+        submissionData.status === 'graded' || 
+        submissionData.status === 'late' ? 
+        submissionData.status : 'submitted';
       
-      return existingSubmission.id;
+      const queryAsync = promisify<string, any[], OkPacket>(pool.query);
+      const result = await queryAsync(query, [
+        id,
+        submissionData.assignmentId,
+        submissionData.studentId,
+        status,
+        submissionData.submissionUrl || null,
+        submissionData.fileName || null,
+        submissionData.fileType || null,
+        submissionData.fileSize || null
+      ]);
+      
+      return {
+        id,
+        ...submissionData,
+        status,
+        submittedAt: new Date()
+      } as Submission;
+    } catch (error) {
+      console.error('Error creating submission:', error);
+      throw error;
     }
-    
-    // Create new submission
-    const query = `
-      INSERT INTO assignment_submissions (
-        id, assignmentId, studentId, status, submissionUrl
-      ) VALUES (?, ?, ?, ?, ?)
-    `;
-    
-    await pool.query<ResultSetHeader>(query, [
-      id,
-      submissionData.assignmentId,
-      submissionData.studentId,
-      submissionData.status,
-      submissionData.submissionUrl || null
-    ]);
-    
-    return id;
   }
 
   /**
@@ -164,12 +225,12 @@ class SubmissionModel {
    */
   async grade(id: string, grade: number, feedback?: string): Promise<boolean> {
     const query = `
-      UPDATE assignment_submissions 
+      UPDATE submissions 
       SET grade = ?, feedback = ?, status = 'graded'
       WHERE id = ?
     `;
     
-    const [result] = await pool.query<ResultSetHeader>(query, [grade, feedback || null, id]);
+    const [result] = await pool.query<OkPacket>(query, [grade, feedback || null, id]);
     return result.affectedRows > 0;
   }
 
@@ -178,7 +239,7 @@ class SubmissionModel {
    */
   async getByAssignment(assignmentId: string): Promise<Submission[]> {
     const [rows] = await pool.query<SubmissionRow[]>(
-      'SELECT * FROM assignment_submissions WHERE assignmentId = ? ORDER BY submittedAt DESC',
+      'SELECT * FROM submissions WHERE assignmentId = ? ORDER BY submittedAt DESC',
       [assignmentId]
     );
     return rows;
@@ -189,7 +250,7 @@ class SubmissionModel {
    */
   async getByStudent(studentId: string): Promise<Submission[]> {
     const [rows] = await pool.query<SubmissionRow[]>(
-      'SELECT * FROM assignment_submissions WHERE studentId = ? ORDER BY submittedAt DESC',
+      'SELECT * FROM submissions WHERE studentId = ? ORDER BY submittedAt DESC',
       [studentId]
     );
     return rows;
@@ -202,7 +263,7 @@ class SubmissionModel {
     const query = `
       SELECT s.*, a.title as assignmentTitle, a.dueDate, a.points, 
              c.id as courseId, c.name as courseName, c.code as courseCode
-      FROM assignment_submissions s
+      FROM submissions s
       JOIN assignments a ON s.assignmentId = a.id
       JOIN courses c ON a.courseId = c.id
       WHERE s.studentId = ?
@@ -219,7 +280,7 @@ class SubmissionModel {
   async getSubmissionsWithStudentDetails(assignmentId: string): Promise<any[]> {
     const query = `
       SELECT s.*, u.firstName, u.lastName, u.email
-      FROM assignment_submissions s
+      FROM submissions s
       JOIN users u ON s.studentId = u.id
       WHERE s.assignmentId = ?
       ORDER BY u.lastName, u.firstName
@@ -233,7 +294,7 @@ class SubmissionModel {
    * Count submissions for an assignment
    */
   async countByAssignment(assignmentId: string, status?: 'submitted' | 'graded' | 'late'): Promise<number> {
-    let query = 'SELECT COUNT(*) as count FROM assignment_submissions WHERE assignmentId = ?';
+    let query = 'SELECT COUNT(*) as count FROM submissions WHERE assignmentId = ?';
     const params = [assignmentId];
     
     if (status) {
@@ -250,7 +311,7 @@ class SubmissionModel {
    */
   async getAverageGradeForAssignment(assignmentId: string): Promise<number | null> {
     const [rows] = await pool.query<RowDataPacket[]>(
-      'SELECT AVG(grade) as average FROM assignment_submissions WHERE assignmentId = ? AND grade IS NOT NULL',
+      'SELECT AVG(grade) as average FROM submissions WHERE assignmentId = ? AND grade IS NOT NULL',
       [assignmentId]
     );
     
@@ -261,6 +322,75 @@ class SubmissionModel {
     
     return parseFloat(rows[0].average);
   }
+
+  /**
+   * Update a submission
+   */
+  async update(id: string, updates: UpdateSubmissionDTO): Promise<boolean> {
+    try {
+      let query = 'UPDATE submissions SET ';
+      const queryParams: any[] = [];
+      const updateFields: string[] = [];
+      
+      if (updates.grade !== undefined) {
+        updateFields.push('grade = ?');
+        queryParams.push(updates.grade);
+      }
+      
+      if (updates.feedback !== undefined) {
+        updateFields.push('feedback = ?');
+        queryParams.push(updates.feedback);
+      }
+      
+      if (updates.gradedBy !== undefined) {
+        updateFields.push('gradedBy = ?');
+        queryParams.push(updates.gradedBy);
+      }
+      
+      if (updates.status !== undefined) {
+        updateFields.push('status = ?');
+        queryParams.push(updates.status);
+      }
+      
+      if (updateFields.length === 0) {
+        return true; // Nothing to update
+      }
+      
+      query += updateFields.join(', ');
+      query += ' WHERE id = ?';
+      queryParams.push(id);
+
+      const queryAsync = promisify<string, any[], OkPacket>(pool.query);
+      const result = await queryAsync(query, queryParams);
+
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error updating submission:', error);
+      throw error;
+    }
+  }
 }
 
-export const submissionModel = new SubmissionModel(); 
+export const submissionModel = new SubmissionModel();
+
+// SQL to create the submissions table
+export const createSubmissionsTableSQL = `
+  CREATE TABLE IF NOT EXISTS submissions (
+    id VARCHAR(36) PRIMARY KEY,
+    assignmentId VARCHAR(36) NOT NULL,
+    studentId VARCHAR(36) NOT NULL,
+    submittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    grade FLOAT,
+    feedback TEXT,
+    gradedBy VARCHAR(36),
+    gradedAt TIMESTAMP NULL,
+    status ENUM('submitted', 'graded', 'late') DEFAULT 'submitted',
+    submissionUrl VARCHAR(255),
+    fileName VARCHAR(255),
+    fileType VARCHAR(100),
+    fileSize INT,
+    FOREIGN KEY (assignmentId) REFERENCES assignments(id) ON DELETE CASCADE,
+    FOREIGN KEY (studentId) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (gradedBy) REFERENCES users(id) ON DELETE SET NULL
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+`; 

@@ -21,6 +21,12 @@ export class ApiClient {
       "Content-Type": "application/json",
       ...config.headers,
     }
+    
+    // Initialize auth token from localStorage on startup
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      this.setAuthToken(token);
+    }
   }
 
   private async request<T>(
@@ -28,29 +34,47 @@ export class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
+    
+    // Get the latest token before each request
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      this.headers.Authorization = `Bearer ${token}`;
+    }
+    
     const headers = {
       ...this.headers,
       ...options.headers,
     }
 
     try {
+      console.log(`Making ${options.method || 'GET'} request to: ${url}`);
+      console.log('Headers:', headers);
+      
       const response = await fetch(url, {
         ...options,
         headers,
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "An error occurred")
+        if (response.status === 401) {
+          // Handle unauthorized - clear token and redirect to login
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          window.location.href = '/auth/sign-in';
+          throw new Error('Authentication required');
+        }
+        
+        const error = await response.json();
+        throw new Error(error.message || "An error occurred");
       }
 
-      const data = await response.json()
-      return data
+      const data = await response.json();
+      return data;
     } catch (error) {
       if (error instanceof Error) {
-        throw new Error(error.message)
+        throw new Error(error.message);
       }
-      throw new Error("An unknown error occurred")
+      throw new Error("An unknown error occurred");
     }
   }
 

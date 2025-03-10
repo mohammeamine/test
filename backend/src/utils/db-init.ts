@@ -6,6 +6,12 @@ import { courseModel } from '../models/course.model';
 import { courseEnrollmentModel } from '../models/course-enrollment.model';
 import { classModel } from '../models/class.model';
 import { classScheduleModel } from '../models/class-schedule.model';
+import { attendanceModel } from '../models/attendance.model';
+import { createDocumentsTableSQL } from '../models/document.model';
+import { createSubmissionsTableSQL } from '../models/submission.model';
+import { paymentModel } from '../models/payment.model';
+import { materialModel } from '../models/material.model';
+import { feedbackModel } from '../models/feedback.model';
 
 /**
  * Initialize database tables
@@ -28,6 +34,17 @@ export const initializeDatabase = async (): Promise<void> => {
         // Execute all statements at once (multipleStatements option should be true in the connection)
         await pool.query(sql);
         console.log('Schema applied successfully');
+        
+        // Create additional tables (may not be in schema yet)
+        await pool.query(createDocumentsTableSQL);
+        await pool.query(createSubmissionsTableSQL);
+        await attendanceModel.createTable();
+        await paymentModel.createTable();
+        await paymentModel.createInvoicesTable();
+        await paymentModel.createPaymentMethodsTable();
+        await materialModel.createTable();
+        await materialModel.createProgressTable();
+        await feedbackModel.createTable();
       } catch (error) {
         console.error('Error executing schema, falling back to direct table creation:', error);
         // Create tables directly if schema execution fails
@@ -36,6 +53,15 @@ export const initializeDatabase = async (): Promise<void> => {
         await courseEnrollmentModel.createTable();
         await classModel.createTable();
         await classScheduleModel.createTable();
+        await attendanceModel.createTable();
+        await pool.query(createDocumentsTableSQL);
+        await pool.query(createSubmissionsTableSQL);
+        await paymentModel.createTable();
+        await paymentModel.createInvoicesTable();
+        await paymentModel.createPaymentMethodsTable();
+        await materialModel.createTable();
+        await materialModel.createProgressTable();
+        await feedbackModel.createTable();
       }
     } else {
       console.log('Schema file not found, creating tables directly...');
@@ -46,7 +72,15 @@ export const initializeDatabase = async (): Promise<void> => {
       await courseEnrollmentModel.createTable();
       await classModel.createTable();
       await classScheduleModel.createTable();
-      // Add other model table creations here as they are implemented
+      await attendanceModel.createTable();
+      await pool.query(createDocumentsTableSQL);
+      await pool.query(createSubmissionsTableSQL);
+      await paymentModel.createTable();
+      await paymentModel.createInvoicesTable();
+      await paymentModel.createPaymentMethodsTable();
+      await materialModel.createTable();
+      await materialModel.createProgressTable();
+      await feedbackModel.createTable();
     }
     
     console.log('Database tables initialized successfully');

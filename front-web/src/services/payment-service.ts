@@ -1,234 +1,241 @@
-import { apiClient } from './api-client';
-import { Payment } from "../types/models"
+import { apiClient } from '../lib/api-client';
 
-export interface CreatePaymentData {
-  amount: number
-  description: string
-  paymentMethod: string
-  cardDetails?: {
-    cardNumber: string
-    cardholderName: string
-    expiryMonth: string
-    expiryYear: string
-    cvv: string
-  }
-  saveCard?: boolean
-  isRecurring?: boolean
-  recurringFrequency?: 'monthly' | 'quarterly' | 'yearly'
-  metadata?: Record<string, any>
+export interface PaymentSummary {
+  totalPaid: number;
+  pendingPayments: number;
+  nextPaymentDue: Date | null;
+  overduePayments: number;
+}
+
+export interface Payment {
+  id: string;
+  studentId: string;
+  amount: number;
+  description: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded' | 'overdue';
+  paymentMethod?: string;
+  transactionId?: string;
+  dueDate: string;
+  paymentDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Invoice {
+  id: string;
+  paymentId: string;
+  invoiceNumber: string;
+  studentId: string;
+  amount: number;
+  description: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded' | 'overdue';
+  dueDate: string;
+  issueDate: string;
+  paidDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentMethod {
+  id: string;
+  studentId: string;
+  type: 'credit_card' | 'paypal' | 'bank_account';
+  lastFour?: string;
+  expiryDate?: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PaymentFilters {
-  startDate?: string
-  endDate?: string
-  status?: string
-  paymentMethod?: string
-  minAmount?: number
-  maxAmount?: number
-  search?: string
-  page?: number
-  limit?: number
-  sortBy?: string
-  sortDirection?: 'asc' | 'desc'
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+}
+
+export interface ProcessPaymentRequest {
+  amount: number;
+  description: string;
+  paymentMethod: string;
+  cardDetails?: {
+    cardNumber: string;
+    expiryDate: string;
+    cvv: string;
+    cardholderName: string;
+  };
+  dueDate?: string;
+}
+
+export interface AddPaymentMethodRequest {
+  type: 'credit_card' | 'paypal' | 'bank_account';
+  lastFour?: string;
+  expiryDate?: string;
+  isDefault?: boolean;
 }
 
 export interface PaymentResponse {
-  id: string
-  amount: number
-  description: string
-  status: 'pending' | 'completed' | 'failed' | 'refunded'
-  paymentMethod: string
-  createdAt: string
-  updatedAt: string
-  metadata?: Record<string, any>
-  receiptUrl?: string
-  invoiceUrl?: string
+  paymentId: string;
+  invoiceId: string;
+  invoiceNumber: string;
+  transactionId: string;
+  message: string;
 }
 
-export interface PaymentMethodResponse {
-  id: string
-  type: 'card' | 'bank_account' | 'paypal'
-  isDefault: boolean
-  lastFour?: string
-  expiryMonth?: string
-  expiryYear?: string
-  cardBrand?: string
-  cardholderName?: string
-  bankName?: string
-  accountType?: string
-  createdAt: string
-}
-
-export interface PaymentStatsResponse {
-  totalPaid: number
-  pendingAmount: number
-  refundedAmount: number
-  paymentCount: number
-  pendingCount: number
-  refundedCount: number
-  failedCount: number
-  recentPayments: PaymentResponse[]
-}
-
-export class PaymentService {
-  private basePath = '/payments'
-
+class PaymentService {
   /**
-   * Get all payments with optional filtering
+   * Get payment summary for the current student
    */
-  async getPayments(filters?: PaymentFilters): Promise<PaymentResponse[]> {
-    const response = await apiClient.get(this.basePath, { params: filters })
-    return response.data
+  async getPaymentSummary(): Promise<PaymentSummary> {
+    const response = await apiClient.get<PaymentSummary>('/payments/summary');
+    return response.data;
   }
 
   /**
-   * Get a specific payment by ID
+   * Get payment history for the current student
    */
-  async getPayment(id: string): Promise<PaymentResponse> {
-    const response = await apiClient.get(`${this.basePath}/${id}`)
-    return response.data
-  }
-
-  /**
-   * Create a new payment
-   */
-  async createPayment(data: CreatePaymentData): Promise<PaymentResponse> {
-    const response = await apiClient.post(this.basePath, data)
-    return response.data
-  }
-
-  /**
-   * Process a payment with Stripe
-   */
-  async processStripePayment(data: CreatePaymentData): Promise<PaymentResponse> {
-    const response = await apiClient.post(`${this.basePath}/process/stripe`, data)
-    return response.data
-  }
-
-  /**
-   * Process a payment with PayPal
-   */
-  async processPayPalPayment(data: CreatePaymentData): Promise<{ redirectUrl: string }> {
-    const response = await apiClient.post(`${this.basePath}/process/paypal`, data)
-    return response.data
-  }
-
-  /**
-   * Verify a PayPal payment after return from PayPal
-   */
-  async verifyPayPalPayment(paymentId: string, payerId: string): Promise<PaymentResponse> {
-    const response = await apiClient.post(`${this.basePath}/verify/paypal`, { paymentId, payerId })
-    return response.data
-  }
-
-  /**
-   * Refund a payment
-   */
-  async refundPayment(id: string, amount?: number, reason?: string): Promise<PaymentResponse> {
-    const response = await apiClient.post(`${this.basePath}/${id}/refund`, { amount, reason })
-    return response.data
-  }
-
-  /**
-   * Get payment receipt
-   */
-  async getPaymentReceipt(id: string): Promise<Blob> {
-    const response = await apiClient.get(`${this.basePath}/${id}/receipt`, { responseType: 'blob' })
-    return response.data
-  }
-
-  /**
-   * Get payment invoice
-   */
-  async getPaymentInvoice(id: string): Promise<Blob> {
-    const response = await apiClient.get(`${this.basePath}/${id}/invoice`, { responseType: 'blob' })
-    return response.data
-  }
-
-  /**
-   * Get user's saved payment methods
-   */
-  async getPaymentMethods(): Promise<PaymentMethodResponse[]> {
-    const response = await apiClient.get('/payment-methods')
-    return response.data
-  }
-
-  /**
-   * Add a new payment method
-   */
-  async addPaymentMethod(data: {
-    type: 'card' | 'bank_account' | 'paypal'
-    isDefault?: boolean
-    cardDetails?: {
-      cardNumber: string
-      cardholderName: string
-      expiryMonth: string
-      expiryYear: string
-      cvv: string
+  async getPaymentHistory(filters?: PaymentFilters): Promise<Payment[]> {
+    // For GET requests with query parameters, we need to use fetch directly
+    let url = '/api/payments/history';
+    
+    if (filters) {
+      const queryParams = new URLSearchParams();
+      if (filters.status) queryParams.append('status', filters.status);
+      if (filters.startDate) queryParams.append('startDate', filters.startDate);
+      if (filters.endDate) queryParams.append('endDate', filters.endDate);
+      if (filters.limit) queryParams.append('limit', filters.limit.toString());
+      
+      if (queryParams.toString()) {
+        url += `?${queryParams.toString()}`;
+      }
     }
-    bankDetails?: {
-      accountNumber: string
-      routingNumber: string
-      accountType: string
-      accountHolderName: string
+    
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch payment history');
     }
-  }): Promise<PaymentMethodResponse> {
-    const response = await apiClient.post('/payment-methods', data)
-    return response.data
+    
+    const data = await response.json();
+    return data.payments;
+  }
+
+  /**
+   * Get upcoming payments for the current student
+   */
+  async getUpcomingPayments(limit?: number): Promise<Payment[]> {
+    let url = '/api/payments/upcoming';
+    
+    if (limit) {
+      url += `?limit=${limit}`;
+    }
+    
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch upcoming payments');
+    }
+    
+    const data = await response.json();
+    return data.payments;
+  }
+
+  /**
+   * Process a payment
+   */
+  async processPayment(paymentData: ProcessPaymentRequest): Promise<PaymentResponse> {
+    const response = await apiClient.post<PaymentResponse>('/payments/process', paymentData);
+    return response.data;
+  }
+
+  /**
+   * Get invoices for the current student
+   */
+  async getInvoices(limit?: number): Promise<Invoice[]> {
+    let url = '/api/payments/invoices';
+    
+    if (limit) {
+      url += `?limit=${limit}`;
+    }
+    
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch invoices');
+    }
+    
+    const data = await response.json();
+    return data.invoices;
+  }
+
+  /**
+   * Get a specific invoice
+   */
+  async getInvoice(invoiceId: string): Promise<Invoice> {
+    const response = await apiClient.get<Invoice>(`/payments/invoices/${invoiceId}`);
+    return response.data;
+  }
+
+  /**
+   * Download an invoice
+   */
+  async downloadInvoice(invoiceId: string): Promise<Blob> {
+    // For blob responses, we need to use fetch directly
+    const response = await fetch(`/api/payments/invoices/${invoiceId}/download`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to download invoice');
+    }
+    
+    return await response.blob();
+  }
+
+  /**
+   * Get payment methods for the current student
+   */
+  async getPaymentMethods(): Promise<PaymentMethod[]> {
+    const response = await apiClient.get<{ methods: PaymentMethod[] }>('/payments/methods');
+    return response.data.methods;
+  }
+
+  /**
+   * Add a payment method
+   */
+  async addPaymentMethod(methodData: AddPaymentMethodRequest): Promise<{ methodId: string }> {
+    const response = await apiClient.post<{ methodId: string }>('/payments/methods', methodData);
+    return response.data;
   }
 
   /**
    * Delete a payment method
    */
-  async deletePaymentMethod(id: string): Promise<void> {
-    await apiClient.delete(`/payment-methods/${id}`)
+  async deletePaymentMethod(methodId: string): Promise<void> {
+    await apiClient.delete(`/payments/methods/${methodId}`);
   }
 
   /**
    * Set a payment method as default
    */
-  async setDefaultPaymentMethod(id: string): Promise<PaymentMethodResponse> {
-    const response = await apiClient.put(`/payment-methods/${id}/default`)
-    return response.data
-  }
-
-  /**
-   * Get payment statistics
-   */
-  async getPaymentStats(): Promise<PaymentStatsResponse> {
-    const response = await apiClient.get(`${this.basePath}/stats`)
-    return response.data
-  }
-
-  /**
-   * Create a subscription
-   */
-  async createSubscription(data: {
-    planId: string
-    paymentMethodId: string
-    metadata?: Record<string, any>
-  }): Promise<{
-    id: string
-    status: string
-    currentPeriodEnd: string
-    planId: string
-    createdAt: string
-  }> {
-    const response = await apiClient.post('/subscriptions', data)
-    return response.data
-  }
-
-  /**
-   * Cancel a subscription
-   */
-  async cancelSubscription(id: string, reason?: string): Promise<{
-    id: string
-    status: string
-    canceledAt: string
-  }> {
-    const response = await apiClient.post(`/subscriptions/${id}/cancel`, { reason })
-    return response.data
+  async setDefaultPaymentMethod(methodId: string): Promise<{ message: string }> {
+    const response = await apiClient.put<{ message: string }>(`/payments/methods/${methodId}/default`, {});
+    return response.data;
   }
 }
 
-export const paymentService = new PaymentService() 
+export const paymentService = new PaymentService(); 
