@@ -58,6 +58,7 @@ export interface ProcessPaymentRequest {
   amount: number;
   description: string;
   paymentMethod: string;
+  studentId?: string;
   cardDetails?: {
     cardNumber: string;
     expiryDate: string;

@@ -65,19 +65,19 @@ class AuthService {
     // Define the payload
     const payload: JwtPayload = {
       userId: user.id,
+      id: user.id, // Include id for backward compatibility
       email: user.email,
       role: user.role,
       firstName: user.firstName,
       lastName: user.lastName
     };
 
-    // Define the JWT options
-    const options: SignOptions = {
-      expiresIn: config.jwt.expiresIn
-    };
-
-    // Generate the token
-    return jwt.sign(payload, config.jwt.secret as Secret, options);
+    // Generate the token with expiration
+    return jwt.sign(
+      payload, 
+      config.jwt.secret as Secret, 
+      { expiresIn: '24h' } // Use a literal string instead of config
+    );
   }
 
   /**

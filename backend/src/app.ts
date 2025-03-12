@@ -42,6 +42,15 @@ app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
+// Version check endpoint
+app.get('/version', (_req: Request, res: Response) => {
+  res.status(200).json({ 
+    version: '1.0.1',
+    description: 'Fixed payment API endpoints to handle missing user ID gracefully',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API routes
 app.use('/api', routes);
 app.use('/api/assignments', assignmentRoutes);

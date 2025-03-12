@@ -56,6 +56,7 @@ export interface UpdatePasswordData {
 
 export interface JwtPayload {
   userId: string;
+  id?: string; // For backward compatibility with code that uses id instead of userId
   email: string;
   role: UserRole;
   firstName: string;

@@ -131,7 +131,7 @@ export default apiClient;
 
 // Add token management from localStorage
 export const initializeAuth = () => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('auth_token');
   if (token) {
     apiClient.setAuthToken(token);
   }
@@ -139,12 +139,12 @@ export const initializeAuth = () => {
 
 // Save token to localStorage
 export const saveAuthToken = (token: string) => {
-  localStorage.setItem('authToken', token);
+  localStorage.setItem('auth_token', token);
   apiClient.setAuthToken(token);
 };
 
 // Remove token from localStorage
 export const removeAuthToken = () => {
-  localStorage.removeItem('authToken');
+  localStorage.removeItem('auth_token');
   apiClient.removeAuthToken();
 };

@@ -216,9 +216,10 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
                 <div className="space-y-4">
                   {/* This would be replaced with a real payment form */}
                   <Button onClick={() => handlePaymentComplete({
-                    amount: 100,
+                    amount: 50.00, 
                     description: 'Tuition payment',
                     paymentMethod: 'credit_card',
+                    studentId: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}').id : undefined,
                     cardDetails: {
                       cardNumber: '4242424242424242',
                       expiryDate: '12/25',
@@ -227,7 +228,7 @@ export function StudentPayments({ user }: StudentPaymentsProps) {
                     }
                   })}>
                     Process Demo Payment
-                            </Button>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
