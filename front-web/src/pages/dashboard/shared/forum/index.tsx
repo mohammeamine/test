@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../../../../types/auth';
 import { ForumPost, ForumCategory } from '../../../../types/forum';
 import { Button } from '../../../../components/ui/button';
@@ -41,6 +41,27 @@ interface ForumPageProps {
   user: User;
 }
 
+/**
+ * Safely parse a date string and return a formatted ISO string
+ * If the date is invalid, returns current date as ISO string
+ */
+function safeDateToISOString(date: Date | number): string {
+  try {
+    const newDate = new Date(date);
+    
+    // Check if date is valid
+    if (isNaN(newDate.getTime())) {
+      console.warn('Invalid date encountered:', date);
+      return new Date().toISOString();
+    }
+    
+    return newDate.toISOString();
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return new Date().toISOString();
+  }
+}
+
 export const ForumPage = ({ user }: ForumPageProps) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
@@ -71,8 +92,8 @@ export const ForumPage = ({ user }: ForumPageProps) => {
         authorName: 'Principal Johnson',
         authorRole: 'administrator',
         authorAvatar: 'https://i.pravatar.cc/150?img=50',
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+        updatedAt: safeDateToISOString(Date.now() - 7 * 24 * 60 * 60 * 1000),
         category: 'announcements',
         tags: ['welcome', 'announcement', 'rules'],
         upvotes: 45,
@@ -88,8 +109,8 @@ export const ForumPage = ({ user }: ForumPageProps) => {
         authorName: 'Ms. Thompson',
         authorRole: 'teacher',
         authorAvatar: 'https://i.pravatar.cc/150?img=32',
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+        updatedAt: safeDateToISOString(Date.now() - 3 * 24 * 60 * 60 * 1000),
         category: 'academics',
         tags: ['exams', 'study', 'tips'],
         upvotes: 38,
@@ -105,8 +126,8 @@ export const ForumPage = ({ user }: ForumPageProps) => {
         authorName: 'Coach Davis',
         authorRole: 'teacher',
         authorAvatar: 'https://i.pravatar.cc/150?img=60',
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        updatedAt: safeDateToISOString(Date.now() - 2 * 24 * 60 * 60 * 1000),
         category: 'events',
         tags: ['sports', 'basketball', 'tryouts'],
         upvotes: 25,
@@ -122,8 +143,8 @@ export const ForumPage = ({ user }: ForumPageProps) => {
         authorName: 'Alex Johnson',
         authorRole: 'student',
         authorAvatar: 'https://i.pravatar.cc/150?img=12',
-        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-        updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+        updatedAt: safeDateToISOString(Date.now() - 1 * 24 * 60 * 60 * 1000),
         category: 'help',
         tags: ['math', 'calculus', 'homework'],
         upvotes: 12,
@@ -139,8 +160,8 @@ export const ForumPage = ({ user }: ForumPageProps) => {
         authorName: 'Emma Williams',
         authorRole: 'student',
         authorAvatar: 'https://i.pravatar.cc/150?img=5',
-        createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
-        updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
+        updatedAt: safeDateToISOString(Date.now() - 12 * 60 * 60 * 1000),
         category: 'resources',
         tags: ['biology', 'study', 'resources'],
         upvotes: 30,
@@ -156,8 +177,8 @@ export const ForumPage = ({ user }: ForumPageProps) => {
         authorName: 'Vice Principal Smith',
         authorRole: 'administrator',
         authorAvatar: 'https://i.pravatar.cc/150?img=52',
-        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-        updatedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+        updatedAt: safeDateToISOString(Date.now() - 5 * 60 * 60 * 1000),
         category: 'announcements',
         tags: ['conference', 'schedule', 'parents'],
         upvotes: 18,

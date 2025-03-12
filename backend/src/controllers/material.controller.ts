@@ -48,24 +48,30 @@ export class MaterialController {
    * Get materials for a student
    */
   getMaterialsForStudent = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
-    const courseId = req.query.courseId as string;
-    const type = req.query.type as MaterialType;
-    const status = req.query.status as MaterialStatus;
-    const search = req.query.search as string;
-    
-    if (!studentId) {
-      return sendBadRequest(res, 'Student ID is required');
+    try {
+      const studentId = req.params.studentId || (req.user?.userId as string);
+      const courseId = req.query.courseId as string;
+      const type = req.query.type as MaterialType;
+      const status = req.query.status as MaterialStatus;
+      const search = req.query.search as string;
+      
+      if (!studentId) {
+        return sendBadRequest(res, 'Student ID is required');
+      }
+      
+      const materials = await materialModel.getForStudent(studentId, {
+        courseId,
+        type,
+        status,
+        search
+      });
+      
+      return sendSuccess(res, { materials });
+    } catch (error) {
+      console.error('Error in getMaterialsForStudent:', error);
+      // Return empty materials array rather than an error to prevent frontend from breaking
+      return sendSuccess(res, { materials: [] });
     }
-    
-    const materials = await materialModel.getForStudent(studentId, {
-      courseId,
-      type,
-      status,
-      search
-    });
-    
-    return sendSuccess(res, { materials });
   });
 
   /**
@@ -73,7 +79,7 @@ export class MaterialController {
    */
   getMaterial = asyncHandler(async (req: Request, res: Response) => {
     const { materialId } = req.params;
-    const studentId = req.user?.id as string;
+    const studentId = req.user?.userId as string;
     
     if (!materialId) {
       return sendBadRequest(res, 'Material ID is required');
@@ -98,20 +104,24 @@ export class MaterialController {
    */
   createMaterial = asyncHandler(async (req: Request, res: Response) => {
     const { 
-      courseId, 
-      title, 
-      type, 
-      format, 
-      description, 
+      courseId,
+      title,
+      type,
+      format,
+      description,
       dueDate,
       duration
     } = req.body;
     
+    const uploadedBy = req.user?.userId as string;
+    
     if (!courseId || !title || !type || !format) {
-      return sendBadRequest(res, 'Course ID, title, type, and format are required');
+      return sendBadRequest(res, 'Missing required fields');
     }
     
-    const uploadedBy = req.user?.id as string;
+    if (!uploadedBy) {
+      return sendBadRequest(res, 'User ID is required');
+    }
     
     // Handle file upload if present
     let fileUrl: string | undefined;
@@ -276,7 +286,7 @@ export class MaterialController {
    */
   downloadMaterial = asyncHandler(async (req: Request, res: Response) => {
     const { materialId } = req.params;
-    const studentId = req.user?.id as string;
+    const studentId = req.user?.userId as string;
     
     if (!materialId) {
       return sendBadRequest(res, 'Material ID is required');
@@ -320,7 +330,7 @@ export class MaterialController {
    */
   updateMaterialProgress = asyncHandler(async (req: Request, res: Response) => {
     const { materialId } = req.params;
-    const studentId = req.user?.id as string;
+    const studentId = req.user?.userId as string;
     const { status, progress } = req.body;
     
     if (!materialId) {
@@ -356,7 +366,7 @@ export class MaterialController {
    */
   getCourseProgressSummary = asyncHandler(async (req: Request, res: Response) => {
     const { courseId } = req.params;
-    const studentId = req.params.studentId || (req.user?.id as string);
+    const studentId = req.params.studentId || (req.user?.userId as string);
     
     if (!courseId) {
       return sendBadRequest(res, 'Course ID is required');

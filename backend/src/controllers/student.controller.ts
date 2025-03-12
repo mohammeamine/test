@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { studentService, StudentCourseFilters } from '../services/student.service';
+import { studentService } from '../services/student.service';
 import { upload } from '../controllers/document.controller';
 import { StudentModel } from '../models/student.model';
 import { assignmentModel } from '../models/assignment.model';
@@ -25,42 +25,118 @@ import {
 import { asyncHandler } from '../middlewares/error.middleware';
 import { attendanceModel } from '../models/attendance.model';
 import { classScheduleModel } from '../models/class-schedule.model';
+import { userModel } from '../models/user.model';
 
 class StudentController {
   /**
-   * Get dashboard data for a student
+   * Get student dashboard data
    */
   getDashboardData = asyncHandler(async (req: Request, res: Response) => {
-      const studentId = req.params.studentId || (req.user?.id as string);
-      
-      if (!studentId) {
+    const studentId = req.user?.userId as string;
+    
+    if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
-    
-    // Get all the dashboard data components
-    const courses = await StudentModel.getStudentCourses(studentId);
-    const upcomingAssignments = await StudentModel.getUpcomingAssignments(studentId);
-    const recentGrades = await StudentModel.getRecentGrades(studentId);
-    const attendanceStats = await StudentModel.getAttendanceStats(studentId);
-    
-    // Combine into a dashboard object
-    const dashboardData = {
-      courses,
-      upcomingAssignments,
-      recentGrades,
-      attendanceStats
-    };
-    
-    return sendSuccess(res, dashboardData, 'Dashboard data retrieved successfully');
+
+    try {
+      // Get user details
+      let userDetails = null;
+      try {
+        userDetails = await userModel.findById(studentId);
+        console.log('User details fetched:', !!userDetails);
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+      
+      // Get all the dashboard data components with error handling for each
+      let courses = [];
+      try {
+        courses = await StudentModel.getStudentCourses(studentId);
+        console.log('Courses fetched:', courses.length);
+      } catch (error) {
+        console.error('Error fetching student courses:', error);
+      }
+      
+      let upcomingAssignments = [];
+      try {
+        upcomingAssignments = await StudentModel.getUpcomingAssignments(studentId);
+        console.log('Upcoming assignments fetched:', upcomingAssignments.length);
+      } catch (error) {
+        console.error('Error fetching upcoming assignments:', error);
+      }
+      
+      let recentGrades = [];
+      try {
+        recentGrades = await StudentModel.getRecentGrades(studentId);
+        console.log('Recent grades fetched:', recentGrades.length);
+      } catch (error) {
+        console.error('Error fetching recent grades:', error);
+      }
+      
+      let attendanceStats = { present: 0, absent: 0, late: 0, excused: 0, total: 0, percentage: 0 };
+      try {
+        attendanceStats = await StudentModel.getAttendanceStats(studentId);
+        console.log('Attendance stats fetched:', !!attendanceStats);
+      } catch (error) {
+        console.error('Error fetching attendance stats:', error);
+      }
+      
+      // Get today's schedule - using the current day of the week
+      let todaySchedule: Array<{ time: string; subject: string; teacher: string; room: string }> = [];
+      try {
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const today = days[new Date().getDay()] as any; // Cast to any to avoid type errors
+        console.log('Fetching schedule for day:', today);
+        const rawSchedule = await classScheduleModel.getStudentScheduleByDay(studentId, today);
+        console.log('Today schedule fetched:', rawSchedule.length);
+        
+        // Format the schedule in the way the frontend expects it
+        todaySchedule = rawSchedule.map(item => ({
+          time: `${item.startTime} - ${item.endTime}`,
+          subject: item.courseName,
+          teacher: 'Teacher',  // We don't have teacher name in the data
+          room: item.room || 'TBD'
+        }));
+      } catch (error) {
+        console.error('Error fetching today schedule:', error);
+      }
+      
+      // Combine into a dashboard object
+      const dashboardData = {
+        courses: courses || [],
+        upcomingAssignments: upcomingAssignments || [],
+        recentGrades: recentGrades || [],
+        attendanceStats: attendanceStats || { present: 0, absent: 0, late: 0, excused: 0, total: 0, percentage: 0 },
+        schedule: [{
+          day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+          periods: todaySchedule || []
+        }]
+      };
+      
+      console.log('Dashboard data ready to send');
+      return sendSuccess(res, dashboardData);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      return sendSuccess(res, {
+        courses: [],
+        upcomingAssignments: [],
+        recentGrades: [],
+        attendanceStats: { present: 0, absent: 0, late: 0, excused: 0, total: 0, percentage: 0 },
+        schedule: [{
+          day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+          periods: []
+        }]
+      });
+    }
   });
 
   /**
    * Get courses for a student
    */
   getStudentCourses = asyncHandler(async (req: Request, res: Response) => {
-      const studentId = req.params.studentId || (req.user?.id as string);
-      
-      if (!studentId) {
+    const studentId = req.params.studentId || (req.user?.userId as string);
+    
+    if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -80,10 +156,10 @@ class StudentController {
    * Get upcoming assignments for a student
    */
   getUpcomingAssignments = asyncHandler(async (req: Request, res: Response) => {
-      const studentId = req.params.studentId || (req.user?.id as string);
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-      
-      if (!studentId) {
+    const studentId = req.params.studentId || (req.user?.userId as string);
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    
+    if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -95,10 +171,10 @@ class StudentController {
    * Get recent grades for a student
    */
   getRecentGrades = asyncHandler(async (req: Request, res: Response) => {
-      const studentId = req.params.studentId || (req.user?.id as string);
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-      
-      if (!studentId) {
+    const studentId = req.params.studentId || (req.user?.userId as string);
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    
+    if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -110,9 +186,9 @@ class StudentController {
    * Get attendance stats for a student
    */
   getAttendanceStats = asyncHandler(async (req: Request, res: Response) => {
-      const studentId = req.params.studentId || (req.user?.id as string);
-      
-      if (!studentId) {
+    const studentId = req.params.studentId || (req.user?.userId as string);
+    
+    if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -124,7 +200,7 @@ class StudentController {
    * Get submissions for the current student
    */
   getStudentSubmissions = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.user?.id;
+    const studentId = req.user?.userId;
     
     if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
@@ -158,10 +234,10 @@ class StudentController {
    */
   submitAssignment = asyncHandler(async (req: Request, res: Response) => {
     const assignmentId = req.params.assignmentId;
-    const studentId = req.user?.id;
+    const studentId = req.user?.userId;
     const { content } = req.body;
       
-      if (!studentId) {
+    if (!studentId) {
       // Clean up uploaded file if exists
       if (req.file && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
@@ -274,7 +350,7 @@ class StudentController {
    */
   downloadSubmission = asyncHandler(async (req: Request, res: Response) => {
     const submissionId = req.params.submissionId;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const userRole = req.user?.role;
     
     if (!userId) {
@@ -313,9 +389,9 @@ class StudentController {
    * Get detailed attendance records for a student
    */
   getDetailedAttendance = asyncHandler(async (req: Request, res: Response) => {
-      const studentId = req.params.studentId || (req.user?.id as string);
-      
-      if (!studentId) {
+    const studentId = req.params.studentId || (req.user?.userId as string);
+    
+    if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -340,7 +416,7 @@ class StudentController {
    * Get monthly attendance summary for a student
    */
   getMonthlyAttendanceSummary = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
+    const studentId = req.params.studentId || (req.user?.userId as string);
     const year = req.query.year ? parseInt(req.query.year as string) : new Date().getFullYear();
     
     if (!studentId) {
@@ -356,9 +432,9 @@ class StudentController {
    * Get student schedule
    */
   getStudentSchedule = asyncHandler(async (req: Request, res: Response) => {
-      const studentId = req.params.studentId || (req.user?.id as string);
-      
-      if (!studentId) {
+    const studentId = req.params.studentId || (req.user?.userId as string);
+    
+    if (!studentId) {
       return sendBadRequest(res, 'Student ID is required');
     }
     
@@ -397,7 +473,7 @@ class StudentController {
    * Download attendance report
    */
   downloadAttendanceReport = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.params.studentId || (req.user?.id as string);
+    const studentId = req.params.studentId || (req.user?.userId as string);
     const month = req.query.month ? parseInt(req.query.month as string) : undefined;
     const year = req.query.year ? parseInt(req.query.year as string) : undefined;
     const courseId = req.query.courseId as string;

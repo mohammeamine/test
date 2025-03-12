@@ -45,19 +45,19 @@ class StudentService {
    * Get courses for the current student
    */
   async getStudentCourses(filters?: StudentCourseFilters): Promise<Course[]> {
-    const { data } = await apiClient.get<Course[]>(`${this.basePath}/courses`, filters as Record<string, string>);
-    return data;
+    const response = await apiClient.get<{ courses: Course[] }>(`${this.basePath}/courses`, filters as Record<string, string>);
+    return response.data.courses || [];
   }
 
   /**
    * Get courses for a specific student (admin/teacher only)
    */
   async getCoursesForStudent(studentId: string, filters?: StudentCourseFilters): Promise<Course[]> {
-    const { data } = await apiClient.get<Course[]>(
+    const response = await apiClient.get<{ courses: Course[] }>(
       `${this.basePath}/${studentId}/courses`, 
       filters as Record<string, string>
     );
-    return data;
+    return response.data.courses || [];
   }
 
   /**

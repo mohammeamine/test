@@ -30,6 +30,27 @@ interface AttendanceRecord {
   notes?: string;
 }
 
+/**
+ * Safely parse a date string and return a formatted string
+ * If the date is invalid, returns today's date in YYYY-MM-DD format
+ */
+function safeParseDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date encountered:', dateString);
+      return format(new Date(), 'yyyy-MM-dd');
+    }
+    
+    return format(date, 'yyyy-MM-dd');
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return format(new Date(), 'yyyy-MM-dd');
+  }
+}
+
 // Mock data for demonstration
 const mockStudentData = [
   {

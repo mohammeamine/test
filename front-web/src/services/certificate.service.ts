@@ -58,12 +58,33 @@ class CertificateService {
    * Get all certificates for the current student
    */
   async getStudentCertificates(): Promise<Certificate[]> {
-    const { data } = await apiClient.get<{
-      error: boolean;
-      data: { certificates: Certificate[] };
-      message: string;
-    }>('/certificates/student');
-    return data.data.certificates;
+    try {
+      const response = await apiClient.get<{
+        error?: boolean;
+        data?: { certificates: Certificate[] };
+        message?: string;
+        certificates?: Certificate[];
+      }>('/certificates/student');
+      
+      // Handle different response formats
+      if (response.data && response.data.data && response.data.data.certificates) {
+        // Standard format with { error, data: { certificates }, message }
+        return response.data.data.certificates;
+      } else if (response.data && Array.isArray(response.data.certificates)) {
+        // Format with { certificates } directly at root
+        return response.data.certificates;
+      } else if (response.data && Array.isArray(response.data)) {
+        // Direct array format
+        return response.data as Certificate[];
+      } else {
+        // Fallback with empty array if no valid format is found
+        console.warn('Unexpected response format from certificate API:', response.data);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching student certificates:', error);
+      return []; // Return empty array instead of throwing error
+    }
   }
 
   /**

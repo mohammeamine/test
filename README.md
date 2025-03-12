@@ -1,102 +1,105 @@
-# School Management System
+# School Management System API
 
-A comprehensive school management system with features for students, teachers, and administrators.
+This is a comprehensive school management system API for handling students, teachers, courses, assignments, and more.
 
-## Features
+## Prerequisites
 
-### Student Dashboard
-- View upcoming assignments, recent grades, and attendance statistics
-- Access course materials and submit assignments
-- View and download attendance reports
-- Check class schedule
+- Node.js (v14+)
+- MySQL (v8+)
 
-### Teacher Dashboard
-- Manage courses and assignments
-- Grade student submissions
-- Track student attendance
-- View teaching schedule
+## Setup
 
-### Admin Dashboard
-- Manage users, courses, and departments
-- Generate reports
-- Configure system settings
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v14 or higher)
-- MySQL (v8 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```
-git clone https://github.com/yourusername/school-management-system.git
-cd school-management-system
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd <repository-name>
 ```
 
-2. Install dependencies for both frontend and backend:
-```
-# Install backend dependencies
+2. Install dependencies
+```bash
 cd backend
 npm install
-cd ..
-
-# Install frontend dependencies
-cd front-web
-npm install
-cd ..
 ```
 
-3. Configure the database:
-   - Create a MySQL database
-   - Copy `.env.example` to `.env` in the backend directory
-   - Update the database connection details in the `.env` file
-
-4. Run the application:
-
-#### Using PowerShell (Windows):
-```
-# Run the backend server
-.\run-backend.ps1
-
-# In a separate terminal, run the frontend
-cd front-web
-npm run dev
+3. Set up environment variables
+```bash
+# Copy the sample .env file and modify it as needed
+cp .env.example .env
 ```
 
-#### Using Bash (Linux/Mac):
+4. Create and set up the database
+```bash
+# Create the database schema
+node db/setup.js
+
+# Seed the database with sample data
+node db/seed.js
 ```
-# Run the backend server
+
+## Running the Application
+
+1. Start the backend server
+```bash
 cd backend
 npm run dev
-
-# In a separate terminal, run the frontend
-cd front-web
-npm run dev
 ```
 
-5. Access the application:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
+2. Test the API
+```bash
+# Open the API tester in your browser
+open api-tester.html
+```
 
-## API Documentation
+## Database Structure
+
+The system uses a relational database with the following main tables:
+
+- `users`: Stores all users (administrators, teachers, students, and parents)
+- `departments`: Academic departments
+- `courses`: Courses offered by the institution
+- `course_enrollments`: Student enrollments in courses
+- `classes`: Specific class instances with schedules
+- `assignments`: Assignments for courses
+- `assignment_submissions`: Student submissions for assignments
+- `grades`: Student grades for assignments and courses
+- `attendance`: Student attendance records
+- `documents`: Uploaded files and documents
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/login`: Login with email and password
+- `GET /api/auth/me`: Get current authenticated user info
 
 ### Student Endpoints
+- `GET /api/students/dashboard`: Get student dashboard data
+- `GET /api/students/courses`: Get courses for the current student
+- `GET /api/students/assignments/upcoming`: Get upcoming assignments
+- `GET /api/students/submissions`: Get submitted assignments
+- `GET /api/students/grades/recent`: Get recent grades
+- `GET /api/students/attendance`: Get attendance statistics
+- `GET /api/students/schedule`: Get student schedule
 
-- `GET /api/students/dashboard` - Get student dashboard data
-- `GET /api/students/courses` - Get student courses
-- `GET /api/students/assignments/upcoming` - Get upcoming assignments
-- `GET /api/students/grades/recent` - Get recent grades
-- `GET /api/students/attendance` - Get attendance statistics
-- `GET /api/students/attendance/records` - Get detailed attendance records
-- `GET /api/students/attendance/monthly-summary` - Get monthly attendance summary
-- `GET /api/students/attendance/report` - Download attendance report
-- `GET /api/students/schedule` - Get student schedule
-- `GET /api/students/submissions` - Get student submissions
-- `POST /api/students/assignments/:assignmentId/submit` - Submit an assignment
+### Course Endpoints
+- `GET /api/courses`: Get all courses
+- `GET /api/courses/:id`: Get course details
+
+## Default Users
+
+After running the seed script, you can use the following users to login:
+
+- **Admin User**
+  - Email: admin@example.com
+  - Password: password123
+
+- **Teacher User**
+  - Email: teacher@example.com
+  - Password: password123
+
+- **Student User**
+  - Email: student@example.com
+  - Password: password123
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+[MIT](LICENSE)

@@ -36,6 +36,27 @@ interface ExtendedForumPost extends ForumPost {
   isEdited?: boolean;
 }
 
+/**
+ * Safely parse a date string and return a formatted ISO string
+ * If the date is invalid, returns current date as ISO string
+ */
+function safeDateToISOString(date: Date | number): string {
+  try {
+    const newDate = new Date(date);
+    
+    // Check if date is valid
+    if (isNaN(newDate.getTime())) {
+      console.warn('Invalid date encountered:', date);
+      return new Date().toISOString();
+    }
+    
+    return newDate.toISOString();
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return new Date().toISOString();
+  }
+}
+
 export const PostPage = ({ user }: PostPageProps) => {
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
@@ -58,8 +79,8 @@ export const PostPage = ({ user }: PostPageProps) => {
       authorName: 'Principal Johnson',
       authorRole: 'administrator',
       authorAvatar: 'https://i.pravatar.cc/150?img=50',
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-      updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: safeDateToISOString(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+      updatedAt: safeDateToISOString(Date.now() - 7 * 24 * 60 * 60 * 1000),
       category: 'announcements',
       tags: ['welcome', 'announcement', 'rules'],
       upvotes: 45,
@@ -77,8 +98,8 @@ export const PostPage = ({ user }: PostPageProps) => {
         authorName: 'Ms. Thompson',
         authorRole: 'teacher',
         authorAvatar: 'https://i.pravatar.cc/150?img=32',
-        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 6 * 24 * 60 * 60 * 1000),
+        updatedAt: safeDateToISOString(Date.now() - 6 * 24 * 60 * 60 * 1000),
         upvotes: 12,
         downvotes: 0,
         isEdited: false,
@@ -91,8 +112,8 @@ export const PostPage = ({ user }: PostPageProps) => {
         authorName: 'Alex Johnson',
         authorRole: 'student',
         authorAvatar: 'https://i.pravatar.cc/150?img=12',
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        updatedAt: safeDateToISOString(Date.now() - 5 * 24 * 60 * 60 * 1000),
         upvotes: 8,
         downvotes: 0,
         isEdited: false,
@@ -106,8 +127,8 @@ export const PostPage = ({ user }: PostPageProps) => {
         authorName: 'Emma Williams',
         authorRole: 'student',
         authorAvatar: 'https://i.pravatar.cc/150?img=5',
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 5 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
+        updatedAt: safeDateToISOString(Date.now() - 5 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
         upvotes: 5,
         downvotes: 0,
         isEdited: false,
@@ -120,8 +141,8 @@ export const PostPage = ({ user }: PostPageProps) => {
         authorName: 'David Smith',
         authorRole: 'parent',
         authorAvatar: 'https://i.pravatar.cc/150?img=67',
-        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: safeDateToISOString(Date.now() - 4 * 24 * 60 * 60 * 1000),
+        updatedAt: safeDateToISOString(Date.now() - 4 * 24 * 60 * 60 * 1000),
         upvotes: 10,
         downvotes: 0,
         isEdited: false,
@@ -195,8 +216,8 @@ export const PostPage = ({ user }: PostPageProps) => {
         authorName: user ? `${user.firstName} ${user.lastName}` : 'Anonymous',
         authorRole: user?.role || 'unknown',
         authorAvatar: user?.profilePicture, // Use profilePicture instead of avatar
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: safeDateToISOString(Date.now()),
+        updatedAt: safeDateToISOString(Date.now()),
         upvotes: 0,
         downvotes: 0,
         isEdited: false,
@@ -233,8 +254,8 @@ export const PostPage = ({ user }: PostPageProps) => {
         authorName: user ? `${user.firstName} ${user.lastName}` : 'Anonymous',
         authorRole: user?.role || 'unknown',
         authorAvatar: user?.profilePicture, // Use profilePicture instead of avatar
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: safeDateToISOString(Date.now()),
+        updatedAt: safeDateToISOString(Date.now()),
         upvotes: 0,
         downvotes: 0,
         isEdited: false,

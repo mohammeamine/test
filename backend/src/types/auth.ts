@@ -55,11 +55,11 @@ export interface UpdatePasswordData {
 }
 
 export interface JwtPayload {
-  id: string;
   userId: string;
   email: string;
-  name: string;
-  role: 'student' | 'teacher' | 'admin';
+  role: UserRole;
+  firstName: string;
+  lastName: string;
 }
 
 // Extend Express Request type to include user property

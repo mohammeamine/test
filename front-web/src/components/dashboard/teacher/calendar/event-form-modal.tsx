@@ -10,6 +10,27 @@ interface EventFormModalProps {
   onDelete?: (eventId: string) => void
 }
 
+/**
+ * Safely converts a date or date string to ISO string
+ * Falls back to current time if date is invalid
+ */
+function safeToISOString(value: string | Date): string {
+  try {
+    const date = typeof value === 'string' ? new Date(value) : value;
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date encountered:', value);
+      return new Date().toISOString();
+    }
+    
+    return date.toISOString();
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return new Date().toISOString();
+  }
+}
+
 export const EventFormModal = ({ isOpen, onClose, event, onSave, onDelete }: EventFormModalProps) => {
   const [formData, setFormData] = useState<Partial<CalendarEvent>>({
     title: '',
@@ -121,7 +142,7 @@ export const EventFormModal = ({ isOpen, onClose, event, onSave, onDelete }: Eve
               <input
                 type="datetime-local"
                 value={formatDateTimeLocal(formData.start || new Date().toISOString())}
-                onChange={(e) => setFormData({ ...formData, start: new Date(e.target.value).toISOString() })}
+                onChange={(e) => setFormData({ ...formData, start: safeToISOString(e.target.value) })}
                 className={`w-full border rounded-md p-2 ${errors.start ? 'border-red-500' : 'border-gray-300'}`}
               />
               {errors.start && <p className="text-xs text-red-500 mt-1">{errors.start}</p>}
@@ -130,8 +151,8 @@ export const EventFormModal = ({ isOpen, onClose, event, onSave, onDelete }: Eve
               <label className="block text-sm font-medium mb-1">End Time</label>
               <input
                 type="datetime-local"
-                value={formatDateTimeLocal(formData.end || new Date(Date.now() + 60 * 60 * 1000).toISOString())}
-                onChange={(e) => setFormData({ ...formData, end: new Date(e.target.value).toISOString() })}
+                value={formatDateTimeLocal(formData.end || safeToISOString(new Date(Date.now() + 60 * 60 * 1000)))}
+                onChange={(e) => setFormData({ ...formData, end: safeToISOString(e.target.value) })}
                 className={`w-full border rounded-md p-2 ${errors.end ? 'border-red-500' : 'border-gray-300'}`}
               />
               {errors.end && <p className="text-xs text-red-500 mt-1">{errors.end}</p>}

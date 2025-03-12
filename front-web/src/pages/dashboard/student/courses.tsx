@@ -56,17 +56,15 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
   const [loading, setLoading] = useState(true)
   const [courses, setCourses] = useState<Course[]>([])
   const [availableCourses, setAvailableCourses] = useState<Course[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchCourses = async (filterOptions: StudentCourseFilters = {}) => {
+      setLoading(true)
+      setError(null)
+      
       try {
-        setLoading(true)
-        const filters: StudentCourseFilters = {
-          status: selectedStatus === 'all' ? undefined : selectedStatus,
-          search: searchQuery || undefined
-        }
-        
-        const data = await studentService.getStudentCourses(filters)
+        const data = await studentService.getStudentCourses(filterOptions)
         
         // Transform API data to match our Course interface
         const transformedCourses: Course[] = data.map(course => ({
@@ -74,12 +72,12 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
           code: course.code,
           name: course.name,
           description: course.description,
-          instructor: `${course.teacherFirstName} ${course.teacherLastName}`,
+          instructor: course.teacherId || 'Unknown Instructor', // Default since teacher name is not provided
           credits: course.credits,
           schedule: [], // This would need to be populated from a separate API call if needed
           prerequisites: [], // This would need to be populated from a separate API call if needed
-          capacity: course.maxStudents,
-          enrolled: course.enrolledCount || 0,
+          capacity: 30, // Default capacity
+          enrolled: 0, // Default enrolled count
           status: course.status as Course["status"],
           progress: 65, // Placeholder - would need to be calculated from actual progress data
           grade: 85 // Placeholder - would need to be calculated from actual grade data
@@ -88,13 +86,16 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
         setCourses(transformedCourses)
       } catch (error) {
         console.error("Failed to fetch courses:", error)
-        toast.error("Failed to load courses. Please try again later.")
+        setError("Failed to load courses. Please try again later.")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchCourses()
+    fetchCourses({
+      status: selectedStatus === 'all' ? undefined : selectedStatus,
+      search: searchQuery || undefined
+    })
   }, [searchQuery, selectedStatus])
 
   // This would be replaced with an actual API call to get available courses
@@ -351,6 +352,16 @@ export default function StudentCourses({ user }: StudentCoursesProps) {
             </select>
           </div>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+            <p className="flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              {error}
+            </p>
+          </div>
+        )}
 
         {/* Upcoming Assignments */}
         <div className="space-y-4">

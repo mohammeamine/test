@@ -62,16 +62,21 @@ class AuthService {
    * Generate JWT token
    */
   private generateToken(user: User): string {
+    // Define the payload
     const payload: JwtPayload = {
       userId: user.id,
       email: user.email,
       role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName
     };
 
+    // Define the JWT options
     const options: SignOptions = {
-      expiresIn: config.jwt.expiresIn,
+      expiresIn: config.jwt.expiresIn
     };
 
+    // Generate the token
     return jwt.sign(payload, config.jwt.secret as Secret, options);
   }
 
@@ -86,13 +91,16 @@ class AuthService {
    * Request password reset
    */
   async requestPasswordReset(email: string): Promise<boolean> {
-    // In a real application, you would:
-    // 1. Generate a reset token
-    // 2. Store it in the database with an expiry
-    // 3. Send an email with a reset link
-    // For this example, we'll just check if the user exists
+    // Find user by email
     const user = await userModel.findByEmail(email);
-    return !!user;
+    if (!user) {
+      // Don't reveal that the email doesn't exist (security best practice)
+      return false;
+    }
+
+    // TODO: Implement password reset token generation and email sending
+    
+    return true;
   }
 
   /**
@@ -104,13 +112,24 @@ class AuthService {
       // 1. Verify the reset token from the database
       // 2. Check if it's expired
       // 3. Update the password
-      // For this example, we'll just decode the token and update the password
-
+      
       const decoded = jwt.verify(token, config.jwt.secret as Secret) as JwtPayload;
       return await userModel.updatePassword(decoded.userId, newPassword);
     } catch (error) {
       throw new Error('Invalid or expired token');
     }
+  }
+
+  /**
+   * Get user by ID
+   */
+  async getUserById(userId: string): Promise<UserResponse | null> {
+    const user = await userModel.findById(userId);
+    if (!user) return null;
+    
+    // Return user without password
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword as UserResponse;
   }
 }
 

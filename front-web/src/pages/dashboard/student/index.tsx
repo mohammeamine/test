@@ -35,14 +35,25 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
     toast.success('Transcript downloaded successfully')
   }
 
-  const handleSubmitAssignment = async (assignmentId: string, content: string) => {
+  const handleSubmitAssignment = async (assignmentId: string, file: File) => {
     try {
-      await studentService.submitAssignment(assignmentId, { content })
-      toast.success(`Assignment submitted successfully`)
+      // Convert file to content string for API
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const content = e.target?.result as string
+        await studentService.submitAssignment(assignmentId, { content })
+        toast.success(`Assignment submitted successfully`)
+      }
+      reader.readAsText(file)
     } catch (error) {
       console.error(`Failed to submit assignment:`, error)
       toast.error(`Failed to submit assignment. Please try again.`)
     }
+  }
+
+  const handlePaymentComplete = (paymentId: string) => {
+    console.log('Payment completed:', paymentId)
+    toast.success('Payment processed successfully')
   }
 
   if (loading) {
@@ -62,23 +73,32 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
           <StudentDashboardComponent
             studentName={user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
             grades={dashboardData.recentGrades.map(grade => ({
-              subject: grade.courseName,
+              subject: grade.courseName || 'Unknown Course',
               grade: grade.score,
-              date: new Date(grade.createdAt).toISOString().split('T')[0],
+              date: safeParseDate(grade.createdAt),
               teacher: 'Teacher',
               feedback: grade.feedback
             }))}
             assignments={dashboardData.upcomingAssignments.map(assignment => ({
               id: assignment.id,
               title: assignment.title,
-              subject: assignment.courseName,
-              dueDate: new Date(assignment.dueDate).toISOString().split('T')[0],
+              subject: assignment.course?.name || 'Unknown Course',
+              dueDate: safeParseDate(assignment.dueDate),
               description: assignment.description,
               status: 'pending' as const
             }))}
-            schedule={dashboardData.schedule}
+            schedule={dashboardData.schedule.map(scheduleDay => ({
+              day: scheduleDay.day,
+              periods: [{
+                time: `${scheduleDay.startTime} - ${scheduleDay.endTime}`,
+                subject: scheduleDay.courseName || scheduleDay.title,
+                teacher: 'Teacher',
+                room: scheduleDay.room || 'TBD'
+              }]
+            }))}
             onDownloadTranscript={handleDownloadTranscript}
             onSubmitAssignment={handleSubmitAssignment}
+            onPaymentComplete={handlePaymentComplete}
           />
         ) : (
           <div className="text-center py-8">
@@ -88,4 +108,27 @@ export default function StudentDashboard({ user }: StudentDashboardProps) {
       </div>
     </StudentLayout>
   )
+}
+
+/**
+ * Safely parse a date string and return a formatted string
+ * If the date is invalid, returns 'N/A'
+ */
+function safeParseDate(dateString: string | Date | undefined): string {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date encountered:', dateString);
+      return 'N/A';
+    }
+    
+    return date.toISOString().split('T')[0];
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return 'N/A';
+  }
 }

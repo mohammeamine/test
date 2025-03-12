@@ -39,6 +39,27 @@ interface StudentMonitoringProps {
   onDownloadReport: (studentId: string, reportType: string) => void;
 }
 
+/**
+ * Safely format a date string for display
+ * If the date is invalid, returns 'Invalid Date'
+ */
+function safeFormatDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date encountered:', dateString);
+      return 'Invalid Date';
+    }
+    
+    return date.toLocaleDateString();
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return 'Invalid Date';
+  }
+}
+
 export function StudentMonitoring({ students, onDownloadReport }: StudentMonitoringProps) {
   return (
     <div className="space-y-6">
@@ -92,7 +113,7 @@ export function StudentMonitoring({ students, onDownloadReport }: StudentMonitor
                             {grade.grade}%
                           </span>
                         </TableCell>
-                        <TableCell>{new Date(grade.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{safeFormatDate(grade.date)}</TableCell>
                         <TableCell>{grade.teacher}</TableCell>
                       </TableRow>
                     ))}
@@ -112,7 +133,7 @@ export function StudentMonitoring({ students, onDownloadReport }: StudentMonitor
                   <TableBody>
                     {student.attendance.map((record, index) => (
                       <TableRow key={index}>
-                        <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{safeFormatDate(record.date)}</TableCell>
                         <TableCell>
                           <span className={
                             record.status === 'present' ? 'text-green-600' :
@@ -143,7 +164,7 @@ export function StudentMonitoring({ students, onDownloadReport }: StudentMonitor
                       <TableRow key={index}>
                         <TableCell>{assignment.title}</TableCell>
                         <TableCell>{assignment.subject}</TableCell>
-                        <TableCell>{new Date(assignment.dueDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{safeFormatDate(assignment.dueDate)}</TableCell>
                         <TableCell>
                           <span className={
                             assignment.status === 'completed' ? 'text-green-600' :

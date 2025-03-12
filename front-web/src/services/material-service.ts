@@ -84,32 +84,8 @@ class MaterialService {
    * Get materials for the current student
    */
   async getMaterialsForStudent(filters?: MaterialFilters): Promise<Material[]> {
-    let url = '/api/materials/student/materials';
-    
-    if (filters) {
-      const queryParams = new URLSearchParams();
-      if (filters.courseId) queryParams.append('courseId', filters.courseId);
-      if (filters.type) queryParams.append('type', filters.type);
-      if (filters.status) queryParams.append('status', filters.status);
-      if (filters.search) queryParams.append('search', filters.search);
-      
-      if (queryParams.toString()) {
-        url += `?${queryParams.toString()}`;
-      }
-    }
-    
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('auth_token')}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch materials');
-    }
-    
-    const data = await response.json();
-    return data.materials;
+    const response = await apiClient.get<{ materials: Material[] }>('/materials/student/materials', filters as Record<string, string>);
+    return response.data.materials || [];
   }
 
   /**
@@ -125,7 +101,8 @@ class MaterialService {
    */
   async downloadMaterial(materialId: string): Promise<Blob> {
     // For blob responses, we need to use fetch directly
-    const response = await fetch(`/api/materials/${materialId}/download`, {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+    const response = await fetch(`${API_BASE_URL}/materials/${materialId}/download`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('auth_token')}`
       }
@@ -182,7 +159,8 @@ class MaterialService {
     
     // For FormData, we need to use fetch directly
     const token = localStorage.getItem('auth_token');
-    const response = await fetch('/api/materials', {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+    const response = await fetch(`${API_BASE_URL}/materials`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`
@@ -219,7 +197,8 @@ class MaterialService {
     
     // For FormData, we need to use fetch directly
     const token = localStorage.getItem('auth_token');
-    const response = await fetch(`/api/materials/${materialId}`, {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+    const response = await fetch(`${API_BASE_URL}/materials/${materialId}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`

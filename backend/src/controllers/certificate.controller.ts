@@ -13,7 +13,7 @@ export class CertificateController {
    * Get all certificates for the current student
    */
   getStudentCertificates = asyncHandler(async (req: Request, res: Response) => {
-    const studentId = req.user?.id as string;
+    const studentId = req.user?.userId as string;
     
     const certificates = await certificateModel.findByStudentId(studentId);
     
@@ -56,12 +56,18 @@ export class CertificateController {
   });
 
   /**
-   * Get a specific certificate
+   * Get a certificate
    */
   getCertificate = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const userId = req.user?.id as string;
-    const userRole = req.user?.role as string;
+    const studentId = req.user?.userId as string;
+    
+    if (!id) {
+      return res.status(400).json({
+        error: true,
+        message: 'Certificate ID is required'
+      });
+    }
     
     const certificate = await certificateModel.findById(id);
     
@@ -72,11 +78,11 @@ export class CertificateController {
       });
     }
     
-    // Check if the user is authorized to view this certificate
-    if (certificate.studentId !== userId && userRole !== 'administrator') {
+    // Check if the certificate belongs to the requesting student
+    if (req.user?.role === 'student' && certificate.studentId !== studentId) {
       return res.status(403).json({
         error: true,
-        message: 'You are not authorized to view this certificate'
+        message: 'Access denied: This certificate does not belong to you'
       });
     }
     
@@ -300,7 +306,7 @@ export class CertificateController {
    */
   downloadCertificate = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const userId = req.user?.id as string;
+    const userId = req.user?.userId as string;
     const userRole = req.user?.role as string;
     
     const certificate = await certificateModel.findById(id);

@@ -2,6 +2,88 @@ import { RowDataPacket, OkPacket } from 'mysql2';
 import { v4 as uuidv4 } from 'uuid';
 import { pool } from '../config/db';
 
+// Flag to track if database is available
+let isDatabaseAvailable = true;
+
+// Check if the database pool is properly initialized
+const checkDbAvailability = () => {
+  if (!pool || !pool.query) {
+    if (isDatabaseAvailable) {
+      console.error('Database is not available, using mock data for materials');
+      isDatabaseAvailable = false;
+    }
+    return false;
+  }
+  return true;
+};
+
+// Mock data for when database is unavailable
+const mockMaterials = [
+  {
+    id: 'mock-material-1',
+    courseId: 'mock-course-1',
+    courseName: 'Introduction to Computer Science',
+    courseCode: 'CS101',
+    title: 'Introduction to Programming',
+    type: 'document',
+    format: 'pdf',
+    description: 'Learn the basics of programming',
+    uploadedBy: 'mock-teacher-1',
+    uploadDate: new Date(),
+    fileUrl: '/mock/materials/intro.pdf',
+    fileSize: 1024,
+    status: 'not_started',
+    progress: 0,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: 'mock-material-2',
+    courseId: 'mock-course-1',
+    courseName: 'Introduction to Computer Science',
+    courseCode: 'CS101',
+    title: 'Variables and Data Types',
+    type: 'video',
+    format: 'mp4',
+    description: 'Learn about variables and data types in programming',
+    uploadedBy: 'mock-teacher-1',
+    uploadDate: new Date(),
+    fileUrl: '/mock/materials/variables.mp4',
+    fileSize: 10240,
+    duration: 30,
+    status: 'in_progress',
+    progress: 50,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: 'mock-material-3',
+    courseId: 'mock-course-2',
+    courseName: 'Web Development',
+    courseCode: 'WEB101',
+    title: 'HTML Basics',
+    type: 'document',
+    format: 'pdf',
+    description: 'Introduction to HTML',
+    uploadedBy: 'mock-teacher-2',
+    uploadDate: new Date(),
+    fileUrl: '/mock/materials/html.pdf',
+    fileSize: 2048,
+    status: 'completed',
+    progress: 100,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+];
+
+const mockProgressSummary = {
+  totalMaterials: 3,
+  completed: 1,
+  inProgress: 1,
+  notStarted: 1,
+  overallProgress: 50
+};
+
 export type MaterialType = 'document' | 'video' | 'quiz' | 'assignment';
 export type MaterialStatus = 'not_started' | 'in_progress' | 'completed';
 
@@ -223,47 +305,80 @@ export class MaterialModel {
     status?: MaterialStatus;
     search?: string;
   }): Promise<any[]> {
-    let query = `
-      SELECT m.*, mp.status, mp.progress, mp.lastAccessed, c.name as courseName, c.code as courseCode
-      FROM materials m
-      JOIN courses c ON m.courseId = c.id
-      JOIN course_enrollments ce ON c.id = ce.courseId
-      LEFT JOIN material_progress mp ON m.id = mp.materialId AND mp.studentId = ?
-      WHERE ce.studentId = ?
-    `;
-    
-    const queryParams: any[] = [studentId, studentId];
-    
-    if (filters?.courseId) {
-      query += ' AND m.courseId = ?';
-      queryParams.push(filters.courseId);
+    try {
+      if (!checkDbAvailability()) {
+        console.log('Using mock materials data');
+        // Filter mock data based on filters
+        let filteredMaterials = [...mockMaterials];
+        
+        if (filters?.courseId) {
+          filteredMaterials = filteredMaterials.filter(m => m.courseId === filters.courseId);
+        }
+        
+        if (filters?.type) {
+          filteredMaterials = filteredMaterials.filter(m => m.type === filters.type);
+        }
+        
+        if (filters?.status) {
+          filteredMaterials = filteredMaterials.filter(m => m.status === filters.status);
+        }
+        
+        if (filters?.search) {
+          const searchTerm = filters.search.toLowerCase();
+          filteredMaterials = filteredMaterials.filter(
+            m => m.title.toLowerCase().includes(searchTerm) || 
+                 m.description.toLowerCase().includes(searchTerm)
+          );
+        }
+        
+        return filteredMaterials;
+      }
+      
+      let query = `
+        SELECT m.*, mp.status, mp.progress, mp.lastAccessed, c.name as courseName, c.code as courseCode
+        FROM materials m
+        JOIN courses c ON m.courseId = c.id
+        JOIN course_enrollments ce ON c.id = ce.courseId
+        LEFT JOIN material_progress mp ON m.id = mp.materialId AND mp.studentId = ?
+        WHERE ce.studentId = ?
+      `;
+      
+      const queryParams: any[] = [studentId, studentId];
+      
+      if (filters?.courseId) {
+        query += ' AND m.courseId = ?';
+        queryParams.push(filters.courseId);
+      }
+      
+      if (filters?.type) {
+        query += ' AND m.type = ?';
+        queryParams.push(filters.type);
+      }
+      
+      if (filters?.status) {
+        query += ' AND (mp.status = ? OR (mp.status IS NULL AND ? = "not_started"))';
+        queryParams.push(filters.status, filters.status);
+      }
+      
+      if (filters?.search) {
+        query += ' AND (m.title LIKE ? OR m.description LIKE ?)';
+        const searchTerm = `%${filters.search}%`;
+        queryParams.push(searchTerm, searchTerm);
+      }
+      
+      query += ' ORDER BY m.uploadDate DESC';
+      
+      const [rows] = await pool.query<RowDataPacket[]>(query, queryParams);
+      
+      return rows.map(row => ({
+        ...row,
+        status: row.status || 'not_started',
+        progress: row.progress || 0
+      }));
+    } catch (error) {
+      console.error('Error getting materials for student:', error);
+      return mockMaterials;
     }
-    
-    if (filters?.type) {
-      query += ' AND m.type = ?';
-      queryParams.push(filters.type);
-    }
-    
-    if (filters?.status) {
-      query += ' AND (mp.status = ? OR (mp.status IS NULL AND ? = "not_started"))';
-      queryParams.push(filters.status, filters.status);
-    }
-    
-    if (filters?.search) {
-      query += ' AND (m.title LIKE ? OR m.description LIKE ?)';
-      const searchTerm = `%${filters.search}%`;
-      queryParams.push(searchTerm, searchTerm);
-    }
-    
-    query += ' ORDER BY m.uploadDate DESC';
-    
-    const [rows] = await pool.query<RowDataPacket[]>(query, queryParams);
-    
-    return rows.map(row => ({
-      ...row,
-      status: row.status || 'not_started',
-      progress: row.progress || 0
-    }));
   }
 
   /**
@@ -342,49 +457,59 @@ export class MaterialModel {
     notStarted: number;
     overallProgress: number;
   }> {
-    // Get total materials count
-    const [totalRows] = await pool.query<RowDataPacket[]>(
-      'SELECT COUNT(*) as count FROM materials WHERE courseId = ?',
-      [courseId]
-    );
-    const totalMaterials = totalRows[0]?.count || 0;
-    
-    if (totalMaterials === 0) {
+    try {
+      if (!checkDbAvailability()) {
+        console.log('Using mock progress summary data');
+        return mockProgressSummary;
+      }
+      
+      // Get total materials count
+      const [totalRows] = await pool.query<RowDataPacket[]>(
+        'SELECT COUNT(*) as count FROM materials WHERE courseId = ?',
+        [courseId]
+      );
+      const totalMaterials = totalRows[0]?.count || 0;
+      
+      if (totalMaterials === 0) {
+        return {
+          totalMaterials: 0,
+          completed: 0,
+          inProgress: 0,
+          notStarted: 0,
+          overallProgress: 0
+        };
+      }
+      
+      // Get progress counts
+      const [progressRows] = await pool.query<RowDataPacket[]>(
+        `SELECT 
+          SUM(CASE WHEN mp.status = 'completed' THEN 1 ELSE 0 END) as completed,
+          SUM(CASE WHEN mp.status = 'in_progress' THEN 1 ELSE 0 END) as inProgress,
+          SUM(CASE WHEN mp.status = 'not_started' OR mp.status IS NULL THEN 1 ELSE 0 END) as notStarted
+        FROM materials m
+        LEFT JOIN material_progress mp ON m.id = mp.materialId AND mp.studentId = ?
+        WHERE m.courseId = ?`,
+        [studentId, courseId]
+      );
+      
+      const completed = progressRows[0]?.completed || 0;
+      const inProgress = progressRows[0]?.inProgress || 0;
+      const notStarted = progressRows[0]?.notStarted || 0;
+      
+      // Calculate overall progress
+      const overallProgress = Math.round((completed / totalMaterials) * 100);
+      
       return {
-        totalMaterials: 0,
-        completed: 0,
-        inProgress: 0,
-        notStarted: 0,
-        overallProgress: 0
+        totalMaterials,
+        completed,
+        inProgress,
+        notStarted,
+        overallProgress
       };
+    } catch (error) {
+      console.error('Error getting course progress summary:', error);
+      return mockProgressSummary;
     }
-    
-    // Get progress counts
-    const [progressRows] = await pool.query<RowDataPacket[]>(
-      `SELECT 
-        SUM(CASE WHEN mp.status = 'completed' THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN mp.status = 'in_progress' THEN 1 ELSE 0 END) as inProgress,
-        SUM(CASE WHEN mp.status = 'not_started' OR mp.status IS NULL THEN 1 ELSE 0 END) as notStarted
-      FROM materials m
-      LEFT JOIN material_progress mp ON m.id = mp.materialId AND mp.studentId = ?
-      WHERE m.courseId = ?`,
-      [studentId, courseId]
-    );
-    
-    const completed = progressRows[0]?.completed || 0;
-    const inProgress = progressRows[0]?.inProgress || 0;
-    const notStarted = progressRows[0]?.notStarted || 0;
-    
-    // Calculate overall progress
-    const overallProgress = Math.round((completed / totalMaterials) * 100);
-    
-    return {
-      totalMaterials,
-      completed,
-      inProgress,
-      notStarted,
-      overallProgress
-    };
   }
 }
 

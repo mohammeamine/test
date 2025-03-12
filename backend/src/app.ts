@@ -54,12 +54,20 @@ import userRoutes from './routes/user.routes';
 import courseRoutes from './routes/course.routes';
 import classRoutes from './routes/class.routes';
 import departmentRoutes from './routes/department.routes';
+import paymentRoutes from './routes/payment.routes';
+import materialRoutes from './routes/material.routes';
+import feedbackRoutes from './routes/feedback.routes';
+import certificateRoutes from './routes/certificate.routes';
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/materials', materialRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 // Default route
 app.get('/', (req, res) => {
@@ -72,34 +80,46 @@ app.use(notFoundHandler);
 // Error handling middleware
 app.use(errorHandler);
 
-// Start server
-const PORT = config.server.port;
-server.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  
+// Start the server
+const startServer = async () => {
   try {
-    // Test database connection
+    // Test database connection but don't exit if it fails
     await testConnection();
-    console.log('Database connection established successfully');
     
-    // Initialize database tables
+    // Initialize database tables (don't exit on failure)
     try {
       await initializeDatabase();
-      console.log('Database tables initialized successfully');
-    } catch (err) {
-      console.error('Error initializing database tables, but server will continue running:', err);
+    } catch (error) {
+      console.error('Error initializing database tables, but server will continue running:', error);
     }
     
     // Ensure upload directories exist
-    ensureUploadDirectories();
+    await ensureUploadDirectories();
     console.log('Upload directories initialized');
     
-    console.log(`Server is ready at http://localhost:${PORT}`);
-    console.log(`Socket.IO server is running on port ${PORT}`);
-  } catch (err) {
-    console.error('Failed to initialize server properly:', err);
-    console.log('Server is running but some functionality may be limited');
+    // Start the server
+    const PORT = config.server.port;
+    server.listen(PORT, () => {
+      console.log(`Server is ready at ${config.server.baseUrl}`);
+      console.log(`Socket.IO server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Server startup error:', error);
+    console.log('Server will continue running with limited functionality');
+    
+    // Ensure upload directories exist anyway
+    await ensureUploadDirectories();
+    console.log('Upload directories initialized');
+    
+    // Start the server even if database connection fails
+    const PORT = config.server.port;
+    server.listen(PORT, () => {
+      console.log(`Server is ready at ${config.server.baseUrl} (limited functionality)`);
+      console.log(`Socket.IO server is running on port ${PORT}`);
+    });
   }
-});
+};
+
+startServer();
 
 export default app; 
