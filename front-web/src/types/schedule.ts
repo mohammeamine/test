@@ -10,3 +10,16 @@ export interface ScheduleEvent {
     description?: string;
     color?: string;
   }
+
+export interface ClassSchedule {
+  id: string;
+  studentId: string;
+  studentName: string;
+  courseId: string;
+  courseName: string;
+  teacher: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  room: string;
+}
